@@ -76,7 +76,7 @@ Last updated: 2026-11-02
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Main screen | ✅ | Period label, progress bar, on-court list with positions, IN/OUT pairs with position, and a large Next button. |
+| Main screen | ✅ | Period label, progress bar, on-court list with positions, IN/OUT pairs with position, and a large Next button. The screen is one viewport tall: rows keep their normal size when they fit and shrink a little when they don't (e.g. 5 in / 5 out), so it never scrolls. Tested from iPhone SE in Safari (375×548) up to Pro Max (440×956). |
 | D1 | ✅ | |
 | D2 | ✅ | |
 | D3 | ✅ | Played segments are passed to the engine as `fixed`. |

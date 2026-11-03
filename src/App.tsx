@@ -1,4 +1,5 @@
 import { useRoute } from './router';
+import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
 import { GameDayScreen } from './screens/GameDayScreen';
 import { GameSetupScreen } from './screens/GameSetupScreen';
 import { PlanScreen } from './screens/PlanScreen';
@@ -10,6 +11,8 @@ export function App() {
   switch (route.name) {
     case 'teams':
       return <TeamsScreen />;
+    case 'diagnostics':
+      return <DiagnosticsScreen />;
     case 'team':
       return <TeamScreen teamId={route.teamId} />;
     case 'game-setup':

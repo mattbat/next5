@@ -10,6 +10,8 @@ export default defineConfig({
   base,
   define: {
     __APP_VERSION__: JSON.stringify(process.env.npm_package_version ?? '0.0.0'),
+    // Shown on the diagnostics page so you can confirm a phone has the latest build.
+    __BUILD_TIME__: JSON.stringify(new Date().toISOString().slice(0, 16).replace('T', ' ') + ' UTC'),
   },
   plugins: [
     react(),
