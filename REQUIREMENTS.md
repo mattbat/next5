@@ -213,7 +213,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | ID | Requirement |
 |----|-------------|
 | N1 | Launches to a usable screen in under 2 seconds, offline. |
-| N2 | Plan generation completes in under 1 second for up to 15 players and 16 segments. |
+| N2 | Plan generation for up to 15 players and 16 segments ideally completes in under 1 second, and must complete within 3–5 seconds. |
 | N3 | Every action is saved immediately. There is no "Save" button on the game day screen. |
 | N4 | No analytics, tracking, or network calls beyond fetching app updates. |
 | N5 | The rotation engine is documented in the developer README, with a plain-language explanation of how plans are scored. |
