@@ -9,6 +9,9 @@ const PORT = 4173;
 export default defineConfig({
   testDir: 'e2e',
   fullyParallel: true,
+  // WebKit on Windows times out intermittently when tests run side by side,
+  // so local runs go one at a time. CI (Linux) runs them in parallel.
+  workers: process.env.CI ? undefined : 1,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['html', { open: 'never' }]] : 'list',

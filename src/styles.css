@@ -191,6 +191,21 @@ input[type='date'] {
   margin-top: 40px;
 }
 
+.footnote-link {
+  color: inherit;
+  text-decoration: underline dotted;
+}
+
+.list-item.diag {
+  flex-wrap: wrap;
+  gap: 2px 12px;
+}
+
+.list-item.diag .list-meta {
+  overflow-wrap: anywhere;
+  font-size: 15px;
+}
+
 .empty {
   color: var(--text-2);
   background: var(--surface);
@@ -848,12 +863,15 @@ input[type='date'] {
    when it fits; when it doesn't (e.g. 5 in / 5 out), the player rows, gaps
    and buttons shrink a little instead of the page scrolling. */
 
-/* Pinned to all four edges rather than sized with 100dvh: in a Home Screen
-   app with a translucent status bar, iOS reports 100dvh as the screen height
+/* Sized from --app-height (see src/viewport.ts) rather than 100dvh or
+   `inset: 0`: in a Home Screen app iOS reports both as the screen height
    minus the status bar, which left a gap under the buttons. */
 .game-day {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--app-height, 100dvh);
   display: flex;
   flex-direction: column;
   width: 100%;
