@@ -41,11 +41,18 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
   const label = segmentLabel(game.format, game.current);
   const nextLabel = next ? segmentLabel(game.format, game.current + 1) : null;
   const change = next ? substitutions(current, next) : null;
-  const goingOut = new Set(change?.subs.map((s) => s.out) ?? []);
 
   const position = (id: string | null) => (id === null ? '' : (team.positions.find((p) => p.id === id)?.name ?? id));
   const player = (id: string) => byId.get(id);
   const name = (id: string) => player(id)?.name ?? 'Unknown';
+
+  // One row per spot on the court: who's on now, and who takes the spot next.
+  const rows = current.map((slot) => {
+    const sub = change?.subs.find((s) => s.out === slot.playerId);
+    const stay = change?.stays.find((s) => s.playerId === slot.playerId);
+    return { slot, sub, stay };
+  });
+  const changeCount = change?.subs.length ?? 0;
 
   return (
     <main className="screen game-day">
@@ -68,53 +75,53 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
         ))}
       </div>
 
-      <section className="court" aria-label="On court now">
-        <h2>On court</h2>
+      <section className={`lineup ${next ? '' : 'final'}`} aria-label="On court now">
+        <div className="lineup-head" aria-hidden>
+          <span>On court</span>
+          {nextLabel && (
+            <span>
+              Next · {nextLabel.text}
+              {changeCount > 0 && <b className="count">{changeCount} sub{changeCount === 1 ? '' : 's'}</b>}
+            </span>
+          )}
+        </div>
         <ul>
-          {current.map((slot) => (
-            <li key={slot.playerId} className={goingOut.has(slot.playerId) ? 'leaving' : ''}>
-              <Jersey number={player(slot.playerId)?.number ?? ''} />
-              <span className="court-name">{name(slot.playerId)}</span>
-              <span className="court-pos">{position(slot.positionId)}</span>
-              {goingOut.has(slot.playerId) && <span className="badge out">OUT next</span>}
+          {rows.map(({ slot, sub, stay }) => (
+            <li key={slot.playerId} className={sub ? 'slot change' : 'slot'}>
+              <div className="slot-now">
+                <Jersey number={player(slot.playerId)?.number ?? ''} />
+                <span className="slot-text">
+                  <span className="slot-name">{name(slot.playerId)}</span>
+                  <span className={`slot-pos ${sub ? 'out' : ''}`}>
+                    {sub && <span aria-hidden>▼ </span>}
+                    {sub ? `Out · ${position(slot.positionId)}` : position(slot.positionId)}
+                  </span>
+                </span>
+              </div>
+              {next && (
+                <div className={`slot-next ${sub ? 'in' : 'stays'}`}>
+                  {sub ? (
+                    <span className="slot-text">
+                      <span className="slot-name">{name(sub.in)}</span>
+                      <span className="slot-pos in">
+                        <span aria-hidden>▲ </span>In · {position(sub.positionId)}
+                      </span>
+                    </span>
+                  ) : (
+                    <span className="slot-text">
+                      <span className="stay-label">Stays</span>
+                      {stay && stay.from !== stay.to && (
+                        <span className="slot-pos">→ {position(stay.to)}</span>
+                      )}
+                    </span>
+                  )}
+                </div>
+              )}
             </li>
           ))}
         </ul>
-      </section>
-
-      <section className="changes" aria-label="Next change">
-        <h2>{nextLabel ? `Next: ${nextLabel.text}` : 'Last segment'}</h2>
-        {change && change.subs.length === 0 && <p className="no-change">No changes — same five stay on.</p>}
-        {!next && <p className="no-change">This is the final lineup. Tap End game when the game is over.</p>}
-        <ul>
-          {change?.subs.map((sub) => (
-            <li key={sub.in} className="sub">
-              <span className="sub-in">
-                <span className="arrow in" aria-hidden>
-                  ▲
-                </span>
-                <span className="sr-only">In:</span>
-                <span className="sub-name">{name(sub.in)}</span>
-                <span className="sub-pos">{position(sub.positionId)}</span>
-              </span>
-              <span className="sub-out">
-                <span className="arrow out" aria-hidden>
-                  ▼
-                </span>
-                <span className="sr-only">Out:</span>
-                <span className="sub-name">{name(sub.out)}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-        {change?.stays.some((s) => s.from !== s.to) && (
-          <p className="switches">
-            {change.stays
-              .filter((s) => s.from !== s.to)
-              .map((s) => `${name(s.playerId)} moves to ${position(s.to)}`)
-              .join(' · ')}
-          </p>
-        )}
+        {next && changeCount === 0 && <p className="lineup-note">No changes — same five stay on.</p>}
+        {!next && <p className="lineup-note">This is the final lineup. Tap End game when the game is over.</p>}
       </section>
 
       <footer className="game-footer">

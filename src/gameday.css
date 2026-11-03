@@ -1,0 +1,216 @@
+/* Game day: fills exactly one screen at any phone size, with no scrolling. */
+
+.game-day {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.period-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.progress {
+  display: flex;
+  flex: none;
+  gap: 3px;
+  margin: -4px 0 10px;
+}
+
+.progress span {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.progress span[data-period-start] {
+  margin-left: 4px;
+}
+
+.progress span.done {
+  background: var(--text-3);
+}
+
+.progress span.now {
+  background: var(--accent);
+}
+
+/* The lineup takes all the height between the header and the buttons, and
+   its five rows share it: taller rows on big screens, compact on small ones. */
+.lineup {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.lineup-head {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: none;
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.lineup.final .lineup-head {
+  grid-template-columns: 1fr;
+}
+
+.lineup-head .count {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 5px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  letter-spacing: 0.02em;
+}
+
+.lineup ul {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.slot {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  flex: 1 1 0;
+  min-height: 52px;
+  max-height: 104px;
+}
+
+.lineup.final .slot {
+  grid-template-columns: 1fr;
+}
+
+.slot-now,
+.slot-next {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 0 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid transparent;
+}
+
+.slot.change .slot-now {
+  background: var(--out-bg);
+  border-color: color-mix(in srgb, var(--out) 40%, transparent);
+}
+
+.slot-next.in {
+  background: var(--in-bg);
+  border-color: color-mix(in srgb, var(--in) 45%, transparent);
+}
+
+.slot-next.stays {
+  background: transparent;
+  border: 1px dashed var(--line);
+}
+
+.slot-now .jersey {
+  width: 32px;
+  height: 32px;
+  font-size: 15px;
+}
+
+.slot-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.slot-name {
+  overflow: hidden;
+  font-size: clamp(17px, 2.4dvh, 21px);
+  font-weight: 800;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-pos {
+  overflow: hidden;
+  color: var(--text-2);
+  font-size: 13px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-pos.out {
+  color: #fda4af;
+}
+
+.slot-pos.in {
+  color: var(--in);
+}
+
+.stay-label {
+  color: var(--text-3);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.lineup-note {
+  flex: none;
+  margin: 8px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+  text-align: center;
+}
+
+/* Buttons sit at the bottom of the screen, inside the safe area. */
+.game-footer {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  padding: 12px 0 calc(var(--safe-bottom) + 12px);
+}
+
+.game-footer .undo {
+  min-height: clamp(56px, 8dvh, 72px);
+  padding: 0 18px;
+}
+
+.game-footer .next {
+  flex: 1;
+  min-height: clamp(56px, 8dvh, 72px);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+
+/* Very short screens (e.g. Safari with its toolbars on a small phone). */
+@media (max-height: 600px) {
+  .game-day .topbar {
+    min-height: 44px;
+    margin-bottom: 4px;
+  }
+
+  .slot {
+    min-height: 46px;
+  }
+
+  .slot-now .jersey {
+    display: none;
+  }
+}
