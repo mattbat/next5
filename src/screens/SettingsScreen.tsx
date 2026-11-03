@@ -125,7 +125,7 @@ export function SettingsScreen() {
               ref={fileInput}
               type="file"
               accept="application/json,.json"
-              className="sr-only"
+              className="file-input"
               aria-label="Backup file"
               onChange={(e) => void onFile(e.target.files?.[0])}
             />
