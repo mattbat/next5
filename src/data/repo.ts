@@ -102,6 +102,9 @@ export async function createGame(team: Team): Promise<Game> {
     status: 'planned' as const,
     current: 0,
     played: [],
+    subbedOut: [],
+    statuses: {},
+    events: [],
   });
   await db.games.add(game);
   return game;

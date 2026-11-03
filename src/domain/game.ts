@@ -90,29 +90,35 @@ export function describeError(error: GenerateError, game: Game, positions: Posit
 
 /** Starts the game at the first segment. */
 export function startGame(game: Game): Game {
-  return { ...game, status: 'live', current: 0, played: [] };
+  return { ...game, status: 'live', current: 0, played: [], subbedOut: [] };
 }
 
 /**
- * Tapping Next (D1): records the lineup that was on the court and moves on.
- * On the last segment this ends the game.
+ * Tapping Next (D1): records who was on the court and moves on. Players
+ * subbed out partway through the segment are recorded too, so they get
+ * credit for it (D4). On the last segment this ends the game.
  */
 export function nextSegment(game: Game): Game {
   if (game.status !== 'live') return game;
   const onCourt = game.plan[game.current];
   if (!onCourt) return game;
-  const played = [...game.played, onCourt];
+  const played = [...game.played, [...onCourt, ...game.subbedOut]];
   if (game.current + 1 >= game.plan.length) {
-    return { ...game, played, current: game.plan.length - 1, status: 'final' };
+    return { ...game, played, subbedOut: [], current: game.plan.length - 1, status: 'final' };
   }
-  return { ...game, played, current: game.current + 1 };
+  return { ...game, played, subbedOut: [], current: game.current + 1 };
 }
 
 /** Undo (D2): reverses the last Next, including reopening a game that just ended. */
 export function undoSegment(game: Game): Game {
-  if (game.played.length === 0) return game;
+  const last = game.played.at(-1);
+  if (!last) return game;
   const played = game.played.slice(0, -1);
-  return { ...game, played, current: played.length, status: 'live' };
+  const current = played.length;
+  // Anyone recorded beyond the segment's lineup had been subbed out mid-segment.
+  const onCourt = new Set(game.plan[current]?.map((s) => s.playerId));
+  const subbedOut = last.filter((s) => !onCourt.has(s.playerId));
+  return { ...game, played, subbedOut, current, status: 'live' };
 }
 
 export interface PlayerTime {

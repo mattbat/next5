@@ -56,7 +56,7 @@ describe('teams', () => {
     await user.click(screen.getByRole('button', { name: 'Add' }));
     await goTo(window.location.hash);
     expect(await screen.findByRole('heading', { name: '8U Thunder' })).toBeInTheDocument();
-    expect(screen.getByText(/No players yet/)).toBeInTheDocument();
+    expect(screen.getByText(/No players yet. Add your roster on the Roster tab/)).toBeInTheDocument();
   });
 });
 
@@ -66,6 +66,7 @@ describe('roster', () => {
     const team = await createDemoTeam();
     await goTo(`#/team/${team.id}`);
     render(<App />);
+    await user.click(await screen.findByRole('radio', { name: /^Roster/ }));
     await user.click(await screen.findByRole('button', { name: '+ Add' }));
     const sheet = screen.getByRole('dialog', { name: 'New player' });
     await user.type(within(sheet).getByPlaceholderText('First name'), 'Maya');
@@ -83,6 +84,7 @@ describe('roster', () => {
     const team = await createDemoTeam();
     await goTo(`#/team/${team.id}`);
     render(<App />);
+    await user.click(await screen.findByRole('radio', { name: /^Roster/ }));
     await user.click(await screen.findByText('Avery'));
     const sheet = screen.getByRole('dialog', { name: 'Edit player' });
     await user.click(within(within(sheet).getByRole('radiogroup', { name: 'Forward skill' })).getByRole('radio', { name: '—' }));
@@ -101,6 +103,7 @@ describe('roster', () => {
     const team = await createDemoTeam();
     await goTo(`#/team/${team.id}`);
     render(<App />);
+    await user.click(await screen.findByRole('radio', { name: /^Roster/ }));
     await user.click(await screen.findByText('Kai'));
     await user.click(screen.getByRole('button', { name: 'Remove player' }));
     await waitFor(() => expect(screen.queryByText('Kai')).not.toBeInTheDocument());

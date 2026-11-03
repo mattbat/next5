@@ -17,7 +17,23 @@ export class Next5Db extends Dexie {
       players: 'id, teamId',
       games: 'id, teamId, date, status',
     });
+    // v2: game-day changes. Games gain subbedOut, statuses and events.
+    this.version(2)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('games')
+          .toCollection()
+          .modify((game: Partial<Game>) => upgradeGameV2(game)),
+      );
   }
+}
+
+/** Fills in the fields added in schema v2. Exported for tests. */
+export function upgradeGameV2(game: Partial<Game>): void {
+  game.subbedOut ??= [];
+  game.statuses ??= {};
+  game.events ??= [];
 }
 
 export const db = new Next5Db();

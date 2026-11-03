@@ -1,11 +1,31 @@
+import { useState } from 'react';
 import { Empty, Jersey, Section, TopBar } from '../components/ui';
 import { saveGame } from '../data/repo';
-import type { Game, Player, Team } from '../data/types';
+import type { Game, GameEvent, Player, Team } from '../data/types';
+import {
+  addSegments,
+  benchFor,
+  markArrived,
+  planConflicts,
+  replan,
+  setStatus,
+  statusLabel,
+  swapNext,
+  swapNow,
+  type ReplanResult,
+} from '../domain/changes';
 import { nextSegment, playingTime, segmentLabel, undoSegment } from '../domain/game';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
 import { paths } from '../router';
+import {
+  ChoosePlayerSheet,
+  GameMenuSheet,
+  PlayerActionsSheet,
+  ReplanSheet,
+  type PlayerAction,
+} from './GameChanges';
 
 /** Game day: who's on, who comes in and out next, and one big Next button (§9). */
 export function GameDayScreen({ gameId }: { gameId: string }) {
@@ -20,7 +40,7 @@ export function GameDayScreen({ gameId }: { gameId: string }) {
       </main>
     );
   }
-  const { game, team, byId } = data;
+  const { game, team, roster, byId } = data;
   if (game.status === 'final') return <Summary game={game} team={team} byId={byId} />;
   if (game.status === 'planned' || game.plan.length === 0) {
     return (
@@ -32,20 +52,85 @@ export function GameDayScreen({ gameId }: { gameId: string }) {
       </main>
     );
   }
-  return <Live game={game} team={team} byId={byId} />;
+  return <Live game={game} team={team} roster={roster} byId={byId} />;
 }
 
-function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
+/** Which sheet is open on the game day screen. */
+type Sheet =
+  | { kind: 'menu' }
+  | { kind: 'player'; playerId: string }
+  | { kind: 'choose-now'; outId: string; thenOut: boolean }
+  | { kind: 'choose-next'; outId: string }
+  | { kind: 'replan'; preview: ReplanResult };
+
+function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Player[]; byId: Map<string, Player> }) {
+  const [sheet, setSheet] = useState<Sheet | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
   const current = game.plan[game.current]!;
   const next: Lineup | undefined = game.plan[game.current + 1];
   const label = segmentLabel(game.format, game.current);
   const nextLabel = next ? segmentLabel(game.format, game.current + 1) : null;
   const change = next ? substitutions(current, next) : null;
   const goingOut = new Set(change?.subs.map((s) => s.out) ?? []);
+  const conflicts = planConflicts(game);
 
   const position = (id: string | null) => (id === null ? '' : (team.positions.find((p) => p.id === id)?.name ?? id));
   const player = (id: string) => byId.get(id);
   const name = (id: string) => player(id)?.name ?? 'Unknown';
+
+  const close = () => {
+    setSheet(null);
+    setError(null);
+  };
+
+  /** Saves a change, then offers to re-plan the rest of the game around it. */
+  const saveAndOfferReplan = async (changed: Game) => {
+    await saveGame(changed);
+    if (changed.current + 1 >= changed.plan.length) return close();
+    setError(null);
+    setSheet({ kind: 'replan', preview: replan(changed, team, roster) });
+  };
+
+  const onPlayerAction = (playerId: string, action: PlayerAction) => {
+    switch (action.kind) {
+      case 'sub-now':
+        return setSheet({ kind: 'choose-now', outId: playerId, thenOut: false });
+      case 'injured':
+        if (current.some((s) => s.playerId === playerId)) {
+          return setSheet({ kind: 'choose-now', outId: playerId, thenOut: true });
+        }
+        return void saveAndOfferReplan(setStatus(game, playerId, { kind: 'out' }));
+      case 'rest':
+        return void saveAndOfferReplan(setStatus(game, playerId, { kind: 'resting', segments: action.segments }));
+      case 'available':
+        return void saveAndOfferReplan(setStatus(game, playerId, null));
+      case 'arrived':
+        return void saveAndOfferReplan(markArrived(game, playerId));
+    }
+  };
+
+  const pickNow = (outId: string, inId: string, thenOut: boolean) => {
+    const result = swapNow(game, team, roster, outId, inId);
+    if (!result.ok) return setError(result.message);
+    if (thenOut) return void saveAndOfferReplan(setStatus(result.game, outId, { kind: 'out' }));
+    void saveGame(result.game);
+    close();
+  };
+
+  const pickNext = (outId: string, inId: string) => {
+    const result = swapNext(game, team, roster, outId, inId);
+    if (!result.ok) return setError(result.message);
+    void saveGame(result.game);
+    close();
+  };
+
+  const overtime = () => {
+    const result = addSegments(game, team, roster);
+    if (!result.ok) return setError(result.message);
+    void saveGame(result.game);
+    close();
+  };
 
   return (
     <main className="screen game-day">
@@ -53,9 +138,9 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
         title={<span className="period-title">{label.text}</span>}
         back={paths.team(team.id)}
         action={
-          <a className="link" href={paths.gamePlan(game.id)}>
-            Plan
-          </a>
+          <button type="button" className="link" onClick={() => setSheet({ kind: 'menu' })}>
+            Edit
+          </button>
         }
       />
       <div className="progress" aria-label={`Segment ${game.current + 1} of ${game.plan.length}`}>
@@ -68,15 +153,32 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
         ))}
       </div>
 
+      {conflicts.length > 0 && (
+        <button type="button" className="conflict" onClick={() => void saveAndOfferReplan(game)}>
+          <span>
+            {[...new Set(conflicts.map((c) => name(c.playerId)))].join(', ')} can't play but{' '}
+            {new Set(conflicts.map((c) => c.playerId)).size === 1 ? 'is' : 'are'} still in the plan.
+          </span>
+          <b>Re-plan</b>
+        </button>
+      )}
+
       <section className="court" aria-label="On court now">
         <h2>On court</h2>
         <ul>
           {current.map((slot) => (
             <li key={slot.playerId} className={goingOut.has(slot.playerId) ? 'leaving' : ''}>
-              <Jersey number={player(slot.playerId)?.number ?? ''} />
-              <span className="court-name">{name(slot.playerId)}</span>
-              <span className="court-pos">{position(slot.positionId)}</span>
-              {goingOut.has(slot.playerId) && <span className="badge out">OUT next</span>}
+              <button
+                type="button"
+                className="row-btn"
+                aria-label={`${name(slot.playerId)}, ${position(slot.positionId)}: change`}
+                onClick={() => setSheet({ kind: 'player', playerId: slot.playerId })}
+              >
+                <Jersey number={player(slot.playerId)?.number ?? ''} />
+                <span className="court-name">{name(slot.playerId)}</span>
+                <span className="court-pos">{position(slot.positionId)}</span>
+                {goingOut.has(slot.playerId) && <span className="badge out">OUT next</span>}
+              </button>
             </li>
           ))}
         </ul>
@@ -89,14 +191,18 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
         <ul>
           {change?.subs.map((sub) => (
             <li key={sub.in} className="sub">
-              <span className="sub-in">
+              <button
+                type="button"
+                className="sub-in"
+                aria-label={`In: ${name(sub.in)}, ${position(sub.positionId)}. Tap to send in someone else`}
+                onClick={() => setSheet({ kind: 'choose-next', outId: sub.in })}
+              >
                 <span className="arrow in" aria-hidden>
                   ▲
                 </span>
-                <span className="sr-only">In:</span>
                 <span className="sub-name">{name(sub.in)}</span>
                 <span className="sub-pos">{position(sub.positionId)}</span>
-              </span>
+              </button>
               <span className="sub-out">
                 <span className="arrow out" aria-hidden>
                   ▼
@@ -126,12 +232,95 @@ function Live({ game, team, byId }: { game: Game; team: Team; byId: Map<string, 
         >
           ↶ Undo
         </button>
+        {!next && (
+          <button type="button" className="btn secondary undo" onClick={overtime}>
+            + OT
+          </button>
+        )}
         <button type="button" className="btn big next" onClick={() => void saveGame(nextSegment(game))}>
           {next ? 'Next' : 'End game'}
         </button>
       </footer>
+
+      {sheet?.kind === 'menu' && (
+        <GameMenuSheet
+          game={game}
+          roster={roster}
+          onPlayer={(playerId) => setSheet({ kind: 'player', playerId })}
+          onReplan={() => setSheet({ kind: 'replan', preview: replan(game, team, roster) })}
+          onOvertime={overtime}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'player' && player(sheet.playerId) && (
+        <PlayerActionsSheet
+          game={game}
+          player={player(sheet.playerId)!}
+          onAction={(action) => onPlayerAction(sheet.playerId, action)}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'choose-now' && (
+        <ChoosePlayerSheet
+          title={`Who replaces ${name(sheet.outId)}?`}
+          hint={
+            sheet.thenOut
+              ? `${name(sheet.outId)} will be out for the rest of the game.`
+              : 'Both players get credit for this segment.'
+          }
+          candidates={benchFor(game, game.current)}
+          byId={byId}
+          error={error}
+          onPick={(inId) => pickNow(sheet.outId, inId, sheet.thenOut)}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'choose-next' && (
+        <ChoosePlayerSheet
+          title={`Send in someone instead of ${name(sheet.outId)}?`}
+          hint={`Changes the ${nextLabel?.text ?? 'next'} lineup only.`}
+          candidates={benchFor(game, game.current + 1)}
+          byId={byId}
+          error={error}
+          onPick={(inId) => pickNext(sheet.outId, inId)}
+          onClose={close}
+        />
+      )}
+      {sheet?.kind === 'replan' && (
+        <ReplanSheet
+          game={game}
+          preview={sheet.preview}
+          byId={byId}
+          onAccept={(planned) => void saveGame(planned).then(close)}
+          onClose={close}
+        />
+      )}
+      {error && !sheet && (
+        <p className="error floating" role="alert">
+          {error}
+        </p>
+      )}
     </main>
   );
+}
+
+function describeEvent(event: GameEvent, game: Game, byId: Map<string, Player>): string {
+  const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
+  const when = segmentLabel(game.format, event.segment).text;
+  switch (event.kind) {
+    case 'swap-now':
+      return `${when}: ${name(event.in)} replaced ${name(event.out)} mid-segment`;
+    case 'swap-next':
+      return `${when}: ${name(event.in)} went in instead of ${name(event.out)}`;
+    case 'status':
+      return `${when}: ${name(event.playerId)} — ${
+        event.status ? (statusLabel(event.status, { ...game, current: event.segment }) ?? 'status changed') : 'available again'
+      }`;
+    case 'replan':
+      return `${when}: re-planned (${event.changes} lineup${event.changes === 1 ? '' : 's'} changed)`;
+    case 'overtime':
+      return `${when}: added ${event.added} overtime segment${event.added === 1 ? '' : 's'}`;
+  }
 }
 
 function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
@@ -154,6 +343,17 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
           ))}
         </ul>
       </Section>
+      {game.events.length > 0 && (
+        <Section title="Changes from the plan">
+          <ul className="list">
+            {game.events.map((event, i) => (
+              <li key={i} className="list-item static">
+                <span className="list-title event">{describeEvent(event, game, byId)}</span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
       <footer className="footer static">
         <button type="button" className="btn secondary wide" onClick={() => void saveGame(undoSegment(game))}>
           ↶ Undo end of game

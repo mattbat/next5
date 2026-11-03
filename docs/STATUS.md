@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Current milestone:** MVP 1: plan a game and run it on game day. **Next:** MVP 2 (see the bottom of this file).
+**Done:** MVP 1 (plan and run a game) and game-day changes. **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-02
+Last updated: 2026-11-03
 
 ## 3. Platform and technical
 
@@ -18,23 +18,23 @@ Last updated: 2026-11-02
 | T4 | ✅ | `/next5/` base path and hash routing. |
 | T5 | ✅ | Workbox precaches the app. Offline launch is tested in Chromium; WebKit's test browser can't drive service workers. |
 | T6 | ✅ | IndexedDB through Dexie, with `navigator.storage.persist()` requested at startup. |
-| T7 | 🟡 | Schema v1, with the migration process documented in the README. There are no migrations yet and no test of data surviving an app update. |
+| T7 | ✅ | Schema v2 adds game-day fields with an `upgrade()` migration. A test writes a v1 database and checks it opens under v2 with nothing lost. |
 | T8 | ✅ | "Update available" banner, hidden during a live game, with an hourly update check. |
 | T9 | ✅ | React, TypeScript, Vite, vite-plugin-pwa, Dexie. |
-| T10 | 🟡 📱 | Built and tested at iPhone 17 size in WebKit, but not yet on a real phone. |
+| T10 | ✅ | Tested in WebKit at five phone sizes and on an iPhone 16 Pro (Home Screen app). |
 
 ## 4–5. Core concepts and rules
 
 | ID | Status | Notes |
 |----|--------|-------|
 | Quarters / halves, segments per period | ✅ | Defaults: quarters × 2, halves × 4. |
-| Overtime / extra segments | ⬜ | Labels support OT; the add-segment action is not built (D11). |
-| H1 Position coverage | 🟡 | Enforced by the engine. When coverage is impossible the app explains what's missing, but it doesn't yet offer the one-tap "for this game only" fixes. Blocking manual edits arrives with manual edits (G9). |
+| Overtime / extra segments | ✅ | See D11. |
+| H1 Position coverage | 🟡 | Enforced by the engine, and game-day swaps that would break it are blocked with a message naming the missing position. When coverage is impossible the app explains what's missing, but doesn't yet offer one-tap "for this game only" fixes. |
 | R1 Equal playing time | ✅ | Includes fair share for absences. |
 | R2 Don't sit too long | ✅ | Limit is ⌈(players − 5) ÷ 5⌉. |
 | R3 Balance skill | ✅ | Off by default. |
 | Rule priority and plain-language warnings | ✅ | |
-| Fewest changes | 🟡 | Supported by the engine (`previous`) and tested; not yet used by any screen (needs G7, G8 from a point, and D6). |
+| Fewest changes | ✅ | Used by re-plan (D6). Planning-screen uses arrive with G7/G8. |
 
 ## 6. Positions and skill levels
 
@@ -80,21 +80,21 @@ Last updated: 2026-11-02
 | D1 | ✅ | |
 | D2 | ✅ | |
 | D3 | ✅ | Played segments are passed to the engine as `fixed`. |
-| D4 | ⬜ | Swap now. |
-| D5 | ⬜ | Player status (unavailable, resting, arrived). The engine supports `unavailable`. |
-| D6 | ⬜ | Re-plan from here. The engine is ready. |
-| D7 | ✅ 📱 | Screen Wake Lock, re-acquired when the app returns to the foreground. Needs checking on her iPhone. |
+| D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. Swaps that would leave a required position uncovered are blocked. |
+| D5 | ✅ | Injured / out for the game, rest for 1–3 segments, available again, and late arrival (adds a non-attending player). Takes effect from the next segment. |
+| D6 | ✅ | Offered after every status change, from the Edit menu, and from a banner when the plan still includes someone who can't play. Preview shows which lineups change before accepting. |
+| D7 | ✅ 📱 | Screen Wake Lock, re-acquired when the app returns to the foreground. Needs checking on the deployed (https) site; the Wi-Fi test link couldn't use it. |
 | D8 | ✅ | Tested by reloading mid-game. |
 | D9 | ✅ | End game, and "Undo end of game" to resume. |
 | D10 | 🟡 | High-contrast dark theme with IN/OUT shown by words and arrows. The light theme is not built. |
-| D11 | ⬜ | Extra segments and overtime. |
+| D11 | ✅ | "+ OT" on the last segment and "Add overtime segment" in the Edit menu, planned with the same rules. |
 
 ## 10. History and stats
 
 | ID | Status | Notes |
 |----|--------|-------|
-| S1 | 🟡 | Each game stores its setup, plan and played lineups. The change log arrives with D4–D6. |
-| S2 | ✅ | Games tab lists games with their status; finished games open their summary. |
+| S1 | ✅ | Each game stores its setup, plan, played lineups (including mid-segment swaps) and a log of every change. |
+| S2 | ✅ | Games tab lists games with their status; finished games open their summary, including "Changes from the plan". |
 | S3 | 🟡 | The summary shows segments played per player. Planned segments, segments sat and positions played are not shown yet. |
 | S4 | ⬜ | Season stats. |
 | S5 | ⬜ | CSV export. |
@@ -133,8 +133,8 @@ Last updated: 2026-11-02
 | N5 | ✅ | README → "How the rotation engine works". |
 | Q-1 | ✅ | `npm run check` runs everything. |
 | Q-2 | ✅ | Example and property tests, plus a performance check. |
-| Q-3 | 🟡 | Storage, game logic and screens are covered. Backup and CSV tests will come with those features. |
-| Q-4 | 🟡 | The full game flow and adding players are tested in WebKit at iPhone 17 size, and offline launch in Chromium. There's no test yet that data survives an app update. |
+| Q-3 | 🟡 | Storage, migrations, game logic, game-day changes and screens are covered. Backup and CSV tests will come with those features. |
+| Q-4 | ✅ | WebKit at iPhone sizes: the full game flow, adding players, an injury with re-plan and overtime, and Game Day fitting five screen sizes. Offline launch in Chromium. Data surviving an update is covered by the migration test (T7). |
 | Q-5 | ✅ | Enforced: 95% for the engine and 80% overall. Currently about 100% and 97%. |
 | Q-6 | ✅ | `.github/workflows/ci.yml`. |
 | Q-7 | ✅ | |
@@ -145,12 +145,16 @@ All ⬜: favorite lineups, automatic cloud backup, sharing and sync.
 
 ---
 
-## Proposed MVP 2
+## Proposed next milestones
 
 In priority order:
 
-1. Mid-game: swap now (D4), player status (D5), re-plan from here (D6), overtime and extra segments (D11).
+1. ~~Mid-game: swap now (D4), player status (D5), re-plan from here (D6), overtime and extra segments (D11).~~ Done.
 2. Planning: manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).
 3. Backup and restore (B1–B3).
 4. Stats: full per-game stats (S3), season stats (S4), CSV export (S5).
 5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
+
+## Small changes requested
+
+- [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)

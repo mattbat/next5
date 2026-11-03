@@ -955,15 +955,32 @@ input[type='date'] {
 
 .court li {
   display: flex;
-  align-items: center;
-  gap: 12px;
   flex: 0 1 52px;
   min-height: 34px;
-  padding: 0 14px;
   margin-bottom: 4px;
   border-radius: 12px;
   background: var(--surface);
   transition: opacity 200ms ease;
+}
+
+/* Tapping a player on the court opens their actions (sub out, injured, rest). */
+.row-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  padding: 0 14px;
+  border: none;
+  border-radius: inherit;
+  background: none;
+  color: inherit;
+  text-align: left;
+}
+
+.row-btn:active,
+button.sub-in:active {
+  filter: brightness(1.25);
 }
 
 .court li .jersey {
@@ -1030,6 +1047,113 @@ input[type='date'] {
   padding: 0 12px;
   border-radius: 12px;
   min-width: 0;
+}
+
+button.sub-in {
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+
+/* Shown when someone marked out or resting is still in an upcoming lineup. */
+.conflict {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent);
+  border-radius: 12px;
+  background: rgba(251, 191, 36, 0.12);
+  color: #fde68a;
+  font-size: 14px;
+  text-align: left;
+}
+
+.conflict span {
+  flex: 1;
+}
+
+.conflict b {
+  color: var(--warn);
+  white-space: nowrap;
+}
+
+.error.floating {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(var(--safe-bottom) + 100px);
+  z-index: 15;
+}
+
+/* Game-change sheets */
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 12px;
+}
+
+.actions .btn.wide {
+  margin-top: 0;
+}
+
+.action-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-row > span {
+  color: var(--text-2);
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.replan {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.replan li {
+  display: flex;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--surface-2);
+}
+
+.replan-label {
+  flex: none;
+  width: 92px;
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.replan-names {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-weight: 600;
+}
+
+.replan-names .new {
+  color: var(--in);
+}
+
+.replan-names .new::before {
+  content: '▲ ';
+  font-size: 11px;
+}
+
+.list-title.event {
+  font-weight: 500;
+  font-size: 15px;
 }
 
 .sub-in {

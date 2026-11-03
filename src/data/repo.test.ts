@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { db } from './db';
+import Dexie from 'dexie';
+import { db, Next5Db } from './db';
 import {
   addPlayer,
   createDemoTeam,
@@ -96,5 +97,22 @@ describe('repo', () => {
     const team = await createDemoTeam();
     expect(team.requirement).toEqual({ G: 2, C: 1 });
     expect(await db.players.where('teamId').equals(team.id).count()).toBe(10);
+  });
+});
+
+describe('schema migrations', () => {
+  it('upgrades a v1 database to v2 without losing data (T7)', async () => {
+    const name = `migration-test-${newId()}`;
+    // Write a game the way version 1 of the app stored it.
+    const v1 = new Dexie(name);
+    v1.version(1).stores({ teams: 'id, name, archived', players: 'id, teamId', games: 'id, teamId, date, status' });
+    await v1.table('games').add({ id: 'g1', teamId: 't1', date: '2026-10-01', status: 'final', opponent: 'Hawks', played: [[]] });
+    v1.close();
+
+    const upgraded = new Next5Db(name);
+    const game = await upgraded.games.get('g1');
+    expect(game).toMatchObject({ opponent: 'Hawks', played: [[]], subbedOut: [], statuses: {}, events: [] });
+    upgraded.close();
+    await Dexie.delete(name);
   });
 });
