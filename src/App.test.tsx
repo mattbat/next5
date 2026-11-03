@@ -53,7 +53,7 @@ describe('teams', () => {
     const user = userEvent.setup();
     render(<App />);
     await user.type(await screen.findByLabelText('New team name'), '8U Thunder');
-    await user.click(screen.getByRole('button', { name: 'Add' }));
+    await user.click(screen.getByRole('button', { name: 'Add team' }));
     await goTo(window.location.hash);
     expect(await screen.findByRole('heading', { name: '8U Thunder' })).toBeInTheDocument();
     expect(screen.getByText(/No players yet. Add your roster on the Roster tab/)).toBeInTheDocument();

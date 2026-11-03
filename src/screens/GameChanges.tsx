@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Jersey, Sheet } from '../components/ui';
 import type { Game, Player, Position } from '../data/types';
 import { benchFor, statusLabel, type ReplanResult } from '../domain/changes';
-import { describeWarning, segmentLabel } from '../domain/game';
+import { describeWarning, segmentLabel, sortLineup } from '../domain/game';
 
 /** Sheets for game-day changes (REQUIREMENTS.md D4–D6, D11). */
 
@@ -211,12 +211,14 @@ export function ReplanSheet({
   game,
   preview,
   byId,
+  positions,
   onAccept,
   onClose,
 }: {
   game: Game;
   preview: ReplanResult;
   byId: Map<string, Player>;
+  positions: Position[];
   onAccept: (game: Game) => void;
   onClose: () => void;
 }) {
@@ -248,7 +250,7 @@ export function ReplanSheet({
             <li key={segment}>
               <span className="replan-label">{segmentLabel(game.format, segment).text}</span>
               <span className="replan-names">
-                {preview.game.plan[segment]!.map((s) => (
+                {sortLineup(preview.game.plan[segment]!, positions, byId).map((s) => (
                   <span key={s.playerId} className={before.has(s.playerId) ? '' : 'new'}>
                     {name(s.playerId)}
                   </span>

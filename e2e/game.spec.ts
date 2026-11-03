@@ -19,6 +19,9 @@ async function expectNoHorizontalScroll(page: Page) {
 test('plans and runs a full game on an iPhone-sized screen', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByText('Add next5 to your Home Screen')).toBeVisible();
+  // The add-a-team field is pinned to the bottom of the screen, apart from the list.
+  const addTeam = await page.getByLabel('New team name').boundingBox();
+  expect(page.viewportSize()!.height - (addTeam!.y + addTeam!.height)).toBeLessThanOrEqual(30);
   await expectNoHorizontalScroll(page);
 
   // Try the app with the demo team.
@@ -47,6 +50,10 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   const next = page.getByRole('button', { name: 'Next' });
   await expect(next).toBeInViewport();
   await expect(page.getByRole('region', { name: 'On court now' }).getByRole('listitem')).toHaveCount(5);
+  // Players are listed Guards, Forwards, Centers, so the order never shuffles.
+  const positionsShown = await page.getByRole('region', { name: 'On court now' }).locator('.court-pos').allTextContents();
+  const order = ['Guard', 'Forward', 'Center'];
+  expect(positionsShown.map((p) => order.indexOf(p))).toEqual([...positionsShown.map((p) => order.indexOf(p))].sort());
   await expect(page.getByRole('region', { name: 'Next change' })).toBeInViewport();
   await expectNoHorizontalScroll(page);
   const box = await next.boundingBox();
@@ -78,7 +85,7 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
 test('adds a player with positions and skill levels', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('New team name').fill('8U Thunder');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Add team' }).click();
   await expect(page.getByRole('heading', { name: '8U Thunder' })).toBeVisible();
   // Teams open on Games; a new team points to the Roster tab.
   await expect(page.getByText(/No players yet/)).toBeVisible();

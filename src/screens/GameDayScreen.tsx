@@ -16,7 +16,7 @@ import {
   type ReplanResult,
   type SwapResult,
 } from '../domain/changes';
-import { nextSegment, playingTime, segmentLabel, undoSegment } from '../domain/game';
+import { nextSegment, playingTime, segmentLabel, sortLineup, undoSegment } from '../domain/game';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -72,8 +72,11 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   // A swap that breaks a rule, shown as a warning until the coach confirms it.
   const [pending, setPending] = useState<(PendingSwap & { apply: () => void }) | null>(null);
 
-  const current = game.plan[game.current]!;
-  const next: Lineup | undefined = game.plan[game.current + 1];
+  // Shown in a fixed order (Guards, Forwards, Centers; then by name) so the
+  // same players don't reshuffle between segments.
+  const current = sortLineup(game.plan[game.current]!, team.positions, byId);
+  const nextPlanned = game.plan[game.current + 1];
+  const next: Lineup | undefined = nextPlanned && sortLineup(nextPlanned, team.positions, byId);
   const label = segmentLabel(game.format, game.current);
   const nextLabel = next ? segmentLabel(game.format, game.current + 1) : null;
   const change = next ? substitutions(current, next) : null;
@@ -320,6 +323,7 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           game={game}
           preview={sheet.preview}
           byId={byId}
+          positions={team.positions}
           onAccept={(planned) => void saveGame(planned).then(close)}
           onClose={close}
         />

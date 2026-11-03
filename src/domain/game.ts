@@ -34,6 +34,22 @@ export function segmentLabel(format: GameFormat, index: number): SegmentLabel {
   return { period, part, of, text: of === 1 ? period : `${period} · ${part} of ${of}` };
 }
 
+/**
+ * Display order for a lineup: by position in the team's order (Guards, then
+ * Forwards, then Centers), then alphabetically by name. Keeps the same five
+ * in the same order from segment to segment.
+ */
+export function sortLineup(lineup: Lineup, positions: Position[], byId: Map<string, Player>): Lineup {
+  const rank = (positionId: string | null) => {
+    const i = positions.findIndex((p) => p.id === positionId);
+    return i === -1 ? positions.length : i;
+  };
+  const name = (id: string) => byId.get(id)?.name ?? '';
+  return [...lineup].sort(
+    (a, b) => rank(a.positionId) - rank(b.positionId) || name(a.playerId).localeCompare(name(b.playerId)),
+  );
+}
+
 export function toEnginePlayers(players: Player[]): EnginePlayer[] {
   return players.map((p) => ({ id: p.id, skills: p.skills }));
 }
