@@ -19,6 +19,9 @@ async function expectNoHorizontalScroll(page: Page) {
 test('plans and runs a full game on an iPhone-sized screen', async ({ page }) => {
   await page.goto('./');
   await expect(page.getByText('Add next5 to your Home Screen')).toBeVisible();
+  // The add-a-team field is pinned to the bottom of the screen, apart from the list.
+  const addTeam = await page.getByLabel('New team name').boundingBox();
+  expect(page.viewportSize()!.height - (addTeam!.y + addTeam!.height)).toBeLessThanOrEqual(30);
   await expectNoHorizontalScroll(page);
 
   // Try the app with the demo team.
@@ -47,6 +50,10 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   const next = page.getByRole('button', { name: 'Next' });
   await expect(next).toBeInViewport();
   await expect(page.getByRole('region', { name: 'On court now' }).getByRole('listitem')).toHaveCount(5);
+  // Players are listed Guards, Forwards, Centers, so the order never shuffles.
+  const positionsShown = await page.getByRole('region', { name: 'On court now' }).locator('.court-pos').allTextContents();
+  const order = ['Guard', 'Forward', 'Center'];
+  expect(positionsShown.map((p) => order.indexOf(p))).toEqual([...positionsShown.map((p) => order.indexOf(p))].sort());
   await expect(page.getByRole('region', { name: 'Next change' })).toBeInViewport();
   await expectNoHorizontalScroll(page);
   const box = await next.boundingBox();
@@ -78,8 +85,11 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
 test('adds a player with positions and skill levels', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('New team name').fill('8U Thunder');
-  await page.getByRole('button', { name: 'Add', exact: true }).click();
+  await page.getByRole('button', { name: 'Add team' }).click();
   await expect(page.getByRole('heading', { name: '8U Thunder' })).toBeVisible();
+  // Teams open on Games; a new team points to the Roster tab.
+  await expect(page.getByText(/No players yet/)).toBeVisible();
+  await page.getByRole('radio', { name: /^Roster/ }).click();
 
   await page.getByRole('button', { name: '+ Add' }).click();
   const sheet = page.getByRole('dialog', { name: 'New player' });
@@ -94,4 +104,44 @@ test('adds a player with positions and skill levels', async ({ page }) => {
   await expect(row).toContainText('7');
   await expect(row).toContainText('G');
   await expect(row).toContainText('F');
+});
+
+test('handles an injury, re-plans, and goes to overtime', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Load demo team' }).click();
+  await page.getByRole('button', { name: '+ New game' }).click();
+  await page.getByRole('button', { name: 'Generate plan' }).click();
+  await page.getByRole('button', { name: 'Start game' }).click();
+  await expect(page.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeVisible();
+
+  // A guard gets hurt: sub them off for the game with a guard from the bench.
+  const guard = page.getByRole('button', { name: /Guard: change$/ }).first();
+  const injured = (await guard.locator('.court-name').textContent())!;
+  await guard.click();
+  await page.getByRole('button', { name: /Injured or leaving/ }).click();
+  const chooser = page.getByRole('dialog', { name: `Who replaces ${injured}?` });
+  const preview = page.getByRole('dialog', { name: 'Re-plan the rest of the game' });
+  // Players who can play the open spot are listed first, with their positions.
+  await expect(chooser.getByRole('list', { name: 'Can play Guard' })).toBeVisible();
+  await chooser.getByRole('list', { name: 'Can play Guard' }).getByRole('button').first().click();
+  // A swap may break a scheduling rule: that's a warning, never a block.
+  const anyway = page.getByRole('button', { name: 'Swap anyway' });
+  await expect(preview.or(anyway)).toBeVisible();
+  if (await anyway.isVisible()) await anyway.click();
+  await expect(preview).toBeVisible();
+  await preview.getByRole('button', { name: 'Use new plan' }).click();
+  await expect(preview).toBeHidden();
+  await expect(page.getByRole('region', { name: 'On court now' })).not.toContainText(injured);
+
+  // Play to the end, then add overtime.
+  const next = page.getByRole('button', { name: 'Next' });
+  for (let i = 0; i < 7; i++) await next.click();
+  await page.getByRole('button', { name: '+ OT' }).click();
+  await expect(page.getByRole('heading', { name: 'Next: OT1' })).toBeVisible();
+  await next.click();
+  await expect(page.getByRole('heading', { name: 'OT1' })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'On court now' })).not.toContainText(injured);
+  await page.getByRole('button', { name: 'End game' }).click();
+  await expect(page.getByRole('heading', { name: 'Changes from the plan' })).toBeVisible();
+  await expect(page.getByText(/added 1 overtime segment/)).toBeVisible();
 });

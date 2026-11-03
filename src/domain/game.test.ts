@@ -9,6 +9,7 @@ import {
   playingTime,
   segmentCount,
   segmentLabel,
+  sortLineup,
   startGame,
   undoSegment,
 } from './game';
@@ -51,6 +52,9 @@ function makeGame(overrides: Partial<Game> = {}): Game {
     status: 'planned',
     current: 0,
     played: [],
+    subbedOut: [],
+    statuses: {},
+    events: [],
     createdAt: 0,
     updatedAt: 0,
     ...overrides,
@@ -177,5 +181,40 @@ describe('running a game', () => {
     const time = playingTime(game);
     expect(time.reduce((sum, t) => sum + t.planned, 0)).toBe(40);
     expect(time.reduce((sum, t) => sum + t.played, 0)).toBe(5);
+  });
+});
+
+describe('sortLineup', () => {
+  it('orders a lineup Guards, Forwards, Centers, then alphabetically by name', () => {
+    const names = new Map(
+      [
+        ['a', 'Zoe'],
+        ['b', 'Ava'],
+        ['c', 'Max'],
+        ['d', 'Eli'],
+        ['e', 'Bo'],
+      ].map(([id, name]) => [id!, { ...roster[0]!, id: id!, name: name! }]),
+    );
+    const lineup = [
+      { playerId: 'a', positionId: 'G' },
+      { playerId: 'c', positionId: 'C' },
+      { playerId: 'd', positionId: 'F' },
+      { playerId: 'b', positionId: 'G' },
+      { playerId: 'e', positionId: null },
+    ];
+    expect(sortLineup(lineup, DEFAULT_POSITIONS, names).map((s) => names.get(s.playerId)!.name)).toEqual([
+      'Ava',
+      'Zoe',
+      'Eli',
+      'Max',
+      'Bo',
+    ]);
+  });
+
+  it('keeps the same five in the same order whatever order the plan stores them in', () => {
+    const byId = new Map(roster.map((p) => [p.id, p]));
+    const lineup = roster.slice(0, 5).map((p) => ({ playerId: p.id, positionId: p.skills.G ? 'G' : 'F' }));
+    const shuffled = [lineup[3]!, lineup[0]!, lineup[4]!, lineup[2]!, lineup[1]!];
+    expect(sortLineup(shuffled, DEFAULT_POSITIONS, byId)).toEqual(sortLineup(lineup, DEFAULT_POSITIONS, byId));
   });
 });

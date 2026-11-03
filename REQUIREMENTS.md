@@ -71,7 +71,7 @@ Success means the coach never has to work out a rotation in her head or on paper
 ### Hard constraint (never broken)
 | ID | Rule | Definition |
 |----|------|-----------|
-| H1 | **Position coverage** | Every lineup has to meet the team's position requirements (see §6). "At least 2 Guards" means the lineup contains at least 2 players marked as able to play Guard. One player can only count toward one position, so a lineup with 2 Guards and 1 Center needs 3 different players. The generator never produces a lineup that doesn't meet the requirements. A manual edit that would leave a required position uncovered is blocked, with a message naming the missing position. |
+| H1 | **Position coverage** | Every lineup has to meet the team's position requirements (see §6). "At least 2 Guards" means the lineup contains at least 2 players marked as able to play Guard. One player can only count toward one position, so a lineup with 2 Guards and 1 Center needs 3 different players. The generator never produces a lineup that doesn't meet the requirements. A pregame edit that would leave a required position uncovered is blocked, with a message naming the missing position. **During a game, a substitution the coach picks is never blocked** (injuries may make an ideal lineup impossible): the app warns which position is uncovered and lets the coach go ahead. |
 
 If the attending players *can't* cover the required positions (for example, nobody eligible to play Center showed up), the app stops before generating. It explains exactly what is missing and offers two fixes for this game only: make a player eligible for that position, or lower that position's requirement. Position coverage can be turned off entirely for a team, for example for 8U.
 
@@ -153,7 +153,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | D1 | Tapping **Next** moves to the next segment and records it as played. |
 | D2 | **Undo** reverses the last Next tap. |
 | D3 | **Played segments are locked.** No adjustment, swap, or regeneration ever changes a segment that has already been played. |
-| D4 | **Swap now:** change the current lineup or any upcoming lineup. This records the change from the plan. When a swap happens partway through the current segment (for example, because of an injury), both the player who left and the player who came in are credited with that segment. |
+| D4 | **Swap now:** change the current lineup or any upcoming lineup. This records the change from the plan. When a swap happens partway through the current segment (for example, because of an injury), both the player who left and the player who came in are credited with that segment. The list of replacements shows players who can play the open spot's position first, then everyone else, with each player's positions (G, F, C). A swap that breaks any rule, including position coverage, shows a warning with **Swap anyway**; it is never blocked. |
 | D5 | **Player status:** mark a player as *unavailable* (injured or left), *resting for the next N segments*, or *arrived* (for late arrivals). |
 | D6 | **Re-plan from here:** regenerate the remaining segments, taking into account the segments already played and the current player statuses, so the rules hold for the game as a whole as far as possible. The re-plan keeps manual edits and changes as few lineups as possible (§5). The coach sees a preview that highlights what changed before accepting it. A status change (D5) offers a re-plan automatically. |
 | D7 | The screen stays awake while a game is in progress (Screen Wake Lock API). |
@@ -288,6 +288,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-02 | The target device is iPhone 17. |
 | 2026-11-02 | The whole app has automated tests, with the rotation engine tested most thoroughly. The tests run in CI, and deploying requires them all to pass. |
 | 2026-11-02 | CI and deployment run on GitHub Actions. The code, CI, and hosting all stay on GitHub. |
+| 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions
 

@@ -19,7 +19,7 @@ export function TeamScreen({ teamId }: { teamId: string }) {
     () => db.games.where('teamId').equals(teamId).reverse().sortBy('date'),
     [teamId],
   );
-  const [tab, setTab] = useState<Tab>('roster');
+  const [tab, setTab] = useState<Tab>('games');
 
   if (team === undefined || players === undefined) return <main className="screen" />;
   if (team === null) {
@@ -39,13 +39,13 @@ export function TeamScreen({ teamId }: { teamId: string }) {
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'roster', label: `Roster (${players.filter((p) => p.active).length})` },
           { value: 'games', label: 'Games' },
+          { value: 'roster', label: `Roster (${players.filter((p) => p.active).length})` },
           { value: 'settings', label: 'Settings' },
         ]}
       />
       {tab === 'roster' && <Roster team={team} players={players} />}
-      {tab === 'games' && <Games team={team} games={games ?? []} />}
+      {tab === 'games' && <Games team={team} games={games ?? []} hasPlayers={players.length > 0} />}
       {tab === 'settings' && <TeamSettings team={team} />}
     </main>
   );
@@ -94,7 +94,7 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
 
 const STATUS_LABEL = { planned: 'Planned', live: 'In progress', final: 'Final' } as const;
 
-function Games({ team, games }: { team: Team; games: Game[] }) {
+function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlayers: boolean }) {
   const open = (game: Game) => {
     if (game.status === 'live') return paths.gameLive(game.id);
     if (game.plan.length > 0) return paths.gamePlan(game.id);
@@ -113,7 +113,10 @@ function Games({ team, games }: { team: Team; games: Game[] }) {
         </button>
       }
     >
-      {games.length === 0 && <Empty>No games yet. Tap + New game to plan your next one.</Empty>}
+      {games.length === 0 && !hasPlayers && (
+        <Empty>No players yet. Add your roster on the Roster tab, then come back here to plan a game.</Empty>
+      )}
+      {games.length === 0 && hasPlayers && <Empty>No games yet. Tap + New game to plan your next one.</Empty>}
       <ul className="list">
         {games.map((g) => (
           <li key={g.id}>

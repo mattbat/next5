@@ -24,13 +24,13 @@ export function TeamsScreen() {
   };
 
   return (
-    <main className="screen">
+    <main className="screen with-footer">
       <TopBar title={<span className="brand">next<span>5</span></span>} />
       <InstallHint />
       <Section title="Teams">
         {teams && teams.length === 0 && (
           <Empty>
-            No teams yet. Add your team below, or load a demo team with made-up players to try things out.
+            No teams yet. Add your team at the bottom of the screen, or load a demo team with made-up players to try things out.
           </Empty>
         )}
         <ul className="list">
@@ -44,23 +44,6 @@ export function TeamsScreen() {
             </li>
           ))}
         </ul>
-        <form
-          className="inline-form"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void add();
-          }}
-        >
-          <input
-            aria-label="New team name"
-            placeholder="New team name, e.g. 8U Thunder"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          <button type="submit" className="btn" disabled={!name.trim()}>
-            Add
-          </button>
-        </form>
         {teams && teams.length === 0 && (
           <button
             type="button"
@@ -78,6 +61,26 @@ export function TeamsScreen() {
         </a>
         .
       </p>
+      {/* Adding a team sits at the bottom of the screen, apart from the list. */}
+      <footer className="footer add-team">
+        <form
+          className="inline-form"
+          onSubmit={(e) => {
+            e.preventDefault();
+            void add();
+          }}
+        >
+          <input
+            aria-label="New team name"
+            placeholder="New team name, e.g. 8U Thunder"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          <button type="submit" className="btn" disabled={!name.trim()}>
+            Add team
+          </button>
+        </form>
+      </footer>
     </main>
   );
 }

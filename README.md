@@ -35,12 +35,26 @@ It opens full screen like any other app and works in gyms with no signal.
    - **Position requirement**: the minimum number of players who can play each position in every lineup. For example, *Guard 2* means at least two players who can play Guard are always on the court.
    - **Default game format**: quarters or halves, and how many lineups per period. The default is 2 per quarter, a sub at the middle and at the end of each quarter.
    - **Default rules**: see *How the rotation is built* below.
-4. **Plan a game.** On the **Games** tab tap **+ New game**. Uncheck anyone who isn't coming, then tap **Generate plan**.
+4. **Plan a game.** Teams open on the **Games** tab. Tap **+ New game**. Uncheck anyone who isn't coming, then tap **Generate plan**.
 5. **Check the plan.** The grid shows each player (rows) for each lineup (columns). A letter is the position they cover; an empty cell is the bench. The **#** column is their total. Tap **↻ Shuffle** for a different plan that is just as fair.
 6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next by mistake? Tap **↶ Undo**.
 7. After the last lineup tap **End game** to see everyone's playing time. The game is saved in the team's history.
 
 The screen stays awake during a game. If the phone locks anyway, or you switch apps, next5 picks up exactly where you left off.
+
+### When the game doesn't go to plan
+
+- **Sub someone out right now:** tap the player in the **On court** list, then **Sub out now**, and pick who goes in. Both players get credit for that segment.
+- **Send in someone else at the next sub:** tap a green **▲ IN** player and pick a replacement. Only the next lineup changes.
+- **Injury, or a player leaves:** tap the player, then **Injured or leaving**. If they're on the court, pick who replaces them now. They're out for the rest of the game.
+- **Give someone a rest:** tap the player, then **Rest for 1, 2 or 3 segments**.
+- **Late arrival:** tap **Edit** (top right) → **Show players not here** → tap the player → **Arrived**. They can play from the next segment.
+- **Re-plan:** after any of these, next5 offers to re-plan the rest of the game. A preview shows exactly which lineups change (new players in green) before you tap **Use new plan**. Segments already played never change, and it moves as few players as possible. If you keep the old plan, a yellow banner reminds you while someone who can't play is still in an upcoming lineup.
+- **Overtime:** on the last segment, tap **+ OT** (or **Edit → Add overtime segment**) to add another lineup, planned with the same rules.
+
+Every change is listed under **Changes from the plan** in the game summary.
+
+When you pick a replacement, players who can play that spot's position are listed first, then everyone else, and each player shows the positions they play (G, F, C). If your pick breaks one of your rules (no one covering Center, uneven playing time, someone sitting too long), next5 tells you and you can tap **Swap anyway**. During a game you're always in charge; plans next5 generates still always cover your positions.
 
 ### How the rotation is built
 
@@ -112,7 +126,8 @@ src/
     analyze.ts      scores plans and produces warnings
     positions.ts    position coverage (bipartite matching) and assignment
     substitutions.ts  works out IN/OUT pairs between two lineups
-  domain/       Game logic shared by screens (labels, Next/Undo, stats)
+  domain/       Game logic shared by screens: labels, Next/Undo, stats (game.ts)
+                and game-day changes: swaps, statuses, re-plan, overtime (changes.ts)
   data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts)
   screens/      One component per screen
   components/   Shared UI (top bar, toggles, sheets, update banner, install hint)
