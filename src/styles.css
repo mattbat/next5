@@ -843,6 +843,264 @@ input[type='date'] {
   min-width: 34px;
 }
 
+/* Game day
+   The screen is exactly one viewport tall. Everything keeps its normal size
+   when it fits; when it doesn't (e.g. 5 in / 5 out), the player rows, gaps
+   and buttons shrink a little instead of the page scrolling. */
+
+.game-day {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+
+.game-day > .topbar,
+.game-day > .progress {
+  flex: none;
+}
+
+.court,
+.changes {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.period-title {
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.progress {
+  display: flex;
+  gap: 3px;
+  margin: -2px 0 clamp(6px, 1.6dvh, 14px);
+}
+
+.progress span {
+  flex: 1;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+
+.progress span[data-period-start] {
+  margin-left: 4px;
+}
+
+.progress span.done {
+  background: var(--text-3);
+}
+
+.progress span.now {
+  background: var(--accent);
+}
+
+.court h2,
+.changes h2 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.court h2,
+.changes h2,
+.no-change,
+.switches {
+  flex: none;
+}
+
+.court ul,
+.changes ul {
+  display: flex;
+  flex: 0 1 auto;
+  flex-direction: column;
+  min-height: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.court li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 0 1 52px;
+  min-height: 34px;
+  padding: 0 14px;
+  margin-bottom: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+  transition: opacity 200ms ease;
+}
+
+.court li .jersey {
+  width: clamp(28px, 4.5dvh, 36px);
+  height: clamp(26px, 4.5dvh, 36px);
+}
+
+.court li.leaving {
+  background: linear-gradient(90deg, var(--out-bg), var(--surface) 70%);
+}
+
+.court-name {
+  flex: 1;
+  font-size: 19px;
+  font-weight: 700;
+}
+
+.court-pos {
+  color: var(--text-2);
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  padding: 3px 7px;
+  border-radius: 6px;
+}
+
+.badge.out {
+  background: var(--out);
+  color: #fff;
+}
+
+.changes {
+  margin-top: clamp(8px, 2dvh, 18px);
+}
+
+.no-change {
+  margin: 0;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text-2);
+}
+
+.sub {
+  display: grid;
+  grid-template-columns: 1.25fr 1fr;
+  gap: 6px;
+  flex: 0 1 56px;
+  min-height: 34px;
+  margin-bottom: 6px;
+}
+
+.sub-in,
+.sub-out {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 0;
+  padding: 0 12px;
+  border-radius: 12px;
+  min-width: 0;
+}
+
+.sub-in {
+  background: var(--in-bg);
+  border: 1px solid color-mix(in srgb, var(--in) 45%, transparent);
+}
+
+.sub-out {
+  background: var(--out-bg);
+  border: 1px solid color-mix(in srgb, var(--out) 40%, transparent);
+}
+
+.arrow {
+  font-size: 13px;
+}
+
+.arrow.in {
+  color: var(--in);
+}
+
+.arrow.out {
+  color: var(--out);
+}
+
+.sub-name {
+  font-size: 18px;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sub-pos {
+  margin-left: auto;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--in);
+}
+
+.switches {
+  color: var(--text-2);
+  font-size: 15px;
+  margin: 6px 0 0;
+}
+
+/* Buttons stay at the bottom of the screen, inside the safe area. */
+.game-footer {
+  display: flex;
+  flex: none;
+  gap: 10px;
+  margin-top: auto;
+  padding: 12px 0 calc(var(--safe-bottom) + 12px);
+}
+
+.game-footer .undo {
+  min-height: clamp(56px, 8.5dvh, 72px);
+  padding: 0 18px;
+}
+
+.game-footer .next {
+  flex: 1;
+  min-height: clamp(56px, 8.5dvh, 72px);
+  font-size: 24px;
+  letter-spacing: 0.02em;
+}
+
+/* Very short screens (a small phone in Safari with its toolbars showing). */
+@media (max-height: 600px) {
+  .game-day > .topbar {
+    min-height: 44px;
+    margin-bottom: 4px;
+  }
+
+  .court h2,
+  .changes h2 {
+    margin-bottom: 4px;
+    font-size: 12px;
+  }
+
+  .court li,
+  .sub {
+    min-height: 28px;
+    margin-bottom: 3px;
+  }
+
+  .court li .jersey {
+    width: 28px;
+    height: 26px;
+    font-size: 14px;
+  }
+
+  .game-footer {
+    padding-top: 8px;
+  }
+}
+
 .time-bar {
   width: 90px;
   height: 8px;

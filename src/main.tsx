@@ -5,7 +5,6 @@ import { ErrorBanner } from './components/ErrorBanner';
 import { UpdateBanner } from './components/UpdateBanner';
 import { requestPersistentStorage } from './data/db';
 import './styles.css';
-import './gameday.css';
 
 void requestPersistentStorage();
 

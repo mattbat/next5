@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 
 /**
- * The Game Day screen must show all five players, who replaces each of them,
- * and the Next button without any scrolling, at every phone size we support
- * (REQUIREMENTS.md §9). Sizes are the visible area in CSS pixels.
+ * The Game Day screen must show the five players on court, every IN/OUT
+ * pair, and the Next button without any scrolling, at every phone size we
+ * support (REQUIREMENTS.md §9). Sizes are the visible area in CSS pixels.
  */
 const SIZES = [
   { name: 'iPhone 16 Pro / 17, Home Screen app', width: 402, height: 874 },
@@ -26,13 +26,16 @@ for (const size of SIZES) {
       await page.getByRole('button', { name: 'Start game' }).click();
       await expect(page.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeVisible();
 
-      const lineup = page.getByRole('region', { name: 'On court now' });
-      const rows = lineup.getByRole('listitem');
-      await expect(rows).toHaveCount(5);
-      // The demo team has 10 players, so every spot changes at the first sub:
+      const rows = page.getByRole('region', { name: 'On court now' }).getByRole('listitem');
+      // The demo team has 10 players, so all five change at the first sub:
       // the worst case for space.
-      await expect(lineup.getByText(/In ·/)).toHaveCount(5);
-      for (let i = 0; i < 5; i++) await expect(rows.nth(i)).toBeInViewport({ ratio: 1 });
+      const subs = page.getByRole('region', { name: 'Next change' }).getByRole('listitem');
+      await expect(rows).toHaveCount(5);
+      await expect(subs).toHaveCount(5);
+      for (let i = 0; i < 5; i++) {
+        await expect(rows.nth(i)).toBeInViewport({ ratio: 1 });
+        await expect(subs.nth(i)).toBeInViewport({ ratio: 1 });
+      }
       await expect(page.getByRole('button', { name: 'Next' })).toBeInViewport({ ratio: 1 });
       await expect(page.getByRole('button', { name: '↶ Undo' })).toBeInViewport({ ratio: 1 });
 
@@ -46,8 +49,9 @@ for (const size of SIZES) {
       // Tap targets stay comfortably large even on the smallest screen.
       const next = await page.getByRole('button', { name: 'Next' }).boundingBox();
       expect(next!.height).toBeGreaterThanOrEqual(56);
+      // Rows may shrink to fit, but names must stay readable.
       const row = await rows.first().boundingBox();
-      expect(row!.height).toBeGreaterThanOrEqual(44);
+      expect(row!.height).toBeGreaterThanOrEqual(28);
     });
   });
 }

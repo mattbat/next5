@@ -47,6 +47,7 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   const next = page.getByRole('button', { name: 'Next' });
   await expect(next).toBeInViewport();
   await expect(page.getByRole('region', { name: 'On court now' }).getByRole('listitem')).toHaveCount(5);
+  await expect(page.getByRole('region', { name: 'Next change' })).toBeInViewport();
   await expectNoHorizontalScroll(page);
   const box = await next.boundingBox();
   expect(box!.height).toBeGreaterThanOrEqual(60);
