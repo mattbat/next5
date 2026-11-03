@@ -44,8 +44,21 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npx playwright install --with-deps webkit chromium
-      - run: npm run build
+      # Browsers are cached per Playwright version; only the system libraries
+      # they need are installed each run (much faster than a full download).
+      - id: playwright
+        run: echo "version=$(npx playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - id: browser-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ steps.playwright.outputs.version }}-webkit-chromium
+      - if: steps.browser-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps webkit chromium
+      - if: steps.browser-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps webkit chromium
+      # The other job type-checks, so just bundle here.
+      - run: npx vite build
       - run: npm run test:e2e
       - uses: actions/upload-artifact@v4
         if: failure()

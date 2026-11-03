@@ -187,7 +187,10 @@ describe('game day changes', () => {
       expect(next).toContain(forwardId);
       expect(next).not.toContain(replacedId);
     });
-    expect(screen.queryByRole('button', { name: new RegExp(`^In: ${replacedName}`) })).not.toBeInTheDocument();
+    // The screen redraws a moment after the save.
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: new RegExp(`^In: ${replacedName}`) })).not.toBeInTheDocument(),
+    );
     expect((await savedGame(game.id)).events.at(-1)?.kind).toBe('swap-next');
   });
 
