@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Empty, Section, TopBar } from '../components/ui';
 import { InstallHint } from '../components/InstallHint';
 import { db } from '../data/db';
+import { backUp, backupReminderDue, lastBackupAt, snoozeReminder } from '../data/backup';
 import { createDemoTeam, createTeam } from '../data/repo';
 import { navigate, paths } from '../router';
 
@@ -15,6 +16,14 @@ export function TeamsScreen() {
     return map;
   });
   const [name, setName] = useState('');
+  const [reminderHidden, setReminderHidden] = useState(false);
+  const [backupMessage, setBackupMessage] = useState<string | null>(null);
+  const showReminder = !reminderHidden && backupReminderDue((teams?.length ?? 0) > 0);
+
+  const runBackup = async () => {
+    setBackupMessage(await backUp());
+    setReminderHidden(true);
+  };
 
   const add = async () => {
     if (!name.trim()) return;
@@ -25,8 +34,46 @@ export function TeamsScreen() {
 
   return (
     <main className="screen with-footer">
-      <TopBar title={<span className="brand">next<span>5</span></span>} />
+      <TopBar
+        title={<span className="brand">next<span>5</span></span>}
+        action={
+          <a className="link" href={paths.settings()}>
+            Settings
+          </a>
+        }
+      />
       <InstallHint />
+      {showReminder && (
+        <aside className="callout" aria-label="Back up your teams">
+          <strong>Back up your teams</strong>
+          <p>
+            {lastBackupAt() === null
+              ? 'Your teams and games are saved only on this phone.'
+              : 'It’s been over a month since your last backup.'}{' '}
+            A backup file keeps them safe if the app is deleted.
+          </p>
+          <div className="footer-row">
+            <button type="button" className="btn small" onClick={() => void runBackup()}>
+              Back up now
+            </button>
+            <button
+              type="button"
+              className="link"
+              onClick={() => {
+                snoozeReminder();
+                setReminderHidden(true);
+              }}
+            >
+              Later
+            </button>
+          </div>
+        </aside>
+      )}
+      {backupMessage && (
+        <p className="notice" role="status">
+          {backupMessage}
+        </p>
+      )}
       <Section title="Teams">
         {teams && teams.length === 0 && (
           <Empty>
@@ -77,7 +124,7 @@ export function TeamsScreen() {
             onChange={(e) => setName(e.target.value)}
           />
           <button type="submit" className="btn" disabled={!name.trim()}>
-            Add team
+            Add
           </button>
         </form>
       </footer>

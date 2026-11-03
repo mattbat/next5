@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Empty, Info, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from '../components/ui';
+import { backUp } from '../data/backup';
 import { db } from '../data/db';
 import { SKILL_LEVELS } from '../data/defaults';
 import { createGame, deleteTeam, updateTeam } from '../data/repo';
@@ -223,6 +224,8 @@ function TeamSettings({ team }: { team: Team }) {
         ))}
       </Section>
 
+      <TeamBackup team={team} />
+
       <Section title="Danger zone">
         <button
           type="button"
@@ -237,5 +240,25 @@ function TeamSettings({ team }: { team: Team }) {
         </button>
       </Section>
     </>
+  );
+}
+
+/** Backs up just this team (B1), e.g. to hand it to another coach. */
+function TeamBackup({ team }: { team: Team }) {
+  const [message, setMessage] = useState<string | null>(null);
+  return (
+    <Section title="Backup">
+      <button type="button" className="btn secondary wide" onClick={() => void backUp(team.id, team.name).then(setMessage)}>
+        Back up this team
+      </button>
+      {message && (
+        <p className="notice" role="status">
+          {message}
+        </p>
+      )}
+      <p className="hint">
+        Saves this team with its players and games. To back up every team, or to restore, use Settings on the Teams screen.
+      </p>
+    </Section>
   );
 }

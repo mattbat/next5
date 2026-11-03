@@ -73,7 +73,15 @@ Playing time is counted in lineups, not minutes. The goal is best-effort fairnes
 
 ### Your data
 
-Everything is saved on your phone as you go. There is no Save button. Your data is **lost if you delete the app from the Home Screen** or clear Safari's website data. A backup feature is coming (see [docs/STATUS.md](docs/STATUS.md)).
+Everything is saved on your phone as you go. There is no Save button. Your data is **lost if you delete the app from the Home Screen** or clear Safari's website data, so back it up now and then:
+
+- **Back up:** on the Teams screen tap **Settings** (top right) → **Back up all teams**. The share sheet opens: choose **Save to Files** (iCloud Drive is a good place) or AirDrop it to another device. To back up just one team, open the team → **Settings** tab → **Back up this team**.
+- **Restore:** **Settings** → **Restore from a backup file** and pick the file. next5 shows what's in it, then:
+  - **Merge into this phone** adds anything missing; where both have a copy, the more recently changed one is kept. Nothing is deleted.
+  - **Replace everything** makes the phone exactly match the backup (you're asked to confirm first).
+- **Reminder:** if you've never backed up, or it's been over a month, the Teams screen reminds you. **Later** hides it for a week.
+
+Settings also has **Check for updates** and the app version.
 
 ### Updates
 
@@ -128,7 +136,8 @@ src/
     substitutions.ts  works out IN/OUT pairs between two lineups
   domain/       Game logic shared by screens: labels, Next/Undo, stats (game.ts)
                 and game-day changes: swaps, statuses, re-plan, overtime (changes.ts)
-  data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts)
+  data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts),
+                backup files and restore (backup.ts), share sheet / download (share.ts)
   screens/      One component per screen
   components/   Shared UI (top bar, toggles, sheets, update banner, install hint)
   hooks/        useGameData, useWakeLock

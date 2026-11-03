@@ -1365,3 +1365,33 @@ button.sub-in {
 .footer.add-team .inline-form {
   margin-top: 0;
 }
+
+/* Confirmation messages (e.g. "Backup ready"). */
+.notice {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--in-bg);
+  color: #bbf7d0;
+  font-size: 15px;
+}
+
+.restore p {
+  margin: 0 0 10px;
+}
+
+.restore .hint {
+  margin: 4px 0 14px;
+}
+
+.callout .footer-row {
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Room for the whole "New team name, e.g. 8U Thunder" placeholder on iPhone.
+   16px keeps iOS from zooming into the field. */
+.footer.add-team input {
+  padding: 0 10px;
+  font-size: 16px;
+}
