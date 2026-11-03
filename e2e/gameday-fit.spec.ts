@@ -49,6 +49,8 @@ for (const size of SIZES) {
       // Tap targets stay comfortably large even on the smallest screen.
       const next = await page.getByRole('button', { name: 'Next' }).boundingBox();
       expect(next!.height).toBeGreaterThanOrEqual(56);
+      // Next sits at the bottom of the screen, with no empty band below it.
+      expect(size.height - (next!.y + next!.height), 'space below Next').toBeLessThanOrEqual(16);
       // Rows may shrink to fit, but names must stay readable.
       const row = await rows.first().boundingBox();
       expect(row!.height).toBeGreaterThanOrEqual(28);

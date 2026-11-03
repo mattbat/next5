@@ -848,11 +848,15 @@ input[type='date'] {
    when it fits; when it doesn't (e.g. 5 in / 5 out), the player rows, gaps
    and buttons shrink a little instead of the page scrolling. */
 
+/* Pinned to all four edges rather than sized with 100dvh: in a Home Screen
+   app with a translucent status bar, iOS reports 100dvh as the screen height
+   minus the status bar, which left a gap under the buttons. */
 .game-day {
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  height: 100dvh;
+  width: 100%;
   min-height: 0;
   padding-bottom: 0;
   overflow: hidden;
@@ -1056,7 +1060,8 @@ input[type='date'] {
   flex: none;
   gap: 10px;
   margin-top: auto;
-  padding: 12px 0 calc(var(--safe-bottom) + 12px);
+  /* Just clear of the home indicator on Face ID iPhones; 12px elsewhere. */
+  padding: 12px 0 max(12px, var(--safe-bottom));
 }
 
 .game-footer .undo {
