@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, and plan editing (G5a–G9). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), and stats with CSV export (S3–S5). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (plan editing: segment stepper, locks, swaps, redo from here)
+Last updated: 2026-11-03 (game and season stats, CSV export)
 
 ## 3. Platform and technical
 
@@ -94,11 +94,11 @@ Last updated: 2026-11-03 (plan editing: segment stepper, locks, swaps, redo from
 
 | ID | Status | Notes |
 |----|--------|-------|
-| S1 | ✅ | Each game stores its setup, plan, played lineups (including mid-segment swaps) and a log of every change. |
+| S1 | ✅ | Each game stores its setup, plan, the plan as it stood at the start (`startPlan`), played lineups (including mid-segment swaps) and a log of every change. Games started before `startPlan` was added use their final plan instead. |
 | S2 | ✅ | Games tab lists games with their status; finished games open their summary, including "Changes from the plan". |
-| S3 | 🟡 | The summary shows segments played per player. Planned segments, segments sat and positions played are not shown yet. |
-| S4 | ⬜ | Season stats. |
-| S5 | ⬜ | CSV export. |
+| S3 | ✅ | The Final screen shows a table per player: Plan (the plan at the start), Played, Sat, and Positions (e.g. "G 3 · F 1"). Played below plan is highlighted. Players subbed out partway through a segment get credit for it. Segments a player was injured, resting or not yet there aren't counted as sat. |
+| S4 | ✅ | New **Stats** tab on the team (tabs are Games, Roster, Stats, Settings). One row per active player, plus inactive players who played: games, segments played, % of available segments played, and segments by position. Counts finished games only. |
+| S5 | ✅ | **Export stats (CSV)** on the Final screen and **Export season stats (CSV)** on the Stats tab, through the share sheet (download where sharing isn't available). Files are UTF-8 with a byte-order mark and CRLF line endings, so Excel opens names with accents correctly. Skill levels are never included. |
 | S6 | ⬜ | Approximate minutes. |
 
 ## 11. Data and backup
@@ -134,7 +134,7 @@ Last updated: 2026-11-03 (plan editing: segment stepper, locks, swaps, redo from
 | N5 | ✅ | README → "How the rotation engine works". |
 | Q-1 | ✅ | `npm run check` runs everything. |
 | Q-2 | ✅ | Example and property tests, plus a performance check. |
-| Q-3 | 🟡 | Storage, migrations, backup and restore, game logic, game-day changes, plan editing and screens are covered. CSV tests will come with that feature. |
+| Q-3 | ✅ | Storage, migrations, backup and restore, game logic, game-day changes, plan editing, stats and CSV export, and screens are covered. |
 | Q-4 | ✅ | WebKit at iPhone sizes: the full game flow (including stepping through the plan and a lock), adding players, an injury with re-plan and overtime, and Game Day fitting five screen sizes. Offline launch in Chromium. Data surviving an update is covered by the migration test (T7). |
 | Q-5 | ✅ | Enforced: 95% for the engine and 80% overall. Currently about 100% and 97%. |
 | Q-6 | ✅ | `.github/workflows/ci.yml`. |
@@ -153,12 +153,12 @@ In priority order:
 1. ~~Mid-game: swap now (D4), player status (D5), re-plan from here (D6), overtime and extra segments (D11).~~ Done.
 2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
-4. Stats: full per-game stats (S3), season stats (S4), CSV export (S5).
+4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
 5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
 
 ## Small changes requested
 
-- [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
+- [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Stats was added after Roster on 2026-11-03: Games, Roster, Stats, Settings. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
 - [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)

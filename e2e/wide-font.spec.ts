@@ -35,6 +35,8 @@ test('every screen fits a narrow phone even with a wide font', async ({ page }) 
   await page.getByRole('button', { name: /Avery/ }).click();
   await expectFits(page, 'Player editor');
   await page.getByRole('button', { name: 'Done' }).click();
+  await page.getByRole('radio', { name: 'Stats' }).click();
+  await expectFits(page, 'Team: Stats (empty)');
   await page.getByRole('radio', { name: 'Settings' }).click();
   await expectFits(page, 'Team: Settings');
 

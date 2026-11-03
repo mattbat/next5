@@ -27,3 +27,10 @@ export async function shareFile(name: string, text: string, type = 'application/
   setTimeout(() => URL.revokeObjectURL(url), 10_000);
   return 'downloaded';
 }
+
+/** Shares a CSV file (S5) and says what happened, for a status message. */
+export async function shareCsv(name: string, csv: string): Promise<string> {
+  const outcome = await shareFile(name, csv, 'text/csv');
+  if (outcome === 'cancelled') return 'Export cancelled.';
+  return outcome === 'shared' ? 'Stats exported.' : 'Stats file downloaded.';
+}

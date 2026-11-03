@@ -42,7 +42,8 @@ It opens full screen like any other app and works in gyms with no signal.
 
    Every change is kept as a 🔒 lock, and the rest of the plan adjusts straight away to keep playing time fair, changing as little as possible. **↶ Undo** reverses the last change. **🔒 Lock lineup** keeps a whole five, such as your closing lineup. **↻ Redo from here** makes new lineups from that segment on, keeping earlier segments and every lock. **Grid** shows the whole game: players (rows) by lineups (columns), a letter for the position, a ring for a lock-in, ✕ for a lock-out, and each player's total. **↻ Shuffle** makes a whole new plan that is just as fair, still keeping your locks.
 6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next by mistake? Tap **↶ Undo**.
-7. After the last lineup tap **End game** to see everyone's playing time. The game is saved in the team's history.
+7. After the last lineup tap **End game** to see everyone's playing time: segments planned, played and sat, and the positions they played. **Export stats (CSV)** sends the table to Files, Mail or Numbers. The game is saved in the team's history.
+8. **Season stats.** The team's **Stats** tab adds up every finished game: games, segments played, the share of available segments they played, and segments at each position. **Export season stats (CSV)** opens in Excel, Numbers or Google Sheets. Skill levels are never exported.
 
 The screen stays awake during a game. If the phone locks anyway, or you switch apps, next5 picks up exactly where you left off.
 
