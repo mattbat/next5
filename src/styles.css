@@ -379,8 +379,16 @@ input[type='date'] {
 
 /* Checkbox rows */
 
+/* Hidden native inputs stay inside their own row, so they can never widen the page. */
+.list-item.check,
+.toggle-label {
+  position: relative;
+}
+
 .list-item.check input {
   position: absolute;
+  left: 0;
+  top: 0;
   opacity: 0;
   pointer-events: none;
 }
@@ -481,6 +489,8 @@ input[type='date'] {
 
 .toggle-label input {
   position: absolute;
+  left: 0;
+  top: 0;
   opacity: 0;
   pointer-events: none;
 }

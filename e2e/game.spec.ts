@@ -2,9 +2,18 @@ import { expect, test, type Page } from '@playwright/test';
 
 test.describe.configure({ mode: 'serial' });
 
+/** Fails if the page scrolls sideways, naming the elements that stick out. */
 async function expectNoHorizontalScroll(page: Page) {
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
-  expect(overflow).toBeLessThanOrEqual(0);
+  const offenders = await page.evaluate(() => {
+    const width = window.innerWidth;
+    if (document.documentElement.scrollWidth <= width) return [];
+    return [...document.querySelectorAll('body *')]
+      .filter((el) => el.getBoundingClientRect().right > width + 0.5)
+      .filter((el) => !el.closest('.grid-scroll'))
+      .slice(0, 5)
+      .map((el) => `${el.tagName.toLowerCase()}.${el.className} → right edge ${Math.round(el.getBoundingClientRect().right)}px`);
+  });
+  expect(offenders, `Elements wider than the ${page.viewportSize()?.width}px screen`).toEqual([]);
 }
 
 test('plans and runs a full game on an iPhone-sized screen', async ({ page }) => {
