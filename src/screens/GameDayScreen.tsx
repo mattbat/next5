@@ -5,6 +5,7 @@ import type { Game, GameEvent, Player, Team } from '../data/types';
 import {
   addSegments,
   benchFor,
+  describeSwapWarning,
   markArrived,
   planConflicts,
   replan,
@@ -13,6 +14,7 @@ import {
   swapNext,
   swapNow,
   type ReplanResult,
+  type SwapResult,
 } from '../domain/changes';
 import { nextSegment, playingTime, segmentLabel, undoSegment } from '../domain/game';
 import { substitutions, type Lineup } from '../engine';
@@ -24,6 +26,7 @@ import {
   GameMenuSheet,
   PlayerActionsSheet,
   ReplanSheet,
+  type PendingSwap,
   type PlayerAction,
 } from './GameChanges';
 
@@ -66,6 +69,8 @@ type Sheet =
 function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Player[]; byId: Map<string, Player> }) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // A swap that breaks a rule, shown as a warning until the coach confirms it.
+  const [pending, setPending] = useState<(PendingSwap & { apply: () => void }) | null>(null);
 
   const current = game.plan[game.current]!;
   const next: Lineup | undefined = game.plan[game.current + 1];
@@ -82,6 +87,21 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   const close = () => {
     setSheet(null);
     setError(null);
+    setPending(null);
+  };
+
+  const names = new Map(roster.map((p) => [p.id, p.name]));
+
+  /** Applies a swap now, or first warns about the rules it breaks (never blocks). */
+  const confirmOrApply = (inId: string, result: SwapResult, apply: (changed: Game) => void) => {
+    if (!result.ok) return setError(result.message);
+    const run = () => apply(result.game);
+    if (result.warnings.length === 0) return run();
+    setPending({
+      playerId: inId,
+      warnings: result.warnings.map((w) => describeSwapWarning(w, result.game, team.positions, names)),
+      apply: run,
+    });
   };
 
   /** Saves a change, then offers to re-plan the rest of the game around it. */
@@ -110,20 +130,19 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     }
   };
 
-  const pickNow = (outId: string, inId: string, thenOut: boolean) => {
-    const result = swapNow(game, team, roster, outId, inId);
-    if (!result.ok) return setError(result.message);
-    if (thenOut) return void saveAndOfferReplan(setStatus(result.game, outId, { kind: 'out' }));
-    void saveGame(result.game);
-    close();
-  };
+  const pickNow = (outId: string, inId: string, thenOut: boolean) =>
+    confirmOrApply(inId, swapNow(game, team, roster, outId, inId), (changed) => {
+      setPending(null);
+      if (thenOut) return void saveAndOfferReplan(setStatus(changed, outId, { kind: 'out' }));
+      void saveGame(changed);
+      close();
+    });
 
-  const pickNext = (outId: string, inId: string) => {
-    const result = swapNext(game, team, roster, outId, inId);
-    if (!result.ok) return setError(result.message);
-    void saveGame(result.game);
-    close();
-  };
+  const pickNext = (outId: string, inId: string) =>
+    confirmOrApply(inId, swapNext(game, team, roster, outId, inId), (changed) => {
+      void saveGame(changed);
+      close();
+    });
 
   const overtime = () => {
     const result = addSegments(game, team, roster);
@@ -270,8 +289,13 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           }
           candidates={benchFor(game, game.current)}
           byId={byId}
+          positions={team.positions}
+          spotPosition={current.find((s) => s.playerId === sheet.outId)?.positionId ?? null}
           error={error}
+          pending={pending}
           onPick={(inId) => pickNow(sheet.outId, inId, sheet.thenOut)}
+          onConfirm={() => pending?.apply()}
+          onCancelPending={() => setPending(null)}
           onClose={close}
         />
       )}
@@ -281,8 +305,13 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           hint={`Changes the ${nextLabel?.text ?? 'next'} lineup only.`}
           candidates={benchFor(game, game.current + 1)}
           byId={byId}
+          positions={team.positions}
+          spotPosition={next?.find((s) => s.playerId === sheet.outId)?.positionId ?? null}
           error={error}
+          pending={pending}
           onPick={(inId) => pickNext(sheet.outId, inId)}
+          onConfirm={() => pending?.apply()}
+          onCancelPending={() => setPending(null)}
           onClose={close}
         />
       )}

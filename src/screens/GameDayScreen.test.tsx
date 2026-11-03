@@ -24,8 +24,16 @@ async function goTo(hash: string) {
 }
 
 /** A live demo-team game, optionally with one player not attending. */
-async function startLiveGame(options: { absent?: string; advance?: number } = {}): Promise<Game> {
+async function startLiveGame(options: { absent?: string; advance?: number; onlyCenter?: string } = {}): Promise<Game> {
   const team = await createDemoTeam();
+  if (options.onlyCenter) {
+    // Make one player the only center, so taking them off leaves Center uncovered.
+    for (const p of await db.players.toArray()) {
+      if (p.name === options.onlyCenter || p.skills.C === undefined) continue;
+      const rest = Object.fromEntries(Object.entries(p.skills).filter(([pos]) => pos !== 'C'));
+      await updatePlayer(p.id, { skills: Object.keys(rest).length > 0 ? rest : { F: 2 } });
+    }
+  }
   const roster = await db.players.toArray();
   let game = await createGame(team);
   if (options.absent) {
@@ -39,6 +47,12 @@ async function startLiveGame(options: { absent?: string; advance?: number } = {}
   await saveGame(game);
   await goTo(`#/game/${game.id}/live`);
   return game;
+}
+
+/** Taps Swap anyway if the swap broke a rule (swaps warn, never block). */
+async function confirmIfWarned(user: ReturnType<typeof userEvent.setup>) {
+  const anyway = screen.queryByRole('button', { name: 'Swap anyway' });
+  if (anyway) await user.click(anyway);
 }
 
 const savedGame = async (id: string) => (await db.games.get(id))!;
@@ -58,13 +72,9 @@ describe('game day changes', () => {
     await user.click(screen.getByRole('button', { name: 'Sub out now' }));
     const chooser = screen.getByRole('dialog', { name: `Who replaces ${leaving}?` });
     expect(within(chooser).getByText(/Both players get credit/)).toBeInTheDocument();
-    const options = within(chooser).getAllByRole('button').filter((b) => b.classList.contains('list-item'));
-    // Try candidates until one keeps the positions covered (others are explained).
-    for (const option of options) {
-      await user.click(option);
-      if (!screen.queryByRole('dialog')) break;
-      expect(within(chooser).getByRole('alert')).toHaveTextContent(/would leave no one to play/);
-    }
+    // Players who can play the open spot come first; pick the first one.
+    await user.click(within(chooser).getAllByRole('button').filter((b) => b.classList.contains('list-item'))[0]!);
+    await confirmIfWarned(user);
     await waitFor(() => expect(courtNames()).not.toContain(leaving));
     const saved = await savedGame(game.id);
     expect(saved.subbedOut).toHaveLength(1);
@@ -87,6 +97,7 @@ describe('game day changes', () => {
       .getAllByRole('button')
       .find((b) => roster.find((p) => p.name === b.querySelector('.list-title')?.textContent)?.skills.G)!;
     await user.click(benchGuard);
+    await confirmIfWarned(user);
 
     const preview = await screen.findByRole('dialog', { name: 'Re-plan the rest of the game' });
     expect(within(preview).getByText(/upcoming lineups? will change/)).toBeInTheDocument();
@@ -168,6 +179,9 @@ describe('game day changes', () => {
     const forwardId = roster.find((p) => p.name === forward.querySelector('.list-title')!.textContent)!.id;
     const replacedId = roster.find((p) => p.name === replacedName)!.id;
     await user.click(forward);
+    // Keeping a player on for an extra segment breaks equal time: warned, not blocked.
+    expect(screen.getByText(/Playing time isn't equal/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Swap anyway' }));
     await waitFor(async () => {
       const next = (await savedGame(game.id)).plan[1]!.map((s) => s.playerId);
       expect(next).toContain(forwardId);
@@ -222,5 +236,47 @@ describe('game day changes', () => {
     await user.click(await screen.findByRole('button', { name: 'Edit' }));
     expect(screen.queryByRole('button', { name: /Show players not here/ })).not.toBeInTheDocument();
     expect(game.status).toBe('live');
+  });
+
+  it('lists players who can play the open position first, with their positions', async () => {
+    const user = userEvent.setup();
+    await startLiveGame();
+    render(<App />);
+    await user.click((await screen.findAllByRole('button', { name: /Center: change$/ }))[0]!);
+    await user.click(screen.getByRole('button', { name: 'Sub out now' }));
+    const fits = screen.getByRole('list', { name: 'Can play Center' });
+    const others = screen.getByRole('list', { name: 'Other players' });
+    // Every player in the first group plays Center, highlighted; nobody below does.
+    for (const item of within(fits).getAllByRole('listitem')) {
+      expect(item.querySelector('.chip.match')).toHaveTextContent('C');
+    }
+    for (const item of within(others).getAllByRole('listitem')) {
+      expect(item.querySelector('.chip.match')).toBeNull();
+      expect(item.querySelectorAll('.chip').length).toBeGreaterThan(0);
+    }
+  });
+
+  it('warns before a swap that leaves a position uncovered, and lets the coach go ahead', async () => {
+    const user = userEvent.setup();
+    const game = await startLiveGame({ onlyCenter: 'Casey' });
+    render(<App />);
+    const center = (await screen.findAllByRole('button', { name: /Center: change$/ }))[0]!;
+    const centerName = center.querySelector('.court-name')!.textContent!;
+    await user.click(center);
+    await user.click(screen.getByRole('button', { name: 'Sub out now' }));
+    const nonCenter = within(screen.getByRole('list', { name: /players/i })).getAllByRole('button')[0]!;
+    const nonCenterName = nonCenter.querySelector('.list-title')!.textContent!;
+
+    // Pick someone else first, then go ahead anyway.
+    await user.click(nonCenter);
+    expect(screen.getByText(/Nobody on the court is covering Center/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Pick someone else' }));
+    expect(screen.getByRole('list', { name: /players/i })).toBeInTheDocument();
+    await user.click(within(screen.getByRole('list', { name: /players/i })).getAllByRole('button')[0]!);
+    await user.click(screen.getByRole('button', { name: 'Swap anyway' }));
+
+    await waitFor(() => expect(courtNames()).toContain(nonCenterName));
+    expect(courtNames()).not.toContain(centerName);
+    expect((await savedGame(game.id)).events.at(-1)?.kind).toBe('swap-now');
   });
 });

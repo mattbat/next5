@@ -114,13 +114,13 @@ test('handles an injury, re-plans, and goes to overtime', async ({ page }) => {
   await page.getByRole('button', { name: /Injured or leaving/ }).click();
   const chooser = page.getByRole('dialog', { name: `Who replaces ${injured}?` });
   const preview = page.getByRole('dialog', { name: 'Re-plan the rest of the game' });
-  // Try bench players until one keeps the positions covered; others are explained.
-  const candidates = await chooser.locator('.list-title').allTextContents();
-  for (const name of candidates) {
-    await chooser.getByRole('button', { name: new RegExp(name) }).click();
-    await expect(preview.or(chooser.getByRole('alert'))).toBeVisible();
-    if (await preview.isVisible()) break;
-  }
+  // Players who can play the open spot are listed first, with their positions.
+  await expect(chooser.getByRole('list', { name: 'Can play Guard' })).toBeVisible();
+  await chooser.getByRole('list', { name: 'Can play Guard' }).getByRole('button').first().click();
+  // A swap may break a scheduling rule: that's a warning, never a block.
+  const anyway = page.getByRole('button', { name: 'Swap anyway' });
+  await expect(preview.or(anyway)).toBeVisible();
+  if (await anyway.isVisible()) await anyway.click();
   await expect(preview).toBeVisible();
   await preview.getByRole('button', { name: 'Use new plan' }).click();
   await expect(preview).toBeHidden();

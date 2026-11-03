@@ -1151,6 +1151,32 @@ button.sub-in {
   font-size: 11px;
 }
 
+/* Position letters in the sub chooser; the open spot's position is highlighted. */
+.chip.match {
+  background: var(--in-bg);
+  color: var(--in);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--in) 50%, transparent);
+}
+
+/* Warning shown before a swap that breaks a rule (never a block). */
+.confirm {
+  margin: 4px 0 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
+}
+
+.confirm strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #fde68a;
+}
+
+.confirm .warnings {
+  margin: 0;
+}
+
 .list-title.event {
   font-weight: 500;
   font-size: 15px;

@@ -8,6 +8,7 @@ import {
   availableAt,
   benchFor,
   changedSegments,
+  describeSwapWarning,
   markArrived,
   planConflicts,
   replan,
@@ -117,12 +118,36 @@ describe('swapNow', () => {
     expect(time.get(into)).toBe(1);
   });
 
-  it('blocks a swap that would leave a required position uncovered', () => {
+  it('allows a swap that leaves a required position uncovered, with a warning', () => {
     const game = liveGame();
     const center = game.plan[0]!.find((s) => s.positionId === 'C')!.playerId;
     const forward = benchFor(game, 0).find((id) => roster.find((p) => p.id === id)!.skills.F)!;
-    const result = swapNow(game, team, roster, center, forward);
-    expect(result).toEqual({ ok: false, message: expect.stringMatching(/would leave no one to play Center/) });
+    const result = unwrap(swapNow(game, team, roster, center, forward));
+    expect(onCourt(result.game)).toContain(forward);
+    expect(result.warnings).toContainEqual({ kind: 'uncovered', positions: ['C'] });
+    // The forward keeps playing forward; nobody is shown at Center.
+    expect(result.game.plan[0]!.find((s) => s.playerId === forward)!.positionId).toBe('F');
+    expect(describeSwapWarning(result.warnings[0]!, result.game, team.positions, new Map())).toBe(
+      'Nobody on the court is covering Center.',
+    );
+  });
+
+  it('gives the incoming player the leaving player’s position when they can play it', () => {
+    const game = liveGame();
+    const center = game.plan[0]!.find((s) => s.positionId === 'C')!.playerId;
+    const otherCenter = benchFor(game, 0).find((id) => roster.find((p) => p.id === id)!.skills.C);
+    if (!otherCenter) return;
+    const result = unwrap(swapNow(game, team, roster, center, otherCenter));
+    expect(result.warnings).toEqual([]);
+    expect(result.game.plan[0]!.find((s) => s.playerId === otherCenter)!.positionId).toBe('C');
+  });
+
+  it('does not warn about uncovered positions when position coverage is off', () => {
+    const game = { ...liveGame(), rules: { ...DEFAULT_RULES, positionCoverage: false } };
+    const center = game.plan[0]!.find((s) => s.positionId === 'C')!.playerId;
+    const forward = benchFor(game, 0).find((id) => roster.find((p) => p.id === id)!.skills.F)!;
+    const result = unwrap(swapNow(game, team, roster, center, forward));
+    expect(result.warnings.filter((w) => w.kind === 'uncovered')).toEqual([]);
   });
 
   it('rejects players who are not on the court or not available', () => {
@@ -165,6 +190,19 @@ describe('swapNext', () => {
     expect(onCourt(swapped, 1)).toContain(into);
     expect(onCourt(swapped, 0)).toEqual(onCourt(game, 0));
     expect(swapped.events.at(-1)).toMatchObject({ kind: 'swap-next', segment: 1 });
+  });
+
+  it('warns, in plain language, when a swap breaks a scheduling rule', () => {
+    const game = liveGame();
+    // Keep someone from the current lineup on for the next one: they play an
+    // extra segment and the player they replace one fewer.
+    const stayer = game.plan[0]!.find((s) => s.positionId === 'F')!.playerId;
+    const out = game.plan[1]!.find((s) => s.positionId === 'F')!.playerId;
+    const result = unwrap(swapNext(game, team, roster, out, stayer));
+    const rule = result.warnings.find((w) => w.kind === 'rule');
+    expect(rule).toMatchObject({ kind: 'rule', warning: { kind: 'equal-time' } });
+    const names = new Map(roster.map((p) => [p.id, p.name]));
+    expect(describeSwapWarning(rule!, result.game, team.positions, names)).toMatch(/Playing time isn't equal/);
   });
 
   it('rejects swaps that make no sense', () => {

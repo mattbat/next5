@@ -1,11 +1,10 @@
 import { useState } from 'react';
 import { Jersey, Sheet } from '../components/ui';
-import type { Game, Player } from '../data/types';
+import type { Game, Player, Position } from '../data/types';
 import { benchFor, statusLabel, type ReplanResult } from '../domain/changes';
 import { describeWarning, segmentLabel } from '../domain/game';
 
 /** Sheets for game-day changes (REQUIREMENTS.md D4–D6, D11). */
-
 
 function PlayerRow({ player, meta, onClick }: { player: Player | undefined; meta?: string | null; onClick: () => void }) {
   return (
@@ -22,25 +21,95 @@ function PlayerRow({ player, meta, onClick }: { player: Player | undefined; meta
   );
 }
 
-/** Pick a player from a list, e.g. who comes in. */
+/** A swap that breaks a rule, waiting for the coach to confirm it. */
+export interface PendingSwap {
+  playerId: string;
+  warnings: string[];
+}
+
+/**
+ * Pick who comes in. Players who can play the open spot's position are listed
+ * first; everyone else follows. Each player shows the positions they play.
+ */
 export function ChoosePlayerSheet({
   title,
   hint,
   candidates,
   byId,
+  positions,
+  spotPosition,
   error,
+  pending,
   onPick,
+  onConfirm,
+  onCancelPending,
   onClose,
 }: {
   title: string;
   hint?: string;
   candidates: string[];
   byId: Map<string, Player>;
+  positions: Position[];
+  /** Position of the spot being filled; its players are listed first. */
+  spotPosition: string | null;
   error?: string | null;
+  pending?: PendingSwap | null;
   onPick: (playerId: string) => void;
+  onConfirm: () => void;
+  onCancelPending: () => void;
   onClose: () => void;
 }) {
-  const sorted = [...candidates].sort((a, b) => (byId.get(a)?.name ?? '').localeCompare(byId.get(b)?.name ?? ''));
+  const byName = (a: string, b: string) => (byId.get(a)?.name ?? '').localeCompare(byId.get(b)?.name ?? '');
+  const canPlaySpot = (id: string) => spotPosition !== null && byId.get(id)?.skills[spotPosition] !== undefined;
+  const fits = candidates.filter(canPlaySpot).sort(byName);
+  const others = candidates.filter((id) => !canPlaySpot(id)).sort(byName);
+  const spotName = positions.find((p) => p.id === spotPosition)?.name;
+
+  const row = (id: string) => {
+    const player = byId.get(id);
+    return (
+      <li key={id}>
+        <button type="button" className="list-item" onClick={() => onPick(id)}>
+          <Jersey number={player?.number ?? ''} />
+          <span className="list-title">{player?.name ?? 'Unknown'}</span>
+          <span className="chips" aria-label="Plays">
+            {positions
+              .filter((pos) => player?.skills[pos.id] !== undefined)
+              .map((pos) => (
+                <span key={pos.id} className={`chip ${pos.id === spotPosition ? 'match' : ''}`} title={pos.name}>
+                  {pos.short}
+                </span>
+              ))}
+          </span>
+        </button>
+      </li>
+    );
+  };
+
+  if (pending) {
+    const player = byId.get(pending.playerId);
+    return (
+      <Sheet title={title} onClose={onClose}>
+        <div className="confirm" role="alert">
+          <strong>Heads up: putting in {player?.name ?? 'this player'} breaks your rules.</strong>
+          <ul className="warnings">
+            {pending.warnings.map((w) => (
+              <li key={w}>{w}</li>
+            ))}
+          </ul>
+        </div>
+        <div className="footer-row">
+          <button type="button" className="btn secondary" onClick={onCancelPending}>
+            Pick someone else
+          </button>
+          <button type="button" className="btn grow" onClick={onConfirm}>
+            Swap anyway
+          </button>
+        </div>
+      </Sheet>
+    );
+  }
+
   return (
     <Sheet title={title} onClose={onClose}>
       {hint && <p className="hint">{hint}</p>}
@@ -49,14 +118,22 @@ export function ChoosePlayerSheet({
           {error}
         </p>
       )}
-      {sorted.length === 0 ? (
-        <p className="empty">Nobody is available.</p>
-      ) : (
-        <ul className="list">
-          {sorted.map((id) => (
-            <PlayerRow key={id} player={byId.get(id)} onClick={() => onPick(id)} />
-          ))}
-        </ul>
+      {candidates.length === 0 && <p className="empty">Nobody is available.</p>}
+      {fits.length > 0 && (
+        <>
+          <h3 className="sheet-sub">Can play {spotName}</h3>
+          <ul className="list" aria-label={`Can play ${spotName}`}>
+            {fits.map(row)}
+          </ul>
+        </>
+      )}
+      {others.length > 0 && (
+        <>
+          <h3 className="sheet-sub">{fits.length > 0 ? 'Other players' : 'Players'}</h3>
+          <ul className="list" aria-label={fits.length > 0 ? 'Other players' : 'Players'}>
+            {others.map(row)}
+          </ul>
+        </>
       )}
     </Sheet>
   );

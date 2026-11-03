@@ -29,7 +29,7 @@ Last updated: 2026-11-03
 |----|--------|-------|
 | Quarters / halves, segments per period | ✅ | Defaults: quarters × 2, halves × 4. |
 | Overtime / extra segments | ✅ | See D11. |
-| H1 Position coverage | 🟡 | Enforced by the engine, and game-day swaps that would break it are blocked with a message naming the missing position. When coverage is impossible the app explains what's missing, but doesn't yet offer one-tap "for this game only" fixes. |
+| H1 Position coverage | 🟡 | Always enforced in generated plans. During a game, a coach-picked swap that leaves a position uncovered is allowed after a warning (decision 2026-11-03). When coverage is impossible the app explains what's missing, but doesn't yet offer one-tap "for this game only" fixes. |
 | R1 Equal playing time | ✅ | Includes fair share for absences. |
 | R2 Don't sit too long | ✅ | Limit is ⌈(players − 5) ÷ 5⌉. |
 | R3 Balance skill | ✅ | Off by default. |
@@ -80,7 +80,7 @@ Last updated: 2026-11-03
 | D1 | ✅ | |
 | D2 | ✅ | |
 | D3 | ✅ | Played segments are passed to the engine as `fixed`. |
-| D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. Swaps that would leave a required position uncovered are blocked. |
+| D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. The replacement list shows players who can play the open position first, with every player's positions (G, F, C). A swap that breaks any rule warns first ("Swap anyway"); it is never blocked. |
 | D5 | ✅ | Injured / out for the game, rest for 1–3 segments, available again, and late arrival (adds a non-attending player). Takes effect from the next segment. |
 | D6 | ✅ | Offered after every status change, from the Edit menu, and from a banner when the plan still includes someone who can't play. Preview shows which lineups change before accepting. |
 | D7 | ✅ 📱 | Screen Wake Lock, re-acquired when the app returns to the foreground. Needs checking on the deployed (https) site; the Wi-Fi test link couldn't use it. |
@@ -158,3 +158,5 @@ In priority order:
 ## Small changes requested
 
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
+- [ ] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
+- [ ] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)

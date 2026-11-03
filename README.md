@@ -54,7 +54,7 @@ The screen stays awake during a game. If the phone locks anyway, or you switch a
 
 Every change is listed under **Changes from the plan** in the game summary.
 
-Swaps never break your position requirement. If a swap would leave no one to play a required position, next5 says so and asks you to pick someone else.
+When you pick a replacement, players who can play that spot's position are listed first, then everyone else, and each player shows the positions they play (G, F, C). If your pick breaks one of your rules (no one covering Center, uneven playing time, someone sitting too long), next5 tells you and you can tap **Swap anyway**. During a game you're always in charge; plans next5 generates still always cover your positions.
 
 ### How the rotation is built
 

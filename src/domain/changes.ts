@@ -1,15 +1,16 @@
 import {
+  analyzePlan,
   assignPositions,
   canCover,
   generatePlan,
-  missingPositions,
   requiredSlots,
   type Lineup,
   type PlayerId,
+  type PositionId,
   type Warning,
 } from '../engine';
-import type { Game, GameEvent, Player, PlayerStatus, Team } from '../data/types';
-import { describeError, segmentLabel, toEnginePlayers } from './game';
+import type { Game, GameEvent, Player, PlayerStatus, Position, Team } from '../data/types';
+import { describeError, describeWarning, segmentLabel, toEnginePlayers } from './game';
 
 /**
  * Game-day changes (REQUIREMENTS.md D3–D6, D11): swaps, player status,
@@ -69,10 +70,28 @@ function nameOf(roster: Player[], id: PlayerId): string {
   return roster.find((p) => p.id === id)?.name ?? 'That player';
 }
 
+/** Something a hand-picked swap breaks. Swaps are allowed anyway; the coach is warned first. */
+export type SwapWarning = { kind: 'uncovered'; positions: PositionId[] } | { kind: 'rule'; warning: Warning };
+
+export type SwapResult = { ok: true; game: Game; warnings: SwapWarning[] } | { ok: false; message: string };
+
+function bestPositionOf(player: Player | undefined): PositionId | null {
+  let best: PositionId | null = null;
+  let bestSkill = 0;
+  for (const [positionId, skill] of Object.entries(player?.skills ?? {})) {
+    if ((skill ?? 0) > bestSkill) {
+      best = positionId;
+      bestSkill = skill ?? 0;
+    }
+  }
+  return best;
+}
+
 /**
- * Replaces one player in a lineup and reassigns positions. Fails with a
- * plain-language reason when the swap would leave a required position
- * uncovered (H1 is never broken, even by hand).
+ * Replaces one player in a lineup. When the new five can still cover the
+ * required positions, positions are reassigned as usual. When they can't, the
+ * swap still happens (the coach decides), everyone keeps their position, and
+ * the required positions left uncovered are reported.
  */
 function swapInLineup(
   lineup: Lineup,
@@ -81,32 +100,75 @@ function swapInLineup(
   game: Game,
   team: Team,
   roster: Player[],
-): { ok: true; lineup: Lineup } | { ok: false; message: string } {
+): { lineup: Lineup; uncovered: PositionId[] } {
   const ids = lineup.map((s) => (s.playerId === outId ? inId : s.playerId));
   const players = toEnginePlayers(ids.map((id) => roster.find((p) => p.id === id)).filter((p): p is Player => !!p));
   const slots = slotsFor(game, team);
-  const next = players.length === ids.length && canCover(players, slots) ? assignPositions(players, slots) : null;
-  if (!next) {
-    const missing = missingPositions(players, team.requirement)
-      .map((id) => team.positions.find((p) => p.id === id)?.name ?? id)
-      .join(' and ');
-    return {
-      ok: false,
-      message: `Swapping ${nameOf(roster, inId)} in for ${nameOf(roster, outId)} would leave no one to play ${missing}. Pick a different player.`,
-    };
-  }
-  return { ok: true, lineup: next };
+  const covered = players.length === ids.length && canCover(players, slots) ? assignPositions(players, slots) : null;
+  if (covered) return { lineup: covered, uncovered: [] };
+
+  // The incoming player takes the leaving player's position if they can play it.
+  const leaving = lineup.find((s) => s.playerId === outId)!;
+  const incoming = roster.find((p) => p.id === inId);
+  const position =
+    leaving.positionId !== null && incoming?.skills[leaving.positionId] !== undefined
+      ? leaving.positionId
+      : bestPositionOf(incoming);
+  const next = lineup.map((s) => (s.playerId === outId ? { playerId: inId, positionId: position } : s));
+  const uncovered = Object.entries(team.requirement)
+    .filter(([positionId, count]) => next.filter((s) => s.positionId === positionId).length < (count ?? 0))
+    .map(([positionId]) => positionId);
+  return { lineup: next, uncovered };
 }
 
 function withEvent(game: Game, event: GameEvent): Game {
   return { ...game, events: [...game.events, event] };
 }
 
+/** Everything played so far, the current segment, and the rest of the plan. */
+function timeline(game: Game): Lineup[] {
+  return [...game.played, currentAsPlayed(game), ...game.plan.slice(game.current + 1)];
+}
+
+/** Identifies a warning so the same problem isn't reported as new. */
+function warningKey(warning: Warning): string {
+  switch (warning.kind) {
+    case 'equal-time':
+      return `equal-time:${warning.spread}`;
+    case 'bench-streak':
+      return `bench:${warning.playerId}:${warning.startSegment}:${warning.length}`;
+    case 'skill-stack':
+      return `skill:${warning.segment}`;
+  }
+}
+
+/** Scheduling rules (R1–R3) that a change breaks and that weren't already broken. */
+function newRuleWarnings(before: Game, after: Game, roster: Player[]): Warning[] {
+  const analyze = (game: Game) => {
+    const lineups = timeline(game);
+    return analyzePlan(lineups, {
+      players: toEnginePlayers(roster.filter((p) => game.attending.includes(p.id))),
+      rules: { ...game.rules, positionCoverage: false },
+      unavailable: unavailableSegments(game, lineups.length),
+    }).warnings;
+  };
+  const existing = new Set(analyze(before).map(warningKey));
+  return analyze(after).filter((w) => !existing.has(warningKey(w)));
+}
+
+function swapWarnings(before: Game, after: Game, roster: Player[], uncovered: PositionId[]): SwapWarning[] {
+  return [
+    ...(before.rules.positionCoverage && uncovered.length > 0 ? [{ kind: 'uncovered' as const, positions: uncovered }] : []),
+    ...newRuleWarnings(before, after, roster).map((warning) => ({ kind: 'rule' as const, warning })),
+  ];
+}
+
 /**
  * Swap now (D4): a player comes off during the current segment. Both players
- * get credit for the segment.
+ * get credit for the segment. The swap is returned with any rules it breaks,
+ * so the screen can warn before saving.
  */
-export function swapNow(game: Game, team: Team, roster: Player[], outId: PlayerId, inId: PlayerId): ChangeResult {
+export function swapNow(game: Game, team: Team, roster: Player[], outId: PlayerId, inId: PlayerId): SwapResult {
   const lineup = game.plan[game.current];
   if (game.status !== 'live' || !lineup) return { ok: false, message: 'The game is not in progress.' };
   if (!lineup.some((s) => s.playerId === outId)) return { ok: false, message: `${nameOf(roster, outId)} is not on the court.` };
@@ -114,19 +176,15 @@ export function swapNow(game: Game, team: Team, roster: Player[], outId: PlayerI
     return { ok: false, message: `${nameOf(roster, inId)} is not available to come in.` };
   }
   const swapped = swapInLineup(lineup, outId, inId, game, team, roster);
-  if (!swapped.ok) return swapped;
-
   const leaving = lineup.find((s) => s.playerId === outId)!;
   const subbedOut = [...game.subbedOut.filter((s) => s.playerId !== inId), leaving];
   const plan = game.plan.map((l, i) => (i === game.current ? swapped.lineup : l));
-  return {
-    ok: true,
-    game: withEvent({ ...game, plan, subbedOut }, { kind: 'swap-now', segment: game.current, out: outId, in: inId }),
-  };
+  const next = withEvent({ ...game, plan, subbedOut }, { kind: 'swap-now', segment: game.current, out: outId, in: inId });
+  return { ok: true, game: next, warnings: swapWarnings(game, next, roster, swapped.uncovered) };
 }
 
-/** Changes who comes in at the next substitution (D4). */
-export function swapNext(game: Game, team: Team, roster: Player[], outId: PlayerId, inId: PlayerId): ChangeResult {
+/** Changes who comes in at the next substitution (D4), with any rules it breaks. */
+export function swapNext(game: Game, team: Team, roster: Player[], outId: PlayerId, inId: PlayerId): SwapResult {
   const segment = game.current + 1;
   const lineup = game.plan[segment];
   if (game.status !== 'live' || !lineup) return { ok: false, message: 'There is no next lineup to change.' };
@@ -137,9 +195,9 @@ export function swapNext(game: Game, team: Team, roster: Player[], outId: Player
     return { ok: false, message: `${nameOf(roster, inId)} is not available for the next lineup.` };
   }
   const swapped = swapInLineup(lineup, outId, inId, game, team, roster);
-  if (!swapped.ok) return swapped;
   const plan = game.plan.map((l, i) => (i === segment ? swapped.lineup : l));
-  return { ok: true, game: withEvent({ ...game, plan }, { kind: 'swap-next', segment, out: outId, in: inId }) };
+  const next = withEvent({ ...game, plan }, { kind: 'swap-next', segment, out: outId, in: inId });
+  return { ok: true, game: next, warnings: swapWarnings(game, next, roster, swapped.uncovered) };
 }
 
 /**
@@ -258,3 +316,16 @@ export function statusLabel(status: PlayerStatus | undefined, game: Game): strin
       return status.at > game.current ? `Arrived, plays from ${segmentLabel(game.format, status.at).text}` : null;
   }
 }
+
+/** Plain-language text for a rule a swap breaks. */
+export function describeSwapWarning(
+  warning: SwapWarning,
+  game: Game,
+  positions: Position[],
+  names: Map<string, string>,
+): string {
+  if (warning.kind === 'rule') return describeWarning(warning.warning, game, names);
+  const list = warning.positions.map((id) => positions.find((p) => p.id === id)?.name ?? id).join(' and ');
+  return `Nobody on the court is covering ${list}.`;
+}
+
