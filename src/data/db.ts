@@ -26,6 +26,15 @@ export class Next5Db extends Dexie {
           .toCollection()
           .modify((game: Partial<Game>) => upgradeGameV2(game)),
       );
+    // v3: planning locks (G6).
+    this.version(3)
+      .stores({})
+      .upgrade((tx) =>
+        tx
+          .table('games')
+          .toCollection()
+          .modify((game: Partial<Game>) => upgradeGameV3(game)),
+      );
   }
 }
 
@@ -34,6 +43,11 @@ export function upgradeGameV2(game: Partial<Game>): void {
   game.subbedOut ??= [];
   game.statuses ??= {};
   game.events ??= [];
+}
+
+/** Fills in the fields added in schema v3. Exported for tests. */
+export function upgradeGameV3(game: Partial<Game>): void {
+  game.locks ??= [];
 }
 
 export const db = new Next5Db();

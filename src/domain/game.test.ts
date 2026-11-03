@@ -55,6 +55,7 @@ function makeGame(overrides: Partial<Game> = {}): Game {
     subbedOut: [],
     statuses: {},
     events: [],
+    locks: [],
     createdAt: 0,
     updatedAt: 0,
     ...overrides,

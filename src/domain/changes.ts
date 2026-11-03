@@ -10,7 +10,7 @@ import {
   type Warning,
 } from '../engine';
 import type { Game, GameEvent, Player, PlayerStatus, Position, Team } from '../data/types';
-import { describeError, describeWarning, segmentLabel, toEnginePlayers } from './game';
+import { activeLocks, describeError, describeWarning, segmentLabel, toEnginePlayers } from './game';
 
 /**
  * Game-day changes (REQUIREMENTS.md D3–D6, D11): swaps, player status,
@@ -131,7 +131,7 @@ function timeline(game: Game): Lineup[] {
 }
 
 /** Identifies a warning so the same problem isn't reported as new. */
-function warningKey(warning: Warning): string {
+export function warningKey(warning: Warning): string {
   switch (warning.kind) {
     case 'equal-time':
       return `equal-time:${warning.spread}`;
@@ -230,7 +230,7 @@ export function markArrived(game: Game, playerId: PlayerId): Game {
   );
 }
 
-/** Segments after the current one whose players differ between two plans. */
+/** Segments from `from` on whose players differ between two plans. */
 export function changedSegments(before: Lineup[], after: Lineup[], from: number): number[] {
   const changed: number[] = [];
   for (let s = from; s < after.length; s++) {
@@ -253,6 +253,7 @@ function engineInput(game: Game, team: Team, roster: Player[], segmentCount: num
     rules: game.rules,
     segmentCount,
     unavailable: unavailableSegments(game, segmentCount),
+    locks: activeLocks(game, segmentCount),
   };
 }
 

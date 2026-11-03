@@ -1,7 +1,15 @@
 import { analyzePlan, benchLimit, isAvailable } from './analyze';
-import { assignPositions, canCover, missingPositions, requiredSlots } from './positions';
+import { assignPositions, canCover, canCoverWith, missingPositions, missingWithLocks, requiredSlots } from './positions';
 import { createRandom } from './random';
-import { COURT_SIZE, type EnginePlayer, type GenerateInput, type GenerateResult, type Lineup, type PlayerId } from './types';
+import {
+  COURT_SIZE,
+  type EnginePlayer,
+  type GenerateInput,
+  type GenerateResult,
+  type Lineup,
+  type Lock,
+  type PlayerId,
+} from './types';
 
 /**
  * How the generator works (also explained in the developer README):
@@ -14,7 +22,8 @@ import { COURT_SIZE, type EnginePlayer, type GenerateInput, type GenerateResult,
  *      - benching someone past the bench limit is expensive (R2),
  *      - keeping a player from the previous plan is cheaper (fewest changes),
  *      - stacking Rising / Go-To players is a little more expensive (R3),
- *      - combinations that can't cover the required positions are skipped (H1).
+ *      - combinations that can't cover the required positions are skipped (H1),
+ *      - locked-in players are always picked and locked-out players never (G6).
  * 3. Repeat with a little random jitter, score each whole plan with
  *    `analyzePlan`, and keep the best one.
  */
@@ -45,6 +54,34 @@ function maxSkill(player: EnginePlayer): number {
   return levels.length === 0 ? 2 : Math.max(...levels);
 }
 
+interface SegmentLocks {
+  in: Set<PlayerId>;
+  out: Set<PlayerId>;
+}
+
+/** Locks grouped by segment. A lock-out wins over a lock-in for the same player. */
+function locksBySegment(locks: Lock[] | undefined): Map<number, SegmentLocks> {
+  const bySegment = new Map<number, SegmentLocks>();
+  for (const lock of locks ?? []) {
+    let entry = bySegment.get(lock.segment);
+    if (!entry) bySegment.set(lock.segment, (entry = { in: new Set(), out: new Set() }));
+    entry[lock.kind].add(lock.playerId);
+  }
+  for (const entry of bySegment.values()) for (const id of entry.out) entry.in.delete(id);
+  return bySegment;
+}
+
+/**
+ * Splits a segment's available players into those locked in and the rest
+ * who may be picked. Locked-out players are in neither list.
+ */
+function splitByLocks(avail: EnginePlayer[], locks: SegmentLocks | undefined) {
+  const pickable = avail.filter((p) => !locks?.out.has(p.id));
+  const forced = pickable.filter((p) => locks?.in.has(p.id));
+  const others = pickable.filter((p) => !locks?.in.has(p.id));
+  return { pickable, forced, others };
+}
+
 interface State {
   played: Record<PlayerId, number>;
   expected: Record<PlayerId, number>;
@@ -71,6 +108,7 @@ function advanceState(state: State, lineup: Lineup, avail: EnginePlayer[], all: 
 function buildPlan(input: GenerateInput, slots: string[], random: () => number, jitter: number): Lineup[] {
   const { players, rules, unavailable, previous } = input;
   const fixed = input.fixed ?? [];
+  const locks = locksBySegment(input.locks);
   const state: State = { played: {}, expected: {}, streak: {} };
   for (const p of players) {
     state.played[p.id] = 0;
@@ -107,19 +145,22 @@ function buildPlan(input: GenerateInput, slots: string[], random: () => number, 
       return rules.limitBench && after > limit ? COST_BENCH * (after - limit) : 0;
     };
     const cost = new Map(avail.map((p) => [p.id, playerCost(p) - benchCost(p)]));
-    const ranked = [...avail].sort((a, b) => cost.get(a.id)! - cost.get(b.id)!);
+    const { forced, others } = splitByLocks(avail, locks.get(segment));
+    const free = COURT_SIZE - forced.length;
+    const ranked = [...others].sort((a, b) => cost.get(a.id)! - cost.get(b.id)!);
 
     let best: EnginePlayer[] | null = null;
     if (slots.length === 0 && !rules.balanceSkill) {
       // Costs are independent per player: the cheapest five are the best lineup.
-      best = ranked.slice(0, COURT_SIZE);
+      best = [...forced, ...ranked.slice(0, free)];
     } else {
       // Positions or skill balance depend on the whole lineup, so search
       // combinations of the most due players, widening the pool if needed.
       let bestCost = Infinity;
       for (let size = POOL_SIZE; best === null; size += 2) {
         const pool = ranked.slice(0, size);
-        for (const combo of combinations(pool, COURT_SIZE)) {
+        for (const fill of combinations(pool, free)) {
+          const combo = [...forced, ...fill];
           if (slots.length > 0 && !canCover(combo, slots)) continue;
           let total = 0;
           let rising = 0;
@@ -133,7 +174,7 @@ function buildPlan(input: GenerateInput, slots: string[], random: () => number, 
           if (rules.balanceSkill) total += COST_SKILL * (Math.max(0, rising - 1) + Math.max(0, goTo - 2));
           if (total < bestCost) {
             bestCost = total;
-            best = [...combo];
+            best = combo;
           }
         }
         if (size >= ranked.length) break;
@@ -157,6 +198,7 @@ export function generatePlan(input: GenerateInput): GenerateResult {
   }
 
   const fixedCount = Math.min(input.fixed?.length ?? 0, input.segmentCount);
+  const locks = locksBySegment(input.locks);
   for (let segment = fixedCount; segment < input.segmentCount; segment++) {
     const avail = players.filter((p) => isAvailable(unavailable, p.id, segment));
     if (avail.length < COURT_SIZE) {
@@ -166,6 +208,19 @@ export function generatePlan(input: GenerateInput): GenerateResult {
       return {
         ok: false,
         error: { kind: 'positions-uncoverable', segment, missing: missingPositions(avail, input.requirement) },
+      };
+    }
+    const { pickable, forced, others } = splitByLocks(avail, locks.get(segment));
+    if (pickable.length < COURT_SIZE) {
+      return { ok: false, error: { kind: 'too-many-locked-out', segment, available: pickable.length } };
+    }
+    if (forced.length > COURT_SIZE) {
+      return { ok: false, error: { kind: 'too-many-locked-in', segment, count: forced.length } };
+    }
+    if (!canCoverWith(forced, others, slots)) {
+      return {
+        ok: false,
+        error: { kind: 'locks-uncoverable', segment, missing: missingWithLocks(forced, others, input.requirement) },
       };
     }
   }

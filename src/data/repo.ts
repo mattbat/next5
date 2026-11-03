@@ -105,6 +105,7 @@ export async function createGame(team: Team): Promise<Game> {
     subbedOut: [],
     statuses: {},
     events: [],
+    locks: [],
   });
   await db.games.add(game);
   return game;
@@ -127,7 +128,7 @@ export async function updateGame(id: string, changes: Partial<Omit<Game, 'id' | 
   await db.games.update(id, { ...changes, updatedAt: Date.now() });
 }
 
-/** Adds or removes a player from the game's attendance; clears the plan (G1). */
+/** Adds or removes a player from the game's attendance; clears the plan and that player's locks (G1). */
 export async function toggleAttending(gameId: string, playerId: string): Promise<void> {
   await db.transaction('rw', db.games, async () => {
     const game = await db.games.get(gameId);
@@ -135,7 +136,8 @@ export async function toggleAttending(gameId: string, playerId: string): Promise
     const attending = game.attending.includes(playerId)
       ? game.attending.filter((id) => id !== playerId)
       : [...game.attending, playerId];
-    await db.games.update(gameId, { attending, plan: [], warnings: [], updatedAt: Date.now() });
+    const locks = game.locks.filter((l) => l.playerId !== playerId);
+    await db.games.update(gameId, { attending, locks, plan: [], warnings: [], updatedAt: Date.now() });
   });
 }
 

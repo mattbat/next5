@@ -1,4 +1,4 @@
-import type { EnginePlayer, Lineup, PositionId, PositionRequirement, SkillLevel } from './types';
+import { COURT_SIZE, type EnginePlayer, type Lineup, type PositionId, type PositionRequirement, type SkillLevel } from './types';
 
 /** Expands { G: 2, C: 1 } into the list of required slots [G, G, C]. */
 export function requiredSlots(requirement: PositionRequirement): PositionId[] {
@@ -40,6 +40,46 @@ export function canCover(players: EnginePlayer[], slots: PositionId[]): boolean 
   if (slots.length === 0) return true;
   if (players.length < slots.length) return false;
   return matchSlots(players, slots) !== null;
+}
+
+function* subsets<T>(items: T[], k: number, start = 0, picked: T[] = []): Generator<T[]> {
+  if (picked.length === k) {
+    yield picked;
+    return;
+  }
+  for (let i = start; i <= items.length - (k - picked.length); i++) {
+    picked.push(items[i]!);
+    yield* subsets(items, k, i + 1, picked);
+    picked.pop();
+  }
+}
+
+/**
+ * True when a full lineup that includes every `forced` player, filled from
+ * `others`, can cover the slots (locks, G6). Rosters are at most ~15, so
+ * trying every fill is cheap.
+ */
+export function canCoverWith(forced: EnginePlayer[], others: EnginePlayer[], slots: PositionId[]): boolean {
+  if (slots.length === 0) return true;
+  const free = COURT_SIZE - forced.length;
+  if (free < 0 || others.length < free) return false;
+  if (forced.length === 0) return canCover(others, slots);
+  for (const fill of subsets(others, free)) {
+    if (canCover([...forced, ...fill], slots)) return true;
+  }
+  return false;
+}
+
+/** Positions that locks make impossible to cover, for error messages. */
+export function missingWithLocks(
+  forced: EnginePlayer[],
+  others: EnginePlayer[],
+  requirement: PositionRequirement,
+): PositionId[] {
+  const missing = Object.keys(requirement).filter(
+    (id) => (requirement[id] ?? 0) > 0 && !canCoverWith(forced, others, requiredSlots({ [id]: requirement[id] })),
+  );
+  return missing.length > 0 ? missing : Object.keys(requirement).filter((id) => (requirement[id] ?? 0) > 0);
 }
 
 /** Positions whose requirement can't be met by these players, for error messages. */

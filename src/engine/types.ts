@@ -56,6 +56,19 @@ export interface GenerateInput {
   unavailable?: Partial<Record<PlayerId, number[]>>;
   /** Seed for repeatable shuffles. Different seeds give different valid plans. */
   seed?: number;
+  /**
+   * The coach's locks (G6): players who must be on the court, or must sit, in
+   * a segment. Ignored for fixed segments. Availability wins over a lock-in,
+   * and a lock-out wins over a lock-in for the same player and segment.
+   */
+  locks?: Lock[];
+}
+
+/** One player locked into (`in`) or out of (`out`) one segment (G6). Segments are 0-based. */
+export interface Lock {
+  segment: number;
+  playerId: PlayerId;
+  kind: 'in' | 'out';
 }
 
 export type Warning =
@@ -66,7 +79,12 @@ export type Warning =
 export type GenerateError =
   | { kind: 'not-enough-players'; segment: number; available: number }
   | { kind: 'requirement-too-large'; total: number }
-  | { kind: 'positions-uncoverable'; segment: number; missing: PositionId[] };
+  | { kind: 'positions-uncoverable'; segment: number; missing: PositionId[] }
+  /** Locks leave fewer than 5 players who can play the segment. */
+  | { kind: 'too-many-locked-out'; segment: number; available: number }
+  | { kind: 'too-many-locked-in'; segment: number; count: number }
+  /** The players are there, but not with these locks. */
+  | { kind: 'locks-uncoverable'; segment: number; missing: PositionId[] };
 
 export type GenerateResult =
   | { ok: true; plan: Lineup[]; warnings: Warning[] }

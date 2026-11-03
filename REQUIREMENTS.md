@@ -130,6 +130,7 @@ The names are encouraging and describe the player's role at that position, not h
 | G3 | Enable or disable the optional rules for this game. |
 | G4 | **Generate** a full plan. Regenerating may produce a different valid plan (shuffle). |
 | G5 | **Review the plan** in a grid of players × segments. It shows who is on the court and at what position in each segment, and each player's total. Relaxed rules are highlighted. |
+| G5a | **Step through the plan:** before a game, the coach can easily move segment by segment (previous / next, or jump straight to any segment) to see that segment's five with positions and its bench. Locks, swaps and "regenerate from here" (G6–G9) are done from this view. (Added 2026-11-03.) |
 | G6 | **Manual lineups:** the coach can set an entire lineup for any segment by hand (for example, a "closing" lineup for the last segment), lock individual players into specific segments, or lock individual players out of them. Locked items are clearly marked. |
 | G7 | **Auto-fill:** after setting lineups or locks by hand, the generator fills in every unlocked spot around them while still following the rules, and changes as little of the existing plan as possible (see "Fewest changes" in §5). If the locks make a rule impossible, the app says which one. |
 | G8 | **Regenerate:** either regenerate the **whole plan** from scratch, or regenerate **from segment N onward** with as few changes as possible, keeping everything before N. Locked items are always kept. |

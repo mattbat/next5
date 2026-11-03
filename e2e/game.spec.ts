@@ -40,8 +40,28 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   await page.getByRole('button', { name: 'Generate plan' }).click();
 
   await expect(page.getByRole('heading', { name: 'vs Rockets' })).toBeVisible();
+
+  // Step through the plan one segment at a time, and lock someone out (G6, G7).
+  await expect(page.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeVisible();
+  const planCourt = page.getByRole('list', { name: 'On court' });
+  await expect(planCourt.getByRole('listitem')).toHaveCount(5);
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: 'Next segment' }).click();
+  await expect(page.getByRole('heading', { name: 'Q1 · 2 of 2' })).toBeVisible();
+  const lockedOut = (await planCourt.locator('.court-name').first().textContent())!;
+  await planCourt.getByRole('button').first().click();
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: /Lock out/ }).click();
+  await expect(page.getByRole('status')).toContainText(`${lockedOut} locked out for Q1 · 2 of 2.`);
+  await expect(planCourt.getByText(lockedOut, { exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: `${lockedOut}, on the bench, locked out` })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+
+  // The grid shows the whole plan, with the lock.
+  await page.getByRole('radio', { name: 'Grid' }).click();
   await expect(page.getByRole('table')).toBeVisible();
   await expect(page.getByRole('rowheader', { name: 'Kai' })).toHaveCount(0);
+  await expect(page.getByRole('cell', { name: 'Q1 · 2 of 2: bench, locked out' })).toHaveCount(1);
   await expectNoHorizontalScroll(page);
   await page.getByRole('button', { name: 'Start game' }).click();
 

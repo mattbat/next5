@@ -862,6 +862,200 @@ input[type='date'] {
   min-width: 34px;
 }
 
+.plan-grid .th-btn {
+  display: block;
+  width: 100%;
+  min-height: 34px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+/* Locked cells: a ring for locked in, ✕ for locked out (G6). */
+.plan-grid td.locked-in {
+  box-shadow: inset 0 0 0 2px var(--text);
+}
+
+.plan-grid td.locked-out {
+  color: var(--text-3);
+}
+
+/* Plan: one segment at a time (G6–G9) */
+
+.seg-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0 8px;
+}
+
+.seg-step {
+  flex: none;
+  width: var(--tap);
+  height: var(--tap);
+  border: none;
+  border-radius: 12px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 28px;
+  line-height: 1;
+}
+
+.seg-step:disabled {
+  opacity: 0.3;
+}
+
+.seg-title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.seg-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+
+/* One period's segments, labeled Q1, Q2… */
+.seg-group {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.seg-group-label {
+  color: var(--text-3);
+  font-size: 12px;
+  font-weight: 700;
+  padding-left: 2px;
+}
+
+.seg-group-chips {
+  display: flex;
+  gap: 4px;
+}
+
+.seg-chip {
+  position: relative;
+  flex: 1 0 30px;
+  max-width: 48px;
+  min-height: 36px;
+  padding: 0 2px;
+  border: none;
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-weight: 700;
+  font-size: 14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.seg-chip.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+.seg-chip.done {
+  opacity: 0.5;
+}
+
+/* A dot on segments that have locks. */
+.seg-lock {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--warn);
+}
+
+.lineup {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+}
+
+.lineup li {
+  display: flex;
+  min-height: var(--tap);
+  margin-bottom: 4px;
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.lineup.bench li {
+  background: none;
+  border: 1px solid var(--line);
+}
+
+.lineup .court-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 17px;
+}
+
+.lineup .row-btn:disabled {
+  opacity: 1;
+}
+
+.badge.lock {
+  flex: none;
+  white-space: nowrap;
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.badge.lock.out {
+  background: var(--surface-2);
+  color: var(--text-2);
+}
+
+.seg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0 4px;
+}
+
+.seg-actions .btn {
+  flex: 1 1 140px;
+}
+
+/* What the last plan edit did, with Undo. Builds on .notice below. */
+.plan-notice {
+  margin: 10px 0 0;
+  padding-bottom: 2px;
+}
+
+.plan-notice p {
+  margin: 0;
+}
+
+.plan-notice .warnings {
+  margin-top: 8px;
+  color: var(--text);
+}
+
+.notice-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
 /* Game day
    The screen is exactly one viewport tall. Everything keeps its normal size
    when it fits; when it doesn't (e.g. 5 in / 5 out), the player rows, gaps
