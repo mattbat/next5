@@ -111,7 +111,9 @@ input[type='date'] {
 
 .topbar {
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr) 72px;
+  /* Side columns are at least 72px and grow to fit links like "Settings" in any
+     font; equal 1fr sides keep the title centered whenever there is room. */
+  grid-template-columns: minmax(72px, 1fr) minmax(0, auto) minmax(72px, 1fr);
   align-items: center;
   min-height: 52px;
   margin: 0 -4px 8px;
@@ -1364,4 +1366,46 @@ button.sub-in {
 
 .footer.add-team .inline-form {
   margin-top: 0;
+}
+
+/* Confirmation messages (e.g. "Backup ready"). */
+.notice {
+  margin: 8px 0;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--in-bg);
+  color: #bbf7d0;
+  font-size: 15px;
+}
+
+.restore p {
+  margin: 0 0 10px;
+}
+
+.restore .hint {
+  margin: 4px 0 14px;
+}
+
+.callout .footer-row {
+  align-items: center;
+  margin-top: 10px;
+}
+
+/* Room for the whole "New team name, e.g. 8U Thunder" placeholder on iPhone.
+   16px keeps iOS from zooming into the field. */
+.footer.add-team input {
+  padding: 0 10px;
+  font-size: 16px;
+}
+
+/* The real file picker behind "Restore from a backup file". Fixed and tiny so
+   it can never widen the page (file inputs ignore width in some browsers). */
+.file-input {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
 }

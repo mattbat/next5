@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game) and game-day changes. **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, and backup and restore. **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03
+Last updated: 2026-11-03 (backup and restore)
 
 ## 3. Platform and technical
 
@@ -104,10 +104,10 @@ Last updated: 2026-11-03
 
 | ID | Status | Notes |
 |----|--------|-------|
-| B1 | ⬜ | Back up to a file. |
-| B2 | ⬜ | Restore from a backup. |
-| B3 | ⬜ | Backup reminder. |
-| B4 | 🟡 | The version is shown on the Teams screen. There's no Settings screen or manual "Check for updates" yet; the app checks hourly on its own. |
+| B1 | ✅ | Settings → **Back up all teams**, or a team's Settings tab → **Back up this team**. Opens the iOS share sheet (Files, iCloud Drive, AirDrop); downloads the file where sharing isn't available. |
+| B2 | ✅ | Settings → **Restore from a backup file** shows what's in it, then **Merge** (adds what's missing; the more recently changed copy wins; deletes nothing) or **Replace everything** (after confirming). Bad files are explained and change nothing. Backups from older versions are upgraded on restore. |
+| B3 | ✅ | Teams screen reminder when there's a team and no backup, or the last one is over 30 days old. **Later** snoozes it for a week. |
+| B4 | ✅ | Settings shows the version, links to Diagnostics, and has **Check for updates** (the app also checks hourly). |
 
 ## 12. Documentation and help
 
@@ -133,7 +133,7 @@ Last updated: 2026-11-03
 | N5 | ✅ | README → "How the rotation engine works". |
 | Q-1 | ✅ | `npm run check` runs everything. |
 | Q-2 | ✅ | Example and property tests, plus a performance check. |
-| Q-3 | 🟡 | Storage, migrations, game logic, game-day changes and screens are covered. Backup and CSV tests will come with those features. |
+| Q-3 | 🟡 | Storage, migrations, backup and restore, game logic, game-day changes and screens are covered. CSV tests will come with that feature. |
 | Q-4 | ✅ | WebKit at iPhone sizes: the full game flow, adding players, an injury with re-plan and overtime, and Game Day fitting five screen sizes. Offline launch in Chromium. Data surviving an update is covered by the migration test (T7). |
 | Q-5 | ✅ | Enforced: 95% for the engine and 80% overall. Currently about 100% and 97%. |
 | Q-6 | ✅ | `.github/workflows/ci.yml`. |
@@ -151,7 +151,7 @@ In priority order:
 
 1. ~~Mid-game: swap now (D4), player status (D5), re-plan from here (D6), overtime and extra segments (D11).~~ Done.
 2. Planning: manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).
-3. Backup and restore (B1–B3).
+3. ~~Backup and restore (B1–B3).~~ Done.
 4. Stats: full per-game stats (S3), season stats (S4), CSV export (S5).
 5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
 
@@ -160,4 +160,4 @@ In priority order:
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
-- [ ] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)
+- [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)

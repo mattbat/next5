@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 export type Route =
   | { name: 'teams' }
   | { name: 'diagnostics' }
+  | { name: 'settings' }
   | { name: 'team'; teamId: string }
   | { name: 'game-setup'; gameId: string }
   | { name: 'game-plan'; gameId: string }
@@ -16,6 +17,7 @@ export type Route =
 export function parseRoute(hash: string): Route {
   const parts = hash.replace(/^#\/?/, '').split('/').filter(Boolean);
   if (parts[0] === 'diagnostics') return { name: 'diagnostics' };
+  if (parts[0] === 'settings') return { name: 'settings' };
   if (parts[0] === 'team' && parts[1]) return { name: 'team', teamId: parts[1] };
   if (parts[0] === 'game' && parts[1]) {
     if (parts[2] === 'plan') return { name: 'game-plan', gameId: parts[1] };
@@ -28,6 +30,7 @@ export function parseRoute(hash: string): Route {
 export const paths = {
   teams: () => '#/',
   diagnostics: () => '#/diagnostics',
+  settings: () => '#/settings',
   team: (teamId: string) => `#/team/${teamId}`,
   gameSetup: (gameId: string) => `#/game/${gameId}`,
   gamePlan: (gameId: string) => `#/game/${gameId}/plan`,

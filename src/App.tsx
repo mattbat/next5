@@ -3,6 +3,7 @@ import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
 import { GameDayScreen } from './screens/GameDayScreen';
 import { GameSetupScreen } from './screens/GameSetupScreen';
 import { PlanScreen } from './screens/PlanScreen';
+import { SettingsScreen } from './screens/SettingsScreen';
 import { TeamScreen } from './screens/TeamScreen';
 import { TeamsScreen } from './screens/TeamsScreen';
 
@@ -13,6 +14,8 @@ export function App() {
       return <TeamsScreen />;
     case 'diagnostics':
       return <DiagnosticsScreen />;
+    case 'settings':
+      return <SettingsScreen />;
     case 'team':
       return <TeamScreen teamId={route.teamId} />;
     case 'game-setup':

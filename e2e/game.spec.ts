@@ -85,7 +85,7 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
 test('adds a player with positions and skill levels', async ({ page }) => {
   await page.goto('./');
   await page.getByLabel('New team name').fill('8U Thunder');
-  await page.getByRole('button', { name: 'Add team' }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(page.getByRole('heading', { name: '8U Thunder' })).toBeVisible();
   // Teams open on Games; a new team points to the Roster tab.
   await expect(page.getByText(/No players yet/)).toBeVisible();
