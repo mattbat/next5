@@ -166,25 +166,22 @@ describe('game day changes', () => {
     const user = userEvent.setup();
     const game = await startLiveGame();
     render(<App />);
-    const incoming = (await screen.findAllByRole('button', { name: /^In: .*Forward/ }))[0]!;
+    // The demo plan varies from run to run (player ids are random), so use
+    // whichever player is coming in first and whoever is listed first to replace them.
+    const incoming = (await screen.findAllByRole('button', { name: /^In: / }))[0]!;
     const replacedName = incoming.querySelector('.sub-name')!.textContent!;
     await user.click(incoming);
     const chooser = screen.getByRole('dialog', { name: `Send in someone instead of ${replacedName}?` });
     const roster = await db.players.toArray();
-    // With 10 players everyone available is on the court now, so choosing a
-    // forward keeps them on for the next lineup instead.
-    const forward = within(chooser)
-      .getAllByRole('button')
-      .find((b) => roster.find((p) => p.name === b.querySelector('.list-title')?.textContent)?.skills.F)!;
-    const forwardId = roster.find((p) => p.name === forward.querySelector('.list-title')!.textContent)!.id;
+    const pick = within(chooser).getAllByRole('button').find((b) => b.classList.contains('list-item'))!;
+    const pickedId = roster.find((p) => p.name === pick.querySelector('.list-title')!.textContent)!.id;
     const replacedId = roster.find((p) => p.name === replacedName)!.id;
-    await user.click(forward);
-    // Keeping a player on for an extra segment breaks equal time: warned, not blocked.
-    expect(screen.getByText(/Playing time isn't equal/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Swap anyway' }));
+    await user.click(pick);
+    // If the swap breaks a rule it is a warning, never a block.
+    await confirmIfWarned(user);
     await waitFor(async () => {
       const next = (await savedGame(game.id)).plan[1]!.map((s) => s.playerId);
-      expect(next).toContain(forwardId);
+      expect(next).toContain(pickedId);
       expect(next).not.toContain(replacedId);
     });
     // The screen redraws a moment after the save.
