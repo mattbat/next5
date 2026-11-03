@@ -189,7 +189,7 @@ describe('game workflow', () => {
     expect(await screen.findByText(/This is the final lineup/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'End game' }));
     expect(await screen.findByRole('heading', { name: 'Final' })).toBeInTheDocument();
-    expect(screen.getByText('Segments played out of 8.')).toBeInTheDocument();
+    expect(screen.getByText(/^Segments played out of 8./)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: '↶ Undo end of game' }));
     expect(await screen.findByRole('button', { name: 'End game' })).toBeInTheDocument();

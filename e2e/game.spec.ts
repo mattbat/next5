@@ -94,12 +94,27 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   await expect(page.getByText('This is the final lineup.', { exact: false })).toBeVisible();
   await page.getByRole('button', { name: 'End game' }).click();
   await expect(page.getByRole('heading', { name: 'Final' })).toBeVisible();
-  await expect(page.getByText('Segments played out of 8.')).toBeVisible();
+  await expect(page.getByText(/^Segments played out of 8\./)).toBeVisible();
+  // Per-game stats (S3): one row per player who was there.
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(10);
+  await expectNoHorizontalScroll(page);
 
-  // The finished game is in the team's history.
-  await page.getByRole('link', { name: 'Back' }).click();
+  // Done goes back to the team's games, where the finished game is in its history.
+  await page.getByRole('link', { name: 'Done' }).click();
   await page.getByRole('radio', { name: 'Games' }).click();
   await expect(page.getByRole('link', { name: /vs Rockets/ })).toContainText('Final');
+  // Opening it shows its stats summary again (S2, S3).
+  await page.getByRole('link', { name: /vs Rockets/ }).click();
+  await expect(page.getByRole('heading', { name: 'Final' })).toBeVisible();
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(10);
+  await page.getByRole('link', { name: 'Back' }).click();
+
+  // Season stats (S4): every player, including Kai who missed the game.
+  await page.getByRole('radio', { name: 'Stats' }).click();
+  await expect(page.getByText('From 1 finished game.')).toBeVisible();
+  await expect(page.getByRole('row', { name: /^Kai/ })).toContainText('0');
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(11);
+  await expectNoHorizontalScroll(page);
 });
 
 test('adds a player with positions and skill levels', async ({ page }) => {

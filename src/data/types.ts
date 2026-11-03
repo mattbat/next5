@@ -96,4 +96,9 @@ export interface Game extends Record {
    * them; a player's game-day status wins over a lock-in.
    */
   locks: Lock[];
+  /**
+   * The plan as it stood when the game started, for "planned" in stats (S1,
+   * S3). Missing for games started before it was recorded.
+   */
+  startPlan?: Lineup[];
 }

@@ -33,7 +33,8 @@ export async function createBackup(teamId?: string): Promise<Backup> {
   return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), teams, players, games };
 }
 
-function slug(text: string): string {
+/** Lowercase words joined by dashes, for file names. */
+export function slug(text: string): string {
   return text
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')

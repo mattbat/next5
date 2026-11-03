@@ -125,7 +125,7 @@ export function describeError(error: GenerateError, game: Game, positions: Posit
 
 /** Starts the game at the first segment. */
 export function startGame(game: Game): Game {
-  return { ...game, status: 'live', current: 0, played: [], subbedOut: [] };
+  return { ...game, status: 'live', current: 0, played: [], subbedOut: [], startPlan: game.plan };
 }
 
 /**

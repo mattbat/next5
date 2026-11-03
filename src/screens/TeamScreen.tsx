@@ -1,16 +1,18 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
 import { Empty, Info, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from '../components/ui';
-import { backUp } from '../data/backup';
+import { backUp, slug } from '../data/backup';
 import { db } from '../data/db';
 import { SKILL_LEVELS } from '../data/defaults';
 import { createGame, deleteTeam, updateTeam } from '../data/repo';
+import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
+import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
 import { navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
 import { RULE_HELP } from './ruleHelp';
 
-type Tab = 'roster' | 'games' | 'settings';
+type Tab = 'games' | 'roster' | 'stats' | 'settings';
 
 export function TeamScreen({ teamId }: { teamId: string }) {
   // null = not found; undefined = still loading.
@@ -42,11 +44,13 @@ export function TeamScreen({ teamId }: { teamId: string }) {
         options={[
           { value: 'games', label: 'Games' },
           { value: 'roster', label: `Roster (${players.filter((p) => p.active).length})` },
+          { value: 'stats', label: 'Stats' },
           { value: 'settings', label: 'Settings' },
         ]}
       />
       {tab === 'roster' && <Roster team={team} players={players} />}
       {tab === 'games' && <Games team={team} games={games ?? []} hasPlayers={players.length > 0} />}
+      {tab === 'stats' && <SeasonStats team={team} players={players} games={games ?? []} />}
       {tab === 'settings' && <TeamSettings team={team} />}
     </main>
   );
@@ -97,7 +101,8 @@ const STATUS_LABEL = { planned: 'Planned', live: 'In progress', final: 'Final' }
 
 function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlayers: boolean }) {
   const open = (game: Game) => {
-    if (game.status === 'live') return paths.gameLive(game.id);
+    // Live games open Game Day; finished games open their stats summary (S2, S3).
+    if (game.status !== 'planned') return paths.gameLive(game.id);
     if (game.plan.length > 0) return paths.gamePlan(game.id);
     return paths.gameSetup(game.id);
   };
@@ -132,6 +137,80 @@ function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlay
           </li>
         ))}
       </ul>
+    </Section>
+  );
+}
+
+/** Season stats over the team's finished games (S4), with CSV export (S5). */
+function SeasonStats({ team, players, games }: { team: Team; players: Player[]; games: Game[] }) {
+  const [message, setMessage] = useState<string | null>(null);
+  const finished = games.filter((g) => g.status === 'final').length;
+  const rows = seasonStats(games, players);
+  const name = (id: string) => players.find((p) => p.id === id)?.name ?? 'Unknown';
+
+  const exportCsv = async () => {
+    const date = new Date().toISOString().slice(0, 10);
+    setMessage(await shareCsv(`next5-${slug(team.name) || 'team'}-season-${date}.csv`, seasonStatsCsv(games, players, team.positions)));
+  };
+
+  return (
+    <Section
+      title="Season"
+      aside={
+        <Info label="season stats">
+          Counted in segments from finished games. % is the share of segments a player was available for that they
+          played; segments they were injured, resting or not yet there don't count against them.
+        </Info>
+      }
+    >
+      {finished === 0 ? (
+        <Empty>No finished games yet. Stats appear here after your first game ends.</Empty>
+      ) : (
+        <p className="hint">
+          From {finished} finished game{finished === 1 ? '' : 's'}.
+        </p>
+      )}
+      {finished > 0 && (
+        <div className="grid-scroll">
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th className="name-col">Player</th>
+                <th>Games</th>
+                <th>Played</th>
+                <th>%</th>
+                <th className="pos-col">Positions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((s) => (
+                <tr key={s.playerId}>
+                  <th className="name-col" scope="row">
+                    {name(s.playerId)}
+                  </th>
+                  <td>{s.games}</td>
+                  <td>{s.played}</td>
+                  <td>{s.percent === null ? '–' : `${s.percent}%`}</td>
+                  <td className="pos-col">{positionSummary(s.byPosition, team.positions) || '–'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+      {finished > 0 && (
+        <div className="actions stats-actions">
+          <button type="button" className="btn secondary wide" onClick={() => void exportCsv()}>
+            Export season stats (CSV)
+          </button>
+          {message && (
+            <p className="notice" role="status">
+              {message}
+            </p>
+          )}
+          <p className="hint">Opens in Excel, Numbers or Google Sheets. Skill levels are never included.</p>
+        </div>
+      )}
     </Section>
   );
 }

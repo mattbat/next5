@@ -96,6 +96,11 @@ describe('planGame', () => {
     for (const lineup of outcome.plan) expect(lineup.filter((s) => s.positionId === 'G').length).toBeGreaterThanOrEqual(2);
   });
 
+  it('keeps the plan as it stood at the start, for stats (S3)', () => {
+    const planned = plannedGame();
+    expect(startGame(planned).startPlan).toBe(planned.plan);
+  });
+
   it('keeps played segments when regenerating mid-game', () => {
     let game = startGame(plannedGame());
     game = nextSegment(nextSegment(game));

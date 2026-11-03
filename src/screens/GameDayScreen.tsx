@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Empty, Jersey, Section, TopBar } from '../components/ui';
+import { slug } from '../data/backup';
 import { saveGame } from '../data/repo';
+import { shareCsv } from '../data/share';
 import type { Game, GameEvent, Player, Team } from '../data/types';
 import {
   addSegments,
@@ -16,7 +18,8 @@ import {
   type ReplanResult,
   type SwapResult,
 } from '../domain/changes';
-import { nextSegment, playingTime, segmentLabel, sortLineup, undoSegment } from '../domain/game';
+import { nextSegment, segmentLabel, sortLineup, undoSegment } from '../domain/game';
+import { gameStats, gameStatsCsv, positionSummary } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -356,25 +359,51 @@ function describeEvent(event: GameEvent, game: Game, byId: Map<string, Player>):
   }
 }
 
+/** The finished game: per-player stats (S3), changes from the plan, and CSV export (S5). */
 function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
-  const time = playingTime(game).sort((a, b) => (byId.get(a.playerId)?.name ?? '').localeCompare(byId.get(b.playerId)?.name ?? ''));
+  const [message, setMessage] = useState<string | null>(null);
+  const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
+  const stats = gameStats(game).sort((a, b) => name(a.playerId).localeCompare(name(b.playerId)));
+
+  const exportCsv = async () => {
+    const file = `next5-${slug(team.name) || 'team'}-${game.date}${game.opponent ? `-vs-${slug(game.opponent)}` : ''}.csv`;
+    setMessage(await shareCsv(file, gameStatsCsv(game, [...byId.values()], team.positions)));
+  };
+
   return (
     <main className="screen">
       <TopBar title="Final" back={paths.team(team.id)} />
       <Section title={`Playing time${game.opponent ? ` vs ${game.opponent}` : ''}`}>
-        <p className="hint">Segments played out of {game.played.length}.</p>
-        <ul className="list">
-          {time.map((t) => (
-            <li key={t.playerId} className="list-item static">
-              <Jersey number={byId.get(t.playerId)?.number ?? ''} />
-              <span className="list-title">{byId.get(t.playerId)?.name ?? 'Unknown'}</span>
-              <span className="time-bar" aria-hidden>
-                <span style={{ width: `${(t.played / Math.max(1, game.played.length)) * 100}%` }} />
-              </span>
-              <span className="list-meta">{t.played}</span>
-            </li>
-          ))}
-        </ul>
+        <p className="hint">
+          Segments played out of {game.played.length}. Plan is the plan when the game started; Sat counts only segments
+          the player was available for.
+        </p>
+        <div className="grid-scroll">
+          <table className="stats-table">
+            <thead>
+              <tr>
+                <th className="name-col">Player</th>
+                <th>Plan</th>
+                <th>Played</th>
+                <th>Sat</th>
+                <th className="pos-col">Positions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {stats.map((s) => (
+                <tr key={s.playerId}>
+                  <th className="name-col" scope="row">
+                    {name(s.playerId)}
+                  </th>
+                  <td>{s.planned}</td>
+                  <td className={s.played < s.planned ? 'short' : ''}>{s.played}</td>
+                  <td>{s.sat}</td>
+                  <td className="pos-col">{positionSummary(s.byPosition, team.positions) || '–'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </Section>
       {game.events.length > 0 && (
         <Section title="Changes from the plan">
@@ -388,9 +417,22 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
         </Section>
       )}
       <footer className="footer static">
-        <button type="button" className="btn secondary wide" onClick={() => void saveGame(undoSegment(game))}>
-          ↶ Undo end of game
-        </button>
+        <div className="actions">
+          <button type="button" className="btn secondary wide" onClick={() => void exportCsv()}>
+            Export stats (CSV)
+          </button>
+          {message && (
+            <p className="notice" role="status">
+              {message}
+            </p>
+          )}
+          <button type="button" className="btn secondary wide" onClick={() => void saveGame(undoSegment(game))}>
+            ↶ Undo end of game
+          </button>
+          <a className="btn wide big" href={paths.team(team.id)}>
+            Done
+          </a>
+        </div>
       </footer>
     </main>
   );
