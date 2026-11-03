@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Empty, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from '../components/ui';
-import { deleteGame, toggleAttending, updateGame } from '../data/repo';
+import { deleteGame, getGame, toggleAttending, updateGame } from '../data/repo';
 import { useGameData } from '../hooks/useGameData';
 import type { Game, Player, Team } from '../data/types';
 import { describeError, planGame, segmentCount } from '../domain/game';
@@ -33,10 +33,12 @@ function Setup({ game, team, roster }: { game: Game; team: Team; roster: Player[
   const players = roster.filter((p) => p.active || game.attending.includes(p.id));
 
   const generate = async () => {
-    const seed = game.plan.length > 0 ? game.seed + 1 : game.seed;
-    const outcome = planGame({ ...game, plan: [] }, team, roster, seed);
+    // Read the saved game: a setting tapped a moment ago may not be on screen yet.
+    const latest = (await getGame(game.id)) ?? game;
+    const seed = latest.plan.length > 0 ? latest.seed + 1 : latest.seed;
+    const outcome = planGame({ ...latest, plan: [] }, team, roster, seed);
     if (!outcome.ok) {
-      setError(describeError(outcome.error, game, team.positions));
+      setError(describeError(outcome.error, latest, team.positions));
       return;
     }
     setError(null);

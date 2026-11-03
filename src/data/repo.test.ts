@@ -8,6 +8,7 @@ import {
   deleteGame,
   deletePlayer,
   deleteTeam,
+  newId,
   saveGame,
   updatePlayer,
   updateTeam,
@@ -15,6 +16,24 @@ import {
 
 beforeEach(async () => {
   await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
+});
+
+describe('newId', () => {
+  it('makes v4 UUIDs even where crypto.randomUUID is missing (plain http)', () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, 'randomUUID', { value: undefined, configurable: true });
+    try {
+      const ids = new Set(Array.from({ length: 100 }, newId));
+      expect(ids.size).toBe(100);
+      for (const id of ids) expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    } finally {
+      Object.defineProperty(crypto, 'randomUUID', { value: original, configurable: true });
+    }
+  });
+
+  it('uses crypto.randomUUID when available', () => {
+    expect(newId()).toMatch(/^[0-9a-f-]{36}$/);
+  });
 });
 
 describe('repo', () => {

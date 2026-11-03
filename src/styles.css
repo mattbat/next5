@@ -109,10 +109,10 @@ input[type='date'] {
 
 .topbar {
   display: grid;
-  grid-template-columns: 56px 1fr 56px;
+  grid-template-columns: 72px minmax(0, 1fr) 72px;
   align-items: center;
   min-height: 52px;
-  margin: 0 -8px 8px;
+  margin: 0 -4px 8px;
 }
 
 .topbar-title {
@@ -136,7 +136,14 @@ input[type='date'] {
 
 .topbar-action {
   text-align: right;
-  padding-right: 8px;
+  min-width: 0;
+}
+
+.topbar-action .link {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 4px;
+  white-space: nowrap;
 }
 
 .brand {
@@ -1066,6 +1073,32 @@ input[type='date'] {
 
 .update-banner span {
   flex: 1;
+}
+
+.error-banner {
+  position: fixed;
+  left: 12px;
+  right: 12px;
+  bottom: calc(var(--safe-bottom) + 96px);
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 536px;
+  margin: 0 auto;
+  padding: 10px 8px 10px 16px;
+  border-radius: var(--radius);
+  background: #3b0d17;
+  border: 1px solid var(--out);
+  color: #fecdd3;
+  font-size: 15px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+}
+
+.error-banner span {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 @media (prefers-reduced-motion: reduce) {

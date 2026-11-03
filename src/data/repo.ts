@@ -7,8 +7,17 @@ import type { Game, Player, Team } from './types';
  * functions so the storage backend can be swapped or mirrored later (§16).
  */
 
+/**
+ * A random v4 UUID. `crypto.randomUUID` only exists on https pages, so fall
+ * back to `getRandomValues` (available everywhere) for local http testing.
+ */
 export function newId(): string {
-  return crypto.randomUUID();
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6]! & 0x0f) | 0x40;
+  bytes[8] = (bytes[8]! & 0x3f) | 0x80;
+  const hex = [...bytes].map((b) => b.toString(16).padStart(2, '0')).join('');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function stamp<T extends object>(fields: T): T & { id: string; createdAt: number; updatedAt: number } {
@@ -96,6 +105,11 @@ export async function createGame(team: Team): Promise<Game> {
   });
   await db.games.add(game);
   return game;
+}
+
+/** The latest saved copy of a game, for actions that must not use a stale screen copy. */
+export async function getGame(id: string): Promise<Game | undefined> {
+  return db.games.get(id);
 }
 
 export async function saveGame(game: Game): Promise<void> {

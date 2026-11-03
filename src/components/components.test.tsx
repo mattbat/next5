@@ -15,6 +15,27 @@ vi.mock('virtual:pwa-register/react', async () => {
 });
 
 const { UpdateBanner } = await import('./UpdateBanner');
+const { ErrorBanner } = await import('./ErrorBanner');
+
+describe('ErrorBanner', () => {
+  it('shows unhandled errors and can be dismissed', async () => {
+    const user = userEvent.setup();
+    render(<ErrorBanner />);
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    const rejection = new Event('unhandledrejection') as PromiseRejectionEvent;
+    Object.assign(rejection, { reason: new Error('Storage is full') });
+    act(() => {
+      window.dispatchEvent(rejection);
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Storage is full');
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Oops' }));
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Oops');
+  });
+});
 
 describe('UpdateBanner', () => {
   afterEach(() => {
