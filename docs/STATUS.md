@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, and backup and restore. **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, and plan editing (G5a–G9). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (backup and restore)
+Last updated: 2026-11-03 (plan editing: segment stepper, locks, swaps, redo from here)
 
 ## 3. Platform and technical
 
@@ -18,7 +18,7 @@ Last updated: 2026-11-03 (backup and restore)
 | T4 | ✅ | `/next5/` base path and hash routing. |
 | T5 | ✅ | Workbox precaches the app. Offline launch is tested in Chromium; WebKit's test browser can't drive service workers. |
 | T6 | ✅ | IndexedDB through Dexie, with `navigator.storage.persist()` requested at startup. |
-| T7 | ✅ | Schema v2 adds game-day fields with an `upgrade()` migration. A test writes a v1 database and checks it opens under v2 with nothing lost. |
+| T7 | ✅ | Schema v2 adds game-day fields and v3 adds planning locks, each with an `upgrade()` migration. Tests write v1 and v2 databases and check they open under v3 with nothing lost. Backups from older versions get the same upgrade on restore. |
 | T8 | ✅ | "Update available" banner, hidden during a live game, with an hourly update check. |
 | T9 | ✅ | React, TypeScript, Vite, vite-plugin-pwa, Dexie. |
 | T10 | ✅ | Tested in WebKit at five phone sizes and on an iPhone 16 Pro (Home Screen app). |
@@ -34,7 +34,7 @@ Last updated: 2026-11-03 (backup and restore)
 | R2 Don't sit too long | ✅ | Limit is ⌈(players − 5) ÷ 5⌉. |
 | R3 Balance skill | ✅ | Off by default. |
 | Rule priority and plain-language warnings | ✅ | |
-| Fewest changes | ✅ | Used by re-plan (D6). Planning-screen uses arrive with G7/G8. |
+| Fewest changes | ✅ | Used by re-plan (D6) and by every plan edit (G7). |
 
 ## 6. Positions and skill levels
 
@@ -64,11 +64,12 @@ Last updated: 2026-11-03 (backup and restore)
 | G2 | ✅ | |
 | G3 | ✅ | |
 | G4 | ✅ | Generate, and Shuffle for a new seed. |
-| G5 | ✅ | Players × segments grid with positions and totals, plus "Heads up" warnings. Warnings are listed above the grid rather than highlighted in it. |
-| G6 | ⬜ | Manual lineups and locks. |
-| G7 | ⬜ | Auto-fill around manual edits. The engine is ready. |
-| G8 | 🟡 | Regenerating the whole plan works. Regenerating from segment N doesn't exist yet. |
-| G9 | ⬜ | Swapping players in the plan. |
+| G5 | ✅ | The **Grid** view: players × segments with positions and totals, plus "Heads up" warnings. Warnings are listed above the grid rather than highlighted in it. Locked cells are ringed (in) or show ✕ (out). Tapping a column opens that segment. |
+| G5a | ✅ | The Plan screen opens on **Segments**: ‹ › to step, and a Q1–Q4 strip to jump to any segment (a dot marks segments with locks). Each segment shows the five with positions, then the bench. Swipe to step is not built. |
+| G6 | ✅ | Tap a player → **Lock in** / **Lock out** / **Unlock**; **🔒 Lock lineup** locks the whole five (e.g. a closing lineup). Locks are stored on the game (schema v3), shown as 🔒 In / 🔒 Out, kept by Shuffle, Redo from here, and game-day re-plan and overtime. A player's game-day status wins over a lock-in. A player's locks are dropped when they stop attending. |
+| G7 | ✅ | Automatic: every lock or swap re-fills the plan right away with the fewest changes, and says which other lineups changed (with Undo). If the locks make the plan impossible, the edit is refused and the message names the segment and the position or count that fails. Rules the locks break (e.g. a long bench stretch) show as warnings. Decision 2026-11-03: there's no separate "Fill around locks" button, because filling happens on every edit. |
+| G8 | ✅ | **↻ Shuffle** regenerates the whole plan, and **↻ Redo from here** regenerates from the current segment on. Both keep every lock; Redo also keeps the earlier segments. Decision 2026-11-03: "Redo from here" makes a new shuffle for the rest of the game, because the fewest-changes version of it would return the same plan (edits already re-fill with fewest changes). |
+| G9 | ✅ | Tap a court player → **Swap with someone on the bench** (players who can play the open position are listed first), or tap a bench player → **Put in for someone**. The swap is kept as locks, so later edits don't undo it. Swaps that leave a required position uncovered are blocked; swaps that break other rules warn first ("Swap anyway"). |
 | G10 | ✅ | Everything saves immediately. |
 | G11 | ⬜ | Duplicating a previous game's setup. |
 
@@ -133,8 +134,8 @@ Last updated: 2026-11-03 (backup and restore)
 | N5 | ✅ | README → "How the rotation engine works". |
 | Q-1 | ✅ | `npm run check` runs everything. |
 | Q-2 | ✅ | Example and property tests, plus a performance check. |
-| Q-3 | 🟡 | Storage, migrations, backup and restore, game logic, game-day changes and screens are covered. CSV tests will come with that feature. |
-| Q-4 | ✅ | WebKit at iPhone sizes: the full game flow, adding players, an injury with re-plan and overtime, and Game Day fitting five screen sizes. Offline launch in Chromium. Data surviving an update is covered by the migration test (T7). |
+| Q-3 | 🟡 | Storage, migrations, backup and restore, game logic, game-day changes, plan editing and screens are covered. CSV tests will come with that feature. |
+| Q-4 | ✅ | WebKit at iPhone sizes: the full game flow (including stepping through the plan and a lock), adding players, an injury with re-plan and overtime, and Game Day fitting five screen sizes. Offline launch in Chromium. Data surviving an update is covered by the migration test (T7). |
 | Q-5 | ✅ | Enforced: 95% for the engine and 80% overall. Currently about 100% and 97%. |
 | Q-6 | ✅ | `.github/workflows/ci.yml`. |
 | Q-7 | ✅ | |
@@ -150,7 +151,7 @@ All ⬜: favorite lineups, automatic cloud backup, sharing and sync.
 In priority order:
 
 1. ~~Mid-game: swap now (D4), player status (D5), re-plan from here (D6), overtime and extra segments (D11).~~ Done.
-2. Planning: manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).
+2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. Stats: full per-game stats (S3), season stats (S4), CSV export (S5).
 5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).

@@ -61,6 +61,7 @@ function liveGame(): Game {
     subbedOut: [],
     statuses: {},
     events: [],
+    locks: [],
     createdAt: 0,
     updatedAt: 0,
   };

@@ -1,4 +1,4 @@
-import { db, upgradeGameV2 } from './db';
+import { db, upgradeGameV2, upgradeGameV3 } from './db';
 import { shareFile } from './share';
 import type { Game, Player, Team } from './types';
 
@@ -75,6 +75,7 @@ export function parseBackup(text: string): ParseResult {
   const gameList = (games as Partial<Game>[]).map((game) => {
     const copy = structuredClone(game);
     upgradeGameV2(copy);
+    upgradeGameV3(copy);
     return copy as Game;
   });
   return {

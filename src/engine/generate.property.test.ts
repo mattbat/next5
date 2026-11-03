@@ -7,8 +7,9 @@ import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
 import { benchLimit } from './analyze';
 import { generatePlan } from './generate';
+import { canCoverWith, requiredSlots } from './positions';
 import { lineupCovers, longestBench, playedCounts } from './testUtils';
-import type { EnginePlayer, Lineup, RuleSettings, SkillLevel } from './types';
+import type { EnginePlayer, Lineup, Lock, RuleSettings, SkillLevel } from './types';
 
 const POSITIONS = ['G', 'F', 'C'] as const;
 
@@ -108,6 +109,53 @@ describe('generatePlan — properties', { timeout: 60_000 }, () => {
           }
           result.plan.forEach((lineup, segment) => {
             for (const slot of lineup) expect(unavailable[slot.playerId]?.includes(segment) ?? false).toBe(false);
+          });
+        },
+      ),
+      { numRuns: RUNS },
+    );
+  });
+
+  it('always respects locks, or reports a segment whose locks really cannot work (G6, G7)', () => {
+    const lockArb = fc.record({ player: fc.nat(14), segment: fc.nat(9), kind: fc.constantFrom<Lock['kind']>('in', 'out') });
+    fc.assert(
+      fc.property(
+        rosterArb,
+        requirementArb,
+        rulesArb,
+        fc.integer({ min: 1, max: 10 }),
+        fc.array(lockArb, { maxLength: 8 }),
+        fc.integer(),
+        (players, requirement, rules, segmentCount, rawLocks, seed) => {
+          const locks: Lock[] = rawLocks.map((l) => ({
+            segment: l.segment,
+            playerId: players[l.player % players.length]!.id,
+            kind: l.kind,
+          }));
+          const result = generatePlan({ players, requirement, rules, segmentCount, locks, seed });
+          const locksAt = (segment: number) => {
+            const here = locks.filter((l) => l.segment === segment);
+            const out = new Set(here.filter((l) => l.kind === 'out').map((l) => l.playerId));
+            const inIds = new Set(here.filter((l) => l.kind === 'in' && !out.has(l.playerId)).map((l) => l.playerId));
+            return { out, inIds };
+          };
+          if (!result.ok) {
+            if (result.error.kind === 'positions-uncoverable' || result.error.kind === 'requirement-too-large') return;
+            expect(['too-many-locked-out', 'too-many-locked-in', 'locks-uncoverable']).toContain(result.error.kind);
+            const { out, inIds } = locksAt(result.error.segment);
+            const forced = players.filter((p) => inIds.has(p.id));
+            const others = players.filter((p) => !out.has(p.id) && !inIds.has(p.id));
+            const slots = rules.positionCoverage ? requiredSlots(requirement) : [];
+            expect(forced.length + others.length >= 5 && canCoverWith(forced, others, slots)).toBe(false);
+            return;
+          }
+          result.plan.forEach((lineup, segment) => {
+            const ids = new Set(lineup.map((s) => s.playerId));
+            expect(ids.size).toBe(5);
+            const { out, inIds } = locksAt(segment);
+            for (const id of out) expect(ids.has(id)).toBe(false);
+            for (const id of inIds) expect(ids.has(id)).toBe(true);
+            if (rules.positionCoverage) expect(lineupCovers(lineup, players, requirement)).toBe(true);
           });
         },
       ),

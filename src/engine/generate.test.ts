@@ -11,7 +11,7 @@ import {
   typicalRoster,
 } from './testUtils';
 import { benchLimit } from './analyze';
-import type { GenerateInput, Lineup } from './types';
+import type { GenerateInput, Lineup, Lock } from './types';
 
 function plan(input: GenerateInput): Lineup[] {
   const result = generatePlan(input);
@@ -208,6 +208,128 @@ describe('generatePlan — fixed segments, previous plans, and availability', ()
     const players = makePlayers(8, (i) => (i === 0 ? { C: 2 } : { G: 2 }));
     const result = generatePlan(baseInput({ players, requirement: { C: 1 }, rules: ALL_RULES, unavailable: { p1: [5] } }));
     expect(result).toEqual({ ok: false, error: { kind: 'positions-uncoverable', segment: 5, missing: ['C'] } });
+  });
+});
+
+describe('generatePlan — locks (G6, G7)', () => {
+  const onCourt = (lineup: Lineup, id: string) => lineup.some((s) => s.playerId === id);
+
+  it('always plays a locked-in player and never a locked-out one', () => {
+    const locks: Lock[] = [
+      { segment: 0, playerId: 'p9', kind: 'in' },
+      { segment: 0, playerId: 'p1', kind: 'out' },
+      { segment: 3, playerId: 'p10', kind: 'in' },
+    ];
+    const result = plan(baseInput({ locks }));
+    expect(onCourt(result[0]!, 'p9')).toBe(true);
+    expect(onCourt(result[0]!, 'p1')).toBe(false);
+    expect(onCourt(result[3]!, 'p10')).toBe(true);
+  });
+
+  it('keeps a whole locked lineup', () => {
+    const five = ['p6', 'p7', 'p8', 'p9', 'p10'];
+    const locks = five.map((playerId): Lock => ({ segment: 7, playerId, kind: 'in' }));
+    const result = plan(baseInput({ locks }));
+    expect(result[7]!.map((s) => s.playerId).sort()).toEqual([...five].sort());
+  });
+
+  it('keeps playing time fair around the locks', () => {
+    const players = makePlayers(10);
+    const locks: Lock[] = [{ segment: 0, playerId: 'p1', kind: 'out' }];
+    const result = generatePlan(baseInput({ players, locks }));
+    expect(result.ok && result.warnings).toEqual([]);
+    const counts = Object.values(playedCounts(plan(baseInput({ players, locks })), players));
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1);
+  });
+
+  it('warns when the locks break a rule', () => {
+    // Sitting three segments in a row is past the bench limit of 1.
+    const locks: Lock[] = [0, 1, 2].map((segment) => ({ segment, playerId: 'p1', kind: 'out' }));
+    const result = generatePlan(baseInput({ locks }));
+    expect(result.ok && result.warnings).toContainEqual(
+      expect.objectContaining({ kind: 'bench-streak', playerId: 'p1', startSegment: 0, length: 3 }),
+    );
+  });
+
+  it('changes little when a lock is added (fewest changes)', () => {
+    const previous = plan(baseInput());
+    const out = previous[2]![0]!.playerId;
+    const result = plan(baseInput({ previous, locks: [{ segment: 2, playerId: out, kind: 'out' }] }));
+    expect(onCourt(result[2]!, out)).toBe(false);
+    let changes = 0;
+    result.forEach((lineup, s) => {
+      const before = new Set(previous[s]!.map((x) => x.playerId));
+      changes += lineup.filter((x) => !before.has(x.playerId)).length;
+    });
+    // One swap in the locked segment, plus a few moves to keep time fair and
+    // bench stretches short — far from the 40 slots a fresh plan would shuffle.
+    expect(changes).toBeLessThanOrEqual(8);
+  });
+
+  it('covers positions with the locked-in players', () => {
+    const players = typicalRoster(10);
+    const requirement = { G: 2, C: 1 };
+    // Lock in three forwards / centers; two guards must still be found.
+    const locks = ['p3', 'p4', 'p7'].map((playerId): Lock => ({ segment: 1, playerId, kind: 'in' }));
+    const result = plan(baseInput({ players, requirement, rules: ALL_RULES, locks }));
+    expect(lineupCovers(result[1]!, players, requirement)).toBe(true);
+    expect(['p3', 'p4', 'p7'].every((id) => onCourt(result[1]!, id))).toBe(true);
+  });
+
+  it('lets a lock-out win over a lock-in, and availability win over both', () => {
+    const locks: Lock[] = [
+      { segment: 0, playerId: 'p1', kind: 'in' },
+      { segment: 0, playerId: 'p1', kind: 'out' },
+      { segment: 1, playerId: 'p2', kind: 'in' },
+    ];
+    const result = plan(baseInput({ locks, unavailable: { p2: [1] } }));
+    expect(onCourt(result[0]!, 'p1')).toBe(false);
+    expect(onCourt(result[1]!, 'p2')).toBe(false);
+  });
+
+  it('ignores locks on fixed segments', () => {
+    const first = plan(baseInput());
+    const fixed = first.slice(0, 2);
+    const out = fixed[0]![0]!.playerId;
+    const result = plan(baseInput({ fixed, locks: [{ segment: 0, playerId: out, kind: 'out' }] }));
+    expect(result.slice(0, 2)).toEqual(fixed);
+  });
+
+  it('says when too many players are locked out', () => {
+    const players = makePlayers(6);
+    const locks: Lock[] = ['p1', 'p2'].map((playerId) => ({ segment: 4, playerId, kind: 'out' }));
+    expect(generatePlan(baseInput({ players, locks }))).toEqual({
+      ok: false,
+      error: { kind: 'too-many-locked-out', segment: 4, available: 4 },
+    });
+  });
+
+  it('says when more than 5 players are locked in', () => {
+    const locks = [1, 2, 3, 4, 5, 6].map((i): Lock => ({ segment: 2, playerId: `p${i}`, kind: 'in' }));
+    expect(generatePlan(baseInput({ locks }))).toEqual({
+      ok: false,
+      error: { kind: 'too-many-locked-in', segment: 2, count: 6 },
+    });
+  });
+
+  it('says which position the locks leave uncovered', () => {
+    // p1 is the only Center; locking them out leaves nobody for Center.
+    const players = makePlayers(8, (i) => (i === 0 ? { C: 2 } : { G: 2 }));
+    const locks: Lock[] = [{ segment: 3, playerId: 'p1', kind: 'out' }];
+    expect(generatePlan(baseInput({ players, requirement: { C: 1 }, rules: ALL_RULES, locks }))).toEqual({
+      ok: false,
+      error: { kind: 'locks-uncoverable', segment: 3, missing: ['C'] },
+    });
+  });
+
+  it('says when locked-in players fill the seats a position needs', () => {
+    // Five guards locked in leave no seat for the Center.
+    const players = makePlayers(8, (i) => (i === 7 ? { C: 2 } : { G: 2 }));
+    const locks = [1, 2, 3, 4, 5].map((i): Lock => ({ segment: 0, playerId: `p${i}`, kind: 'in' }));
+    expect(generatePlan(baseInput({ players, requirement: { C: 1 }, rules: ALL_RULES, locks }))).toEqual({
+      ok: false,
+      error: { kind: 'locks-uncoverable', segment: 0, missing: ['C'] },
+    });
   });
 });
 

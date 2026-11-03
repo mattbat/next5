@@ -68,7 +68,7 @@ describe('createBackup and parseBackup', () => {
   it('brings games from older app versions up to date', () => {
     const old = { format: BACKUP_FORMAT, version: 1, exportedAt: 'x', teams: [], players: [], games: [{ id: 'g', played: [] }] };
     const parsed = parseBackup(JSON.stringify(old));
-    expect(parsed.ok && parsed.backup.games[0]).toEqual({ id: 'g', played: [], subbedOut: [], statuses: {}, events: [] });
+    expect(parsed.ok && parsed.backup.games[0]).toEqual({ id: 'g', played: [], subbedOut: [], statuses: {}, events: [], locks: [] });
     const noDate = parseBackup(JSON.stringify({ ...old, exportedAt: undefined }));
     expect(noDate.ok && noDate.backup.exportedAt).toBe('');
   });

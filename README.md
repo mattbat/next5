@@ -36,7 +36,11 @@ It opens full screen like any other app and works in gyms with no signal.
    - **Default game format**: quarters or halves, and how many lineups per period. The default is 2 per quarter, a sub at the middle and at the end of each quarter.
    - **Default rules**: see *How the rotation is built* below.
 4. **Plan a game.** Teams open on the **Games** tab. Tap **+ New game**. Uncheck anyone who isn't coming, then tap **Generate plan**.
-5. **Check the plan.** The grid shows each player (rows) for each lineup (columns). A letter is the position they cover; an empty cell is the bench. The **#** column is their total. Tap **↻ Shuffle** for a different plan that is just as fair.
+5. **Check the plan.** The plan opens on the first segment: who's on the court, at what position, and who sits. Step through with **‹ ›**, or tap a segment under Q1–Q4 to jump to it. Tap a player to:
+   - **Swap** them with someone on the bench (or put a bench player in for someone),
+   - **Lock in** to keep them on the court in that segment, or **Lock out** to keep them on the bench.
+
+   Every change is kept as a 🔒 lock, and the rest of the plan adjusts straight away to keep playing time fair, changing as little as possible. **↶ Undo** reverses the last change. **🔒 Lock lineup** keeps a whole five, such as your closing lineup. **↻ Redo from here** makes new lineups from that segment on, keeping earlier segments and every lock. **Grid** shows the whole game: players (rows) by lineups (columns), a letter for the position, a ring for a lock-in, ✕ for a lock-out, and each player's total. **↻ Shuffle** makes a whole new plan that is just as fair, still keeping your locks.
 6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next by mistake? Tap **↶ Undo**.
 7. After the last lineup tap **End game** to see everyone's playing time. The game is saved in the team's history.
 
@@ -152,21 +156,21 @@ Routing uses the URL hash (`#/team/…`) because GitHub Pages can't serve `index
 
 `generatePlan` (in `src/engine/generate.ts`) builds a plan one segment at a time. A segment is one lineup between substitutions.
 
-1. **Validate.** Every segment needs at least 5 available players, and the available players must be able to cover the position requirement. Coverage is a bipartite match of distinct players to required slots, so a player who can play Guard or Center can't count for both at once. If either check fails, the engine returns a typed error that the UI explains.
+1. **Validate.** Every segment needs at least 5 available players, and the available players must be able to cover the position requirement, including with the coach's locks (locked-in players take their seats first). Coverage is a bipartite match of distinct players to required slots, so a player who can play Guard or Center can't count for both at once. If either check fails, the engine returns a typed error that the UI explains.
 2. **Cost each player** for the next segment:
    - Players **behind on playing time** relative to their fair share are cheaper (R1). Fair share accounts for late arrivals and absences.
    - Players **on the bench longer** are cheaper.
    - **Benching** someone past the bench limit `⌈(players − 5) ÷ 5⌉` is expensive (R2).
    - Players in the **previous plan's** lineup are cheaper, so a re-plan makes as few changes as possible.
-3. **Pick the lineup.** With no position or skill rules, the cheapest five win. Otherwise it tries combinations of the most-due players, skips any that can't cover positions (H1), adds a small penalty for stacking skill levels (R3), and widens the pool if nothing fits.
+3. **Pick the lineup.** Locked-in players are always on the court and locked-out players never are; the open seats are filled as follows. With no position or skill rules, the cheapest five win. Otherwise it tries combinations of the most-due players, skips any that can't cover positions (H1), adds a small penalty for stacking skill levels (R3), and widens the pool if nothing fits.
 4. **Repeat with jitter.** It builds 40 candidate plans with a little random jitter and scores each whole plan with `analyzePlan`. The score is weighted by rule priority: equal time ≫ bench limit ≫ changes from the previous plan > skill balance. The best plan wins. A seed makes this repeatable; **Shuffle** just uses the next seed.
 
-Segments in `fixed` (already played, or locked) are never changed. 15 players × 16 segments with positions takes well under a second.
+Segments in `fixed` (already played) are never changed. `locks` pin single players into or out of a segment. A locked-out player still counts toward their fair share, so the plan makes up their time elsewhere. Every plan edit in `src/domain/planning.ts` is stored as a lock and re-runs the engine with the current plan as `previous`, which is how auto-fill (G7) keeps changes small. 15 players × 16 segments with positions takes well under a second.
 
 ### Tests
 
 - `src/engine/*.test.ts`: example tests for every rule, error and edge case.
-- `src/engine/generate.property.test.ts`: fast-check generates hundreds of random rosters, requirements, absences and fixed segments, and checks that positions are always covered, time stays within 1, bench stretches stay within the limit, played segments never change, and unavailable players never play.
+- `src/engine/generate.property.test.ts`: fast-check generates hundreds of random rosters, requirements, absences and fixed segments, and checks that positions are always covered, time stays within 1, bench stretches stay within the limit, played segments never change, unavailable players never play, and locks are always kept (or the error names a segment whose locks really can't work).
 - `src/App.test.tsx`: walks the main workflows through the real screens against an in-memory IndexedDB.
 - `e2e/`: Playwright, in WebKit at 402×874 (iPhone 17) for the full game flow, and in Chromium for offline launch.
 

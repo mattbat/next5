@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { assignPositions, canCover, missingPositions, requiredSlots } from './positions';
+import { assignPositions, canCover, canCoverWith, missingPositions, missingWithLocks, requiredSlots } from './positions';
 import { makePlayers } from './testUtils';
 
 describe('requiredSlots', () => {
@@ -79,5 +79,33 @@ describe('assignPositions', () => {
 
   it('returns null when the requirement cannot be met', () => {
     expect(assignPositions(makePlayers(5, () => ({ G: 2 })), ['C'])).toBeNull();
+  });
+});
+
+describe('canCoverWith and missingWithLocks (locks)', () => {
+  const players = makePlayers(8, (i) => (i === 7 ? { C: 2 } : { G: 2 }));
+  const guards = players.slice(0, 5);
+  const rest = players.slice(5);
+
+  it('fills the open seats from the other players', () => {
+    expect(canCoverWith(guards.slice(0, 4), rest, ['C'])).toBe(true);
+    expect(canCoverWith([], players, ['C'])).toBe(true);
+    expect(canCoverWith(guards, rest, [])).toBe(true);
+  });
+
+  it('fails when the locked-in players take the seats a position needs', () => {
+    expect(canCoverWith(guards, rest, ['C'])).toBe(false);
+    expect(missingWithLocks(guards, rest, { C: 1, G: 2 })).toEqual(['C']);
+  });
+
+  it('fails with too many locked in or too few left', () => {
+    expect(canCoverWith(players.slice(0, 6), [], ['G'])).toBe(false);
+    expect(canCoverWith([], players.slice(0, 4), ['G'])).toBe(false);
+  });
+
+  it('blames every required position when none fails on its own', () => {
+    // One G/C player can cover either position, but not both.
+    const flexible = makePlayers(6, (i) => (i === 0 ? { G: 2, C: 2 } : { F: 2 }));
+    expect(missingWithLocks([], flexible, { G: 1, C: 1 })).toEqual(['G', 'C']);
   });
 });

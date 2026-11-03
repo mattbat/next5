@@ -1,4 +1,4 @@
-import { generatePlan, type EnginePlayer, type GenerateError, type Lineup, type Warning } from '../engine';
+import { generatePlan, type EnginePlayer, type GenerateError, type Lineup, type Lock, type Warning } from '../engine';
 import type { Game, GameFormat, Player, Position, Team } from '../data/types';
 
 /** Pure game logic shared by the screens. No storage or UI here. */
@@ -54,17 +54,27 @@ export function toEnginePlayers(players: Player[]): EnginePlayer[] {
   return players.map((p) => ({ id: p.id, skills: p.skills }));
 }
 
+/**
+ * The game's locks that still apply (G6): for attending players and within
+ * the plan. Locks for players who stopped attending are ignored.
+ */
+export function activeLocks(game: Game, count: number): Lock[] {
+  return game.locks.filter((l) => l.segment < count && game.attending.includes(l.playerId));
+}
+
 export type PlanOutcome = { ok: true; plan: Lineup[]; warnings: Warning[] } | { ok: false; error: GenerateError };
 
 /**
  * Generates (or regenerates) a game's plan from the attending players.
- * Segments already played are always kept (D3).
+ * Segments already played and the coach's locks are always kept (D3, G8).
  */
 export function planGame(game: Game, team: Team, roster: Player[], seed?: number): PlanOutcome {
   const attending = roster.filter((p) => game.attending.includes(p.id));
+  const count = Math.max(segmentCount(game.format), game.plan.length);
   return generatePlan({
     players: toEnginePlayers(attending),
-    segmentCount: Math.max(segmentCount(game.format), game.plan.length),
+    segmentCount: count,
+    locks: activeLocks(game, count),
     requirement: team.requirement,
     rules: game.rules,
     fixed: game.played,
@@ -100,6 +110,15 @@ export function describeError(error: GenerateError, game: Game, positions: Posit
       const missing = error.missing.map(posName).join(' and ');
       const when = segmentLabel(game.format, error.segment).text;
       return `Not enough attending players can play ${missing} (needed from ${when}). Mark another player as able to play ${missing}, or lower the requirement in the team settings.`;
+    }
+    case 'too-many-locked-out':
+      return `Too many players are locked out of ${segmentLabel(game.format, error.segment).text}: only ${error.available} are left to play. Unlock someone in that segment.`;
+    case 'too-many-locked-in':
+      return `${error.count} players are locked in for ${segmentLabel(game.format, error.segment).text}, but only 5 fit on the court. Unlock someone in that segment.`;
+    case 'locks-uncoverable': {
+      const missing = error.missing.map(posName).join(' and ');
+      const when = segmentLabel(game.format, error.segment).text;
+      return `With the locks in ${when}, nobody left can play ${missing}. Unlock a player there, or lock in someone who plays ${missing}.`;
     }
   }
 }

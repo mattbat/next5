@@ -11,6 +11,7 @@ import {
   deleteTeam,
   newId,
   saveGame,
+  toggleAttending,
   updatePlayer,
   updateTeam,
 } from './repo';
@@ -93,6 +94,24 @@ describe('repo', () => {
     expect(await db.games.count()).toBe(0);
   });
 
+  it('drops the locks of a player who stops attending (G1, G6)', async () => {
+    const team = await createTeam('Lions');
+    const a = await addPlayer(team.id, { name: 'Ava', number: '1', skills: {} });
+    const b = await addPlayer(team.id, { name: 'Bea', number: '2', skills: {} });
+    const game = await createGame(team);
+    await saveGame({
+      ...game,
+      locks: [
+        { segment: 0, playerId: a.id, kind: 'in' },
+        { segment: 1, playerId: b.id, kind: 'out' },
+      ],
+    });
+    await toggleAttending(game.id, a.id);
+    const saved = await db.games.get(game.id);
+    expect(saved?.attending).toEqual([b.id]);
+    expect(saved?.locks).toEqual([{ segment: 1, playerId: b.id, kind: 'out' }]);
+  });
+
   it('creates a demo team that can cover its positions', async () => {
     const team = await createDemoTeam();
     expect(team.requirement).toEqual({ G: 2, C: 1 });
@@ -101,7 +120,7 @@ describe('repo', () => {
 });
 
 describe('schema migrations', () => {
-  it('upgrades a v1 database to v2 without losing data (T7)', async () => {
+  it('upgrades a v1 database to the latest version without losing data (T7)', async () => {
     const name = `migration-test-${newId()}`;
     // Write a game the way version 1 of the app stored it.
     const v1 = new Dexie(name);
@@ -111,7 +130,22 @@ describe('schema migrations', () => {
 
     const upgraded = new Next5Db(name);
     const game = await upgraded.games.get('g1');
-    expect(game).toMatchObject({ opponent: 'Hawks', played: [[]], subbedOut: [], statuses: {}, events: [] });
+    expect(game).toMatchObject({ opponent: 'Hawks', played: [[]], subbedOut: [], statuses: {}, events: [], locks: [] });
+    upgraded.close();
+    await Dexie.delete(name);
+  });
+
+  it('upgrades a v2 database to v3, adding locks and keeping everything else (T7)', async () => {
+    const name = `migration-test-${newId()}`;
+    const v2 = new Dexie(name);
+    v2.version(1).stores({ teams: 'id, name, archived', players: 'id, teamId', games: 'id, teamId, date, status' });
+    v2.version(2).stores({});
+    const events = [{ kind: 'replan', segment: 2, changes: 1 }];
+    await v2.table('games').add({ id: 'g1', teamId: 't1', status: 'live', subbedOut: [], statuses: {}, events });
+    v2.close();
+
+    const upgraded = new Next5Db(name);
+    expect(await upgraded.games.get('g1')).toMatchObject({ status: 'live', events, locks: [] });
     upgraded.close();
     await Dexie.delete(name);
   });

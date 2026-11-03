@@ -168,6 +168,10 @@ describe('game workflow', () => {
     await goTo(window.location.hash);
 
     expect(await screen.findByRole('heading', { name: 'vs Rockets' })).toBeInTheDocument();
+    // The plan opens one segment at a time; the grid shows it all.
+    expect(screen.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeInTheDocument();
+    expect(within(screen.getByRole('list', { name: 'On court' })).getAllByRole('listitem')).toHaveLength(5);
+    await user.click(screen.getByRole('radio', { name: 'Grid' }));
     expect(screen.getByRole('table')).toBeInTheDocument();
     expect(screen.queryByText('Kai')).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: '↻ Shuffle' }));

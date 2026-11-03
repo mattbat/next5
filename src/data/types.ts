@@ -1,4 +1,4 @@
-import type { Lineup, PlayerId, PositionId, RuleSettings, SkillLevel, Slot, Warning } from '../engine';
+import type { Lineup, Lock, PlayerId, PositionId, RuleSettings, SkillLevel, Slot, Warning } from '../engine';
 
 /**
  * Stored records. Every record has a stable id and updatedAt so a sync layer
@@ -91,4 +91,9 @@ export interface Game extends Record {
   statuses: Partial<{ [playerId: PlayerId]: PlayerStatus }>;
   /** Log of changes from the plan (S1). */
   events: GameEvent[];
+  /**
+   * The coach's locks from planning (G6). Every regenerate and re-plan keeps
+   * them; a player's game-day status wins over a lock-in.
+   */
+  locks: Lock[];
 }
