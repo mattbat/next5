@@ -12,6 +12,21 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
     <title>next5</title>
+    <script>
+      // Light or dark before the app loads, so it never flashes the wrong one
+      // (D10). Same logic as applyTheme in src/theme.ts.
+      (function () {
+        var pref = "dark";
+        try {
+          pref = localStorage.getItem("next5.theme") || "dark";
+        } catch (e) {}
+        var light = pref === "light" || (pref === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: light)").matches);
+        document.documentElement.dataset.theme = light ? "light" : "dark";
+        document.querySelector("meta[name=theme-color]").setAttribute("content", light ? "#f4f6fa" : "#0b0f17");
+        // Dark status bar text on the light theme; the Home Screen app reads this at launch.
+        if (light) document.querySelector("meta[name=apple-mobile-web-app-status-bar-style]").setAttribute("content", "default");
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

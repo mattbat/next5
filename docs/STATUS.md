@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), and handing a game to an assistant (SH1–SH6). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), and a light theme (D10). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (handing a game to an assistant and back)
+Last updated: 2026-11-03 (light theme)
 
 ## 3. Platform and technical
 
@@ -87,7 +87,7 @@ Last updated: 2026-11-03 (handing a game to an assistant and back)
 | D7 | ✅ 📱 | Screen Wake Lock, re-acquired when the app returns to the foreground. Needs checking on the deployed (https) site; the Wi-Fi test link couldn't use it. |
 | D8 | ✅ | Tested by reloading mid-game. |
 | D9 | ✅ | End game, and "Undo end of game" to resume. |
-| D10 | 🟡 | High-contrast dark theme with IN/OUT shown by words and arrows. The light theme is not built. |
+| D10 | ✅ 📱 | Dark by default; Settings → **Appearance**: Dark, Light or Match phone (follows the phone switching live). The light palette darkens the accent and IN/OUT/warning colors so text keeps 4.5:1 contrast on white. IN/OUT are shown by words and arrows in both. The theme is applied by an inline script in `index.html` before the app loads, so it never flashes the other one. Needs checking on an iPhone: the Home Screen app's status bar (clock, battery) switches to dark text on light only when the app is next opened. |
 | D11 | ✅ | "+ OT" on the last segment and "Add overtime segment" in the Edit menu, planned with the same rules. |
 
 ## 10. History and stats
@@ -139,7 +139,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Design and UX | 🟡 📱 | Dark sports theme, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Dynamic Type and VoiceOver are only partly addressed. |
+| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Dynamic Type and VoiceOver are only partly addressed. |
 | N1 | 📱 | Not measured on a device. |
 | N2 | ✅ | Tested: well under 1 second (the test allows 3 seconds for CI). |
 | N3 | ✅ | |
@@ -167,7 +167,7 @@ In priority order:
 2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
-5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
+5. ~~Light theme (D10)~~ Done. Editable positions (P1), archive and copy teams (M1, M4).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
 ## Small changes requested
