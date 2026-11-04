@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { Info, Section, TopBar } from '../components/ui';
+import { Info, Section, Segmented, TopBar } from '../components/ui';
 import {
   backUp,
   lastBackupAt,
@@ -10,6 +10,7 @@ import {
   type RestoreMode,
 } from '../data/backup';
 import { paths } from '../router';
+import { setThemePreference, themePreference, type ThemePreference } from '../theme';
 
 function formatWhen(time: number | null): string {
   if (time === null) return 'Never';
@@ -20,8 +21,9 @@ function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-/** Settings: backup and restore (B1, B2), updates and app info (B4). */
+/** Settings: appearance (D10), backup and restore (B1, B2), updates and app info (B4). */
 export function SettingsScreen() {
+  const [theme, setTheme] = useState(themePreference);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Backup | null>(null);
@@ -150,6 +152,26 @@ export function SettingsScreen() {
             </button>
           </div>
         )}
+      </Section>
+
+      <Section title="Appearance">
+        <Segmented<ThemePreference>
+          label="Appearance"
+          value={theme}
+          onChange={(value) => {
+            setThemePreference(value);
+            setTheme(value);
+          }}
+          options={[
+            { value: 'dark', label: 'Dark' },
+            { value: 'light', label: 'Light' },
+            { value: 'auto', label: 'Match phone' },
+          ]}
+        />
+        <p className="hint">
+          Dark is easiest to read in most gyms. Light can be clearer outdoors or in a bright room. On the Home Screen
+          app, the clock and battery at the top update the next time you open next5.
+        </p>
       </Section>
 
       <Section title="App">

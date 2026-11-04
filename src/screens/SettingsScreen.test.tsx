@@ -1,5 +1,5 @@
 /** Backup, restore and the backup reminder through the real screens (B1–B4). */
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
@@ -205,5 +205,23 @@ describe('Teams screen backup reminder', () => {
     await goTo('#/');
     render(<App />);
     expect(await screen.findByText(/over a month since your last backup/)).toBeInTheDocument();
+  });
+});
+
+describe('Settings: appearance (D10)', () => {
+  it('switches between dark and light, and remembers it', async () => {
+    const user = userEvent.setup();
+    await goTo('#/settings');
+    render(<App />);
+    const group = await screen.findByRole('radiogroup', { name: 'Appearance' });
+    expect(within(group).getByRole('radio', { name: 'Dark' })).toBeChecked();
+
+    await user.click(within(group).getByRole('radio', { name: 'Light' }));
+    expect(document.documentElement.dataset.theme).toBe('light');
+    expect(localStorage.getItem('next5.theme')).toBe('light');
+    expect(within(group).getByRole('radio', { name: 'Light' })).toBeChecked();
+
+    await user.click(within(group).getByRole('radio', { name: 'Dark' }));
+    expect(document.documentElement.dataset.theme).toBe('dark');
   });
 });
