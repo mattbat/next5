@@ -9,6 +9,12 @@ next5 is an iPhone app for youth basketball coaches. You enter your roster once.
 
 App: **https://mattbat.com/next5/**
 
+<p>
+  <img src="public/help/plan-dark.webp" width="200" alt="The plan for one segment: five players on the court with positions, and the bench">
+  <img src="public/help/gameday-dark.webp" width="200" alt="Game Day: who is on the court, the IN and OUT pairs for the next sub, and the Next button">
+  <img src="public/help/final-dark.webp" width="200" alt="The Final screen: segments planned, played and sat for each player">
+</p>
+
 ---
 
 ## For coaches
@@ -21,6 +27,10 @@ App: **https://mattbat.com/next5/**
 4. Open next5 from the new icon on your Home Screen.
 
 It opens full screen like any other app and works in gyms with no signal.
+
+### Help in the app
+
+The first time next5 opens, a short intro shows what it does (tap **Skip** to go straight in). After that, tap **Help** at the top left of the Teams screen, or **Settings → Help and guide**, for a full guide with pictures: setting up a team, planning, changing the plan, game day, injuries and re-planning, stats, sharing with an assistant, backups, and common questions. Screens with something to explain have a **?** link to the right page. **‹** goes back a page, and **Done** returns you to the screen you were on. **Help → Replay the intro** shows the intro again.
 
 ### Quick start
 
@@ -40,8 +50,12 @@ It opens full screen like any other app and works in gyms with no signal.
    - **Swap** them with someone on the bench (or put a bench player in for someone),
    - **Lock in** to keep them on the court in that segment, or **Lock out** to keep them on the bench.
 
+   <img src="public/help/plan-player-dark.webp" width="200" alt="Options for one player in the plan: swap, lock in or lock out">
+
    Every change is kept as a 🔒 lock, and the rest of the plan adjusts straight away to keep playing time fair, changing as little as possible. **↶ Undo** reverses the last change. **🔒 Lock lineup** keeps a whole five, such as your closing lineup. **↻ Redo from here** makes new lineups from that segment on, keeping earlier segments and every lock. **Grid** shows the whole game: players (rows) by lineups (columns), a letter for the position, a ring for a lock-in, ✕ for a lock-out, and each player's total. **↻ Shuffle** makes a whole new plan that is just as fair, still keeping your locks.
 6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next by mistake? Tap **↶ Undo**.
+   <img src="public/help/gameday-player-dark.webp" width="200" alt="Tapping a player on game day: Sub out now, Injured, or Rest">
+
 7. After the last lineup tap **End game** to see everyone's playing time: segments planned, played and sat, and the positions they played. **Export stats (CSV)** sends the table to Files, Mail or Numbers. The game is saved in the team's history.
 8. **Season stats.** The team's **Stats** tab adds up every finished game: games, segments played, the share of available segments they played, and segments at each position. **Export season stats (CSV)** opens in Excel, Numbers or Google Sheets. Skill levels are never exported.
 
@@ -141,6 +155,7 @@ npm run dev          # http://localhost:5173/next5/
 | `npm run test:e2e` | Playwright end-to-end tests (run `npm run build` first) |
 | `npm run check` | Everything above, in CI order |
 | `npm run icons` | Regenerate PNG icons from `public/favicon.svg` |
+| `npm run screenshots` | Retake the help screenshots in `public/help/` (builds first) |
 
 The first time you run e2e tests, install the browsers with `npx playwright install webkit chromium`.
 
@@ -161,9 +176,12 @@ src/
                 backup files and restore (backup.ts), share sheet / download (share.ts),
                 handing a game to the assistant by link or file (handoff.ts)
   screens/      One component per screen
-  components/   Shared UI (top bar, toggles, sheets, update banner, install hint)
+  components/   Shared UI (top bar, toggles, sheets, update banner, install hint, first-run intro)
+  help/         The in-app guide: topics (topics.tsx), screenshot list (shots.ts), intro state
   hooks/        useGameData, useWakeLock
 e2e/            Playwright tests
+scripts/screens/  Takes the help screenshots (npm run screenshots)
+public/help/    Help screenshots, <name>-dark.webp and <name>-light.webp
 docs/STATUS.md  Which requirements are done
 REQUIREMENTS.md The spec
 ```
@@ -190,7 +208,14 @@ Segments in `fixed` (already played) are never changed. `locks` pin single playe
 - `src/engine/*.test.ts`: example tests for every rule, error and edge case.
 - `src/engine/generate.property.test.ts`: fast-check generates hundreds of random rosters, requirements, absences and fixed segments, and checks that positions are always covered, time stays within 1, bench stretches stay within the limit, played segments never change, unavailable players never play, and locks are always kept (or the error names a segment whose locks really can't work).
 - `src/App.test.tsx`: walks the main workflows through the real screens against an in-memory IndexedDB.
+- `src/screens/Help.test.tsx`: the intro, and every help topic renders with links and screenshots that exist.
 - `e2e/`: Playwright, in WebKit at 402×874 (iPhone 17) for the full game flow, and in Chromium for offline launch.
+
+The e2e tests start past the first-run intro (`storageState` in `playwright.config.ts`); `e2e/help.spec.ts` starts from a fresh phone to test it.
+
+### Help screenshots
+
+The guide's pictures are real screens of the demo team (made-up players) in both themes. When a screen changes, run `npm run screenshots` and commit the new images in `public/help/`. Help picks the image matching the current theme. To add one, list it in `src/help/shots.ts`, take it in `scripts/screens/capture.spec.ts`, and use `<Shot name="…" />` in a topic. The images are precached, so help works offline (about 1.2 MB for both themes).
 
 Coverage thresholds are enforced in `vite.config.ts`: 95% of lines for `src/engine`, 80% for the app.
 

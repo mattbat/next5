@@ -11,6 +11,7 @@ import {
 } from '../data/backup';
 import { paths } from '../router';
 import { setThemePreference, themePreference, type ThemePreference } from '../theme';
+import { HelpLink } from '../help/parts';
 
 function formatWhen(time: number | null): string {
   if (time === null) return 'Never';
@@ -100,6 +101,15 @@ export function SettingsScreen() {
         </p>
       )}
 
+      <Section title="Help">
+        <a className="btn secondary wide" href={paths.help()}>
+          Help and guide
+        </a>
+        <p className="hint">
+          How every part of next5 works, with pictures. <a href={paths.welcome()}>Replay the intro</a>.
+        </p>
+      </Section>
+
       <Section
         title="Back up"
         aside={
@@ -114,7 +124,9 @@ export function SettingsScreen() {
         <button type="button" className="btn wide" onClick={() => void onBackUp()}>
           Back up all teams
         </button>
-        <p className="hint">To back up one team, use the Settings tab on that team.</p>
+        <p className="hint">
+          To back up one team, use the Settings tab on that team. <HelpLink topic="backup">About backups</HelpLink>
+        </p>
       </Section>
 
       <Section title="Restore">

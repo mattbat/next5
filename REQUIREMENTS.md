@@ -209,6 +209,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | H-5 | **Explaining the generator's choices:** whenever the generator relaxes a rule or blocks an edit, it says why in plain language and suggests how to fix it. |
 | H-6 | **Empty states** that explain what to do next (for example, "No players yet. Tap + to add your roster."). |
 | H-7 | **In-app install prompt:** when the app is opened in regular Safari rather than from the Home Screen, show how to add it to the Home Screen. |
+| H-8 | **In-app guide:** a Help screen with a topic for each part of the app (setup, planning, game day, stats, sharing, backups, common questions), with screenshots that match the current theme and work offline. Screens link to the topic that explains them. |
 
 ## 13. Design and UX (iOS)
 
@@ -307,6 +308,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-03 | Dropped: copying a team into a new season (M4), duplicating a game's setup (G11), approximate minutes (S6), and one-tap position fixes (H1). Stretch goals (§16) wait. README screenshots (H-1) wait until the app is more polished. |
 | 2026-11-03 | A game can be shared at any point (planned, in progress, or finished), not only at fixed coach and assistant steps. After sharing a game in progress, the sharing phone is locked until Take back control, so two phones never run the same game. |
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
+| 2026-11-04 | The first-run guide (H-3) is a few skippable intro cards ending in "Try the demo team" or "Set up my own team", replayable from Help. A full in-app guide (H-8) is added, reached from the Teams screen, Settings and "?" links on screens. Screenshots are taken automatically from the demo team in both themes. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions

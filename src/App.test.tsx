@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { db } from './data/db';
+import { markIntroSeen } from './help/intro';
 import { createDemoTeam, createGame, saveGame } from './data/repo';
 import { planGame, startGame } from './domain/game';
 import { parseRoute } from './router';
@@ -15,6 +16,9 @@ beforeEach(async () => {
   await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
   window.location.hash = '#/';
   localStorage.clear();
+  sessionStorage.clear();
+  // The first-run intro has its own tests (Help.test.tsx).
+  markIntroSeen();
 });
 
 afterEach(() => {
@@ -68,6 +72,19 @@ describe('teams', () => {
     expect(await screen.findByRole('button', { name: '+ New game' })).toBeInTheDocument();
     expect(screen.queryByRole('complementary', { name: 'Archived team' })).not.toBeInTheDocument();
     expect((await db.teams.get(team.id))?.archived).toBe(false);
+  });
+
+  it('reopens a team on the tab you left, e.g. after reading help from the Roster tab', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await goTo(`#/team/${team.id}`);
+    render(<App />);
+    await user.click(await screen.findByRole('radio', { name: /Roster/ }));
+    await user.click(screen.getByRole('link', { name: /Positions and skill levels/ }));
+    await goTo(window.location.hash);
+    expect(await screen.findByRole('heading', { name: 'Teams and players' })).toBeInTheDocument();
+    await goTo(`#/team/${team.id}`);
+    expect(await screen.findByRole('radio', { name: /Roster/ })).toHaveAttribute('aria-checked', 'true');
   });
 
   it('shows the install hint and an empty state, and can dismiss the hint', async () => {

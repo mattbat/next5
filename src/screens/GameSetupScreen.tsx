@@ -6,6 +6,7 @@ import type { Game, Player, Team } from '../data/types';
 import { describeError, planGame, segmentCount } from '../domain/game';
 import { navigate, paths } from '../router';
 import { RULE_HELP } from './ruleHelp';
+import { HelpLink } from '../help/parts';
 
 /** Game setup: date, opponent, attendance, format and rules (G1–G3). */
 export function GameSetupScreen({ gameId }: { gameId: string }) {
@@ -122,7 +123,7 @@ function Setup({ game, team, roster }: { game: Game; team: Team; roster: Player[
             <p className="hint">{segmentCount(game.format)} lineups in this game.</p>
           </Section>
 
-          <Section title="Rules for this game">
+          <Section title="Rules for this game" aside={<HelpLink topic="rules">How rules work</HelpLink>}>
             {(Object.keys(RULE_HELP) as (keyof typeof RULE_HELP)[]).map((key) => (
               <Toggle
                 key={key}

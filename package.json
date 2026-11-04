@@ -14,7 +14,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "check": "node scripts/check.mjs",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "screenshots": "playwright test --config playwright.screens.config.ts"
   },
   "dependencies": {
     "dexie": "^4.4.7",

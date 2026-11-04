@@ -37,7 +37,7 @@ test('backs up, loses everything, and restores it from the backup file (B1, B2)'
   await expect(page.getByRole('status')).toContainText('Everything on this phone now matches the backup');
 
   // The team, its roster and its game are all back.
-  await page.getByRole('link', { name: 'Back' }).click();
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
   await page.getByRole('link', { name: /Demo Hoopers/ }).click();
   await expect(page.getByRole('link', { name: /vs Rockets/ })).toBeVisible();
   await expect(page.getByRole('radio', { name: 'Roster (10)' })).toBeVisible();
