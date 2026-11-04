@@ -66,86 +66,90 @@ function Setup({ game, team, roster }: { game: Game; team: Team; roster: Player[
         </label>
       </Section>
 
-      <Section title={`Attending (${game.attending.length})`}>
-        {players.length === 0 && <Empty>This team has no players yet. Add them on the team's Roster tab.</Empty>}
-        <ul className="list">
-          {players.map((p) => (
-            <li key={p.id}>
-              <label className="list-item check">
-                <Jersey number={p.number} />
-                <span className="list-title">{p.name}</span>
-                <input
-                  type="checkbox"
-                  checked={game.attending.includes(p.id)}
-                  disabled={locked}
-                  onChange={() => void toggleAttending(game.id, p.id)}
-                  aria-label={`${p.name} attending`}
-                />
-                <span className="checkmark" aria-hidden />
-              </label>
-            </li>
-          ))}
-        </ul>
-      </Section>
-
-      <Section title="Format">
-        <div className="row">
-          <span className="row-label">Periods</span>
-          <Segmented
-            label="Periods"
-            value={game.format.periodType}
-            onChange={(periodType) =>
-              !locked &&
-              update({
-                format: { periodType, segmentsPerPeriod: periodType === 'quarters' ? 2 : 4 },
-                plan: [],
-                warnings: [],
-              })
-            }
-            options={[
-              { value: 'quarters', label: 'Quarters' },
-              { value: 'halves', label: 'Halves' },
-            ]}
-          />
-        </div>
-        <div className="row">
-          <span className="row-label">Subs per {game.format.periodType === 'quarters' ? 'quarter' : 'half'}</span>
-          <Stepper
-            label="segments per period"
-            value={game.format.segmentsPerPeriod}
-            min={1}
-            max={6}
-            onChange={(v) => !locked && update({ format: { ...game.format, segmentsPerPeriod: v }, plan: [], warnings: [] })}
-          />
-        </div>
-        <p className="hint">{segmentCount(game.format)} lineups in this game.</p>
-      </Section>
-
-      <Section title="Rules for this game">
-        {(Object.keys(RULE_HELP) as (keyof typeof RULE_HELP)[]).map((key) => (
-          <Toggle
-            key={key}
-            label={RULE_HELP[key].label}
-            info={RULE_HELP[key].help}
-            checked={game.rules[key]}
-            onChange={(v) => !locked && update({ rules: { ...game.rules, [key]: v }, plan: [], warnings: [] })}
-          />
-        ))}
-      </Section>
-
+      {/* Who's playing, the format and the rules are fixed once the game starts. */}
       {!locked && (
-        <Section title="">
-          <button
-            type="button"
-            className="btn danger wide"
-            onClick={() => {
-              if (window.confirm('Delete this game?')) void deleteGame(game.id).then(() => navigate(paths.team(team.id)));
-            }}
-          >
-            Delete game
-          </button>
-        </Section>
+        <>
+          <Section title={`Attending (${game.attending.length})`}>
+            {players.length === 0 && <Empty>This team has no players yet. Add them on the team's Roster tab.</Empty>}
+            <ul className="list">
+              {players.map((p) => (
+                <li key={p.id}>
+                  <label className="list-item check">
+                    <Jersey number={p.number} />
+                    <span className="list-title">{p.name}</span>
+                    <input
+                      type="checkbox"
+                      checked={game.attending.includes(p.id)}
+                      onChange={() => void toggleAttending(game.id, p.id)}
+                      aria-label={`${p.name} attending`}
+                    />
+                    <span className="checkmark" aria-hidden />
+                  </label>
+                </li>
+              ))}
+            </ul>
+          </Section>
+
+          <Section title="Format">
+            <div className="row">
+              <span className="row-label">Periods</span>
+              <Segmented
+                label="Periods"
+                value={game.format.periodType}
+                onChange={(periodType) =>
+                  update({
+                    format: { periodType, segmentsPerPeriod: periodType === 'quarters' ? 2 : 4 },
+                    plan: [],
+                    warnings: [],
+                  })
+                }
+                options={[
+                  { value: 'quarters', label: 'Quarters' },
+                  { value: 'halves', label: 'Halves' },
+                ]}
+              />
+            </div>
+            <div className="row">
+              <span className="row-label">Subs per {game.format.periodType === 'quarters' ? 'quarter' : 'half'}</span>
+              <Stepper
+                label="segments per period"
+                value={game.format.segmentsPerPeriod}
+                min={1}
+                max={6}
+                onChange={(v) => update({ format: { ...game.format, segmentsPerPeriod: v }, plan: [], warnings: [] })}
+              />
+            </div>
+            <p className="hint">{segmentCount(game.format)} lineups in this game.</p>
+          </Section>
+
+          <Section title="Rules for this game">
+            {(Object.keys(RULE_HELP) as (keyof typeof RULE_HELP)[]).map((key) => (
+              <Toggle
+                key={key}
+                label={RULE_HELP[key].label}
+                info={RULE_HELP[key].help}
+                checked={game.rules[key]}
+                onChange={(v) => update({ rules: { ...game.rules, [key]: v }, plan: [], warnings: [] })}
+              />
+            ))}
+          </Section>
+        </>
       )}
+
+      <Section title="">
+        <button
+          type="button"
+          className="btn danger wide"
+          onClick={() => {
+            const question = locked
+              ? 'Delete this game with everything played and its stats? This can’t be undone.'
+              : 'Delete this game?';
+            if (window.confirm(question)) void deleteGame(game.id).then(() => navigate(paths.team(team.id)));
+          }}
+        >
+          Delete game
+        </button>
+      </Section>
 
       <footer className="footer">
         {error && (

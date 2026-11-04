@@ -91,14 +91,17 @@ Settings also has **Check for updates** and the app version.
 
 ### Sharing a game with your assistant
 
-If an assistant runs the subs on their phone, hand them the game and get it back when it's over:
+If an assistant runs the subs on their phone, either of you can share the game with the other at any point: before, during or after the game. Tap **Share game** on the plan screen, in the Game Day **Edit** menu, or on the Final screen, then choose **Text a link** (Messages, WhatsApp, email) or **AirDrop a file** (when you're together; works with no signal).
 
-1. **Coach:** open the plan and tap **Send to assistant**. Choose **Text a link** (Messages, WhatsApp, email) or **AirDrop a file** (when you're together; works with no signal).
-2. **Assistant:** tap the link and then **Open here**. If you use the next5 app on your Home Screen, tap **Copy for the next5 app** instead, then open next5 and tap **Paste game** on the Teams screen. For an AirDropped file, tap **Open game file** on the Teams screen.
-3. **During the game** the assistant runs it as usual. The coach's phone shows **With your assistant**. You can still change the plan and **Send again** until tip-off; once the assistant has started, their phone won't let an old plan wipe out their swaps.
-4. **After the game** the assistant taps **Send back to coach** on the Final screen. The coach opens it the same way, and the game, with every swap and the playing time, is back on the coach's phone.
+To open a shared game, tap the link and then **Open here**. If you use the next5 app on your Home Screen, tap **Copy for the next5 app** instead, then open next5 and tap **Paste game** on the Teams screen. For an AirDropped file, tap **Open game file** on the Teams screen.
 
-If the assistant can't finish (a dead battery, say), the coach taps **Take back control**.
+Some ways to use it:
+
+- **Before the game:** the coach shares the plan. Changed something? Share again; it replaces the assistant's copy until they start the game.
+- **Assistant has to leave:** they share the game in progress. The coach opens it and carries on from the same segment, with every swap so far.
+- **Assistant missed a game:** the coach shares the finished game, so the assistant's season stats are complete.
+
+Only one phone runs a game at a time. After you share a game that's in progress, your phone shows **The other phone is running this game** and won't let you tap Next or make swaps. If the other phone can't carry on (a dead battery, say), tap **Take back control**. A phone that has already played further won't let an older copy wipe out its swaps.
 
 ### Updates
 

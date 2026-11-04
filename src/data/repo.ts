@@ -149,16 +149,22 @@ export async function deleteGame(id: string): Promise<void> {
 // Handing a game to the assistant and back (SH1–SH6)
 
 /**
- * Records that this phone sent the game. The game's updatedAt is set to the
- * same moment, so any later edit shows as "changed since you sent it".
+ * Records that this phone shared the game. Until it comes back (or Take back
+ * control), the other phone runs it (SH5); a finished game is shared only
+ * for the records, so this phone keeps it. The game's updatedAt is set to
+ * the same moment, so any later edit shows as "changed since you shared it".
  */
 export async function markSent(gameId: string, n: number, now = Date.now()): Promise<void> {
   await db.transaction('rw', db.games, async () => {
     const game = await db.games.get(gameId);
     if (!game) return;
-    await db.games.update(gameId, { handoff: { n, role: roleOf(game), away: true, sentAt: now }, updatedAt: now });
+    const away = game.status !== 'final';
+    await db.games.update(gameId, { handoff: { n, role: roleOf(game), away, sentAt: now }, updatedAt: now });
   });
 }
+
+/** True while the other phone runs this game: shared, not finished, and not taken back (SH5). */
+export const sharedAway = (game: Game): boolean => !!game.handoff?.away && game.status !== 'final';
 
 /** True when the game was edited after it was last sent. */
 export const changedSinceSent = (game: Game): boolean =>

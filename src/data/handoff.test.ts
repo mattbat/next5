@@ -12,7 +12,7 @@ import {
   parseHandoff,
   type GameHandoff,
 } from './handoff';
-import { addPlayer, changedSinceSent, createDemoTeam, createGame, markSent, receiveGame, saveGame, takeBack, updateGame } from './repo';
+import { addPlayer, changedSinceSent, sharedAway, createDemoTeam, createGame, markSent, receiveGame, saveGame, takeBack, updateGame } from './repo';
 import type { Game, Handoff } from './types';
 import { nextSegment, planGame, startGame } from '../domain/game';
 
@@ -116,8 +116,9 @@ describe('links and files', () => {
 
   it('names the file after the game', async () => {
     const { team, roster, game } = await plannedGame();
-    expect(handoffFileName(makeHandoff(game, team, roster))).toBe('next5-game-2026-11-08-vs-tigers.json');
-    expect(handoffFileName(makeHandoff({ ...game, opponent: '' }, team, roster))).toBe('next5-game-2026-11-08.json');
+    expect(handoffFileName(makeHandoff(game, team, roster))).toBe('next5-demo-hoopers-game-2026-11-08-vs-tigers.json');
+    expect(handoffFileName(makeHandoff({ ...game, opponent: '' }, team, roster))).toBe('next5-demo-hoopers-game-2026-11-08.json');
+    expect(handoffFileName(makeHandoff(game, { ...team, name: '!!' }, roster))).toBe('next5-team-game-2026-11-08-vs-tigers.json');
   });
 });
 
@@ -213,6 +214,16 @@ describe('sending and receiving on this phone', () => {
     expect(changedSinceSent(saved)).toBe(saved.updatedAt > game.updatedAt + 10);
     await takeBack(game.id);
     expect((await db.games.get(game.id))!.handoff).toEqual({ n: 2, role: 'coach', away: false });
+  });
+
+  it('keeps a shared finished game in charge here: it went for the records', async () => {
+    const { game } = await plannedGame();
+    await saveGame(finish(game));
+    await markSent(game.id, 1);
+    const saved = (await db.games.get(game.id))!;
+    expect(saved.handoff).toMatchObject({ n: 1, away: false });
+    expect(sharedAway(saved)).toBe(false);
+    expect(sharedAway({ ...saved, status: 'live', handoff: { ...saved.handoff!, away: true } })).toBe(true);
   });
 
   it('ignores marking or taking back a game that is gone or was never sent', async () => {

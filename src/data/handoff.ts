@@ -158,10 +158,11 @@ export function dataFromText(text: string): string | null {
   return candidate ? candidate[0] : null;
 }
 
-/** e.g. next5-game-2026-11-08-vs-tigers.json */
+/** e.g. next5-8u-thunder-game-2026-11-08-vs-tigers.json, so files for several teams stay apart. */
 export function handoffFileName(handoff: GameHandoff): string {
+  const team = slug(handoff.team.name) || 'team';
   const opponent = slug(handoff.game.opponent);
-  return `next5-game-${handoff.game.date}${opponent ? `-vs-${opponent}` : ''}.json`;
+  return `next5-${team}-game-${handoff.game.date}${opponent ? `-vs-${opponent}` : ''}.json`;
 }
 
 // Receiving

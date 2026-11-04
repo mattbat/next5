@@ -4,12 +4,13 @@ import { encodeHandoff, handoffFileName, handoffLink, makeHandoff } from '../dat
 import { getGame, markSent } from '../data/repo';
 import { shareFile, shareLink } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
+import { segmentLabel } from '../domain/game';
 
 /**
- * Send a game to the assistant, or back to the coach (SH1, SH2): as a link
- * for Messages and other chat apps, or as a file for AirDrop and Files.
+ * Share a game with the other phone at any point (SH1, SH2): as a link for
+ * Messages and other chat apps, or as a file for AirDrop and Files.
  */
-export function SendGameSheet({
+export function ShareGameSheet({
   game,
   team,
   roster,
@@ -23,10 +24,8 @@ export function SendGameSheet({
   onClose: () => void;
 }) {
   const [error, setError] = useState<string | null>(null);
-  const toCoach = game.handoff?.role === 'assistant';
-  const who = toCoach ? 'the coach' : 'your assistant';
 
-  /** Builds the handoff from the latest saved copy, so a just-made edit goes too. */
+  /** Builds the handoff from the latest saved copy, so a just-made change goes too. */
   const build = async () => makeHandoff((await getGame(game.id)) ?? game, team, roster);
 
   const sendLink = async () => {
@@ -37,7 +36,7 @@ export function SendGameSheet({
     if (outcome === 'cancelled') return;
     if (outcome === 'failed') return setError('Couldn’t share or copy the link. Try sending a file instead.');
     await markSent(game.id, handoff.n);
-    onSent(outcome === 'copied' ? `Link copied. Paste it in a message to ${who}.` : `Sent to ${who}.`);
+    onSent(outcome === 'copied' ? 'Link copied. Paste it in a message to the other phone.' : 'Game shared.');
   };
 
   const sendFile = async () => {
@@ -45,11 +44,11 @@ export function SendGameSheet({
     const outcome = await shareFile(handoffFileName(handoff), JSON.stringify(handoff));
     if (outcome === 'cancelled') return;
     await markSent(game.id, handoff.n);
-    onSent(outcome === 'shared' ? `Sent to ${who}.` : `Game file downloaded. Send it to ${who}.`);
+    onSent(outcome === 'shared' ? 'Game shared.' : 'Game file downloaded. Send it to the other phone.');
   };
 
   return (
-    <Sheet title={toCoach ? 'Send back to coach' : 'Send to assistant'} onClose={onClose}>
+    <Sheet title="Share game" onClose={onClose}>
       <div className="actions">
         <button type="button" className="btn wide" onClick={() => void sendLink()}>
           Text a link
@@ -60,12 +59,7 @@ export function SendGameSheet({
         </button>
         <p className="hint">When you’re standing together. Works with no signal. Also saves to Files.</p>
       </div>
-      {!toCoach && (
-        <p className="hint">
-          You can keep changing the plan and send it again until tip-off. Once your assistant starts the game, it runs
-          on their phone until they send it back.
-        </p>
-      )}
+      <p className="hint">{whatHappens(game)}</p>
       {error && (
         <p className="error" role="alert">
           {error}
@@ -73,4 +67,14 @@ export function SendGameSheet({
       )}
     </Sheet>
   );
+}
+
+function whatHappens(game: Game): string {
+  if (game.status === 'planned') {
+    return 'You can keep changing the plan and share it again until tip-off. Once the other phone starts the game, it runs there.';
+  }
+  if (game.status === 'live') {
+    return `The other phone takes over from ${segmentLabel(game.format, game.current).text}. This phone stops running the game until you take back control.`;
+  }
+  return 'Shares the finished game with its playing time, for the other phone’s records.';
 }

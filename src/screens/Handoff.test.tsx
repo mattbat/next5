@@ -13,6 +13,9 @@ import { createDemoTeam, createGame, saveGame } from '../data/repo';
 import type { Game } from '../data/types';
 import { nextSegment, planGame, startGame } from '../domain/game';
 
+/** Compressing a game can take a moment on a busy test machine. */
+const SLOW = { timeout: 5000 };
+
 const sharedLinks: string[] = [];
 const sharedFiles: { name: string; text: string }[] = [];
 let clipboard = '';
@@ -84,28 +87,28 @@ describe('coach: send to assistant (SH1, SH5)', () => {
     const { game } = await plannedGame();
     await goTo(`#/game/${game.id}/plan`);
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Send to assistant' }));
+    await user.click(await screen.findByRole('button', { name: 'Share game' }));
     await user.click(screen.getByRole('button', { name: 'Text a link' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('Sent to your assistant.');
+    expect(await screen.findByRole('status', {}, SLOW)).toHaveTextContent('Game shared.');
     expect(sharedLinks[0]).toContain('#/receive/z');
     expect((await savedGame(game.id)).handoff).toMatchObject({ n: 1, role: 'coach', away: true });
 
-    // Start is replaced by Send again; the plan can still change.
-    expect(screen.getByRole('complementary', { name: 'With your assistant' })).toBeInTheDocument();
+    // Start is replaced by Share again; the plan can still change.
+    expect(screen.getByRole('complementary', { name: 'Shared with the other phone' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Start game' })).not.toBeInTheDocument();
     await new Promise((r) => setTimeout(r, 5));
     await user.click(screen.getByRole('button', { name: '↻ Shuffle' }));
     expect(await screen.findByText(/changed the plan since/)).toBeInTheDocument();
-    await user.click(screen.getByRole('button', { name: 'Send again' }));
+    await user.click(screen.getByRole('button', { name: 'Share again' }));
     await user.click(screen.getByRole('button', { name: 'AirDrop a file' }));
     await waitFor(() => expect(sharedFiles).toHaveLength(1));
-    expect(sharedFiles[0]!.name).toBe(`next5-game-${game.date}-vs-tigers.json`);
+    expect(sharedFiles[0]!.name).toBe(`next5-demo-hoopers-game-${game.date}-vs-tigers.json`);
     expect(JSON.parse(sharedFiles[0]!.text)).toMatchObject({ format: 'next5-game', n: 2, from: 'coach' });
     await waitFor(() => expect(screen.queryByText(/changed the plan since/)).not.toBeInTheDocument());
 
     // The team's game list says where the game is.
     await goTo(`#/team/${game.teamId}`);
-    expect(await screen.findByText('With assistant')).toBeInTheDocument();
+    expect(await screen.findByText('Shared')).toBeInTheDocument();
   });
 
   it('takes back control after confirming', async () => {
@@ -129,16 +132,16 @@ describe('coach: send to assistant (SH1, SH5)', () => {
     delete (navigator as { share?: unknown }).share;
     await goTo(`#/game/${game.id}/plan`);
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Send to assistant' }));
+    await user.click(await screen.findByRole('button', { name: 'Share game' }));
     await user.click(screen.getByRole('button', { name: 'Text a link' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('Link copied');
+    expect(await screen.findByRole('status', {}, SLOW)).toHaveTextContent('Link copied');
     expect(dataFromText(clipboard)).toMatch(/^z/);
 
     Object.assign(navigator, { share: async () => Promise.reject(new DOMException('closed', 'AbortError')) });
     await saveGame({ ...(await savedGame(game.id)), handoff: undefined });
-    await user.click(await screen.findByRole('button', { name: 'Send to assistant' }));
+    await user.click(await screen.findByRole('button', { name: 'Share game' }));
     await user.click(screen.getByRole('button', { name: 'Text a link' }));
-    expect(screen.getByRole('dialog', { name: 'Send to assistant' })).toBeInTheDocument();
+    expect(screen.getByRole('dialog', { name: 'Share game' })).toBeInTheDocument();
     expect((await savedGame(game.id)).handoff).toBeUndefined();
   });
 
@@ -149,7 +152,7 @@ describe('coach: send to assistant (SH1, SH5)', () => {
     Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: () => Promise.reject(new Error('no')) } });
     await goTo(`#/game/${game.id}/plan`);
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Send to assistant' }));
+    await user.click(await screen.findByRole('button', { name: 'Share game' }));
     await user.click(screen.getByRole('button', { name: 'Text a link' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Try sending a file instead');
   });
@@ -163,19 +166,19 @@ describe('opening a game someone sent (SH3, SH4)', () => {
     await otherPhone();
     await goTo(`#/receive/${data}`);
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Game from the coach' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Shared game' })).toBeInTheDocument();
     expect(screen.getByText(/Demo Hoopers · .* · 10 players · Planned/)).toBeInTheDocument();
     // In Safari, the assistant can copy it for the Home Screen app instead.
     await user.click(screen.getByRole('button', { name: 'Copy for the next5 app' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('tap Paste game');
+    expect(await screen.findByRole('status', {}, SLOW)).toHaveTextContent('tap Paste game');
     expect(clipboard).toContain(data);
 
     await user.click(screen.getByRole('button', { name: 'Open here' }));
     expect(await screen.findByRole('heading', { name: 'Q1 · 1 of 2' })).toBeInTheDocument();
     expect((await savedGame(game.id)).handoff).toEqual({ n: 1, role: 'assistant', away: false });
-    // The assistant runs the game; there's no "Send to assistant" on their phone.
+    // The assistant can run the game, and share it back at any time.
     expect(screen.getByRole('button', { name: 'Start game' })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Send to assistant' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Share game' })).toBeInTheDocument();
   });
 
   it('says when this phone already has the game', async () => {
@@ -217,7 +220,7 @@ describe('opening a game someone sent (SH3, SH4)', () => {
     await saveGame({ ...game, handoff: { n: 2, role: 'coach', away: false } });
     await goTo(`#/receive/${await encodeHandoff(fromAssistant)}`);
     render(<App />);
-    expect(await screen.findByRole('heading', { name: 'Game from your assistant' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Shared game' })).toBeInTheDocument();
     expect(screen.getByText(/Both phones changed this game/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Use this copy' }));
     expect(await screen.findByRole('heading', { name: 'Q1 · 1 of 2' })).toBeInTheDocument();
@@ -240,7 +243,7 @@ describe('Teams screen: paste or open a game (SH3)', () => {
     await goTo('#/');
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Paste game' }));
-    expect(await screen.findByRole('heading', { name: 'Game from the coach' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Shared game' })).toBeInTheDocument();
   });
 
   it('says when the clipboard has no game or can’t be read', async () => {
@@ -266,23 +269,71 @@ describe('Teams screen: paste or open a game (SH3)', () => {
     await user.upload(input, new File([JSON.stringify({ format: 'next5-backup' })], 'b.json', { type: 'application/json' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('This is a backup file');
     await user.upload(input, new File([text], 'g.json', { type: 'application/json' }));
-    expect(await screen.findByRole('heading', { name: 'Game from the coach' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Shared game' })).toBeInTheDocument();
   });
 });
 
-describe('assistant: send back to coach (SH2)', () => {
-  it('offers Send back to coach on the Final screen', async () => {
+describe('sharing at any point (SH1, SH2, SH5)', () => {
+  it('shares a game in progress from the Game Day menu, then locks this phone until Take back control', async () => {
+    const user = setup();
+    const { game } = await plannedGame();
+    await saveGame({ ...nextSegment(startGame(game)), handoff: { n: 1, role: 'assistant', away: false } });
+    await goTo(`#/game/${game.id}/live`);
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Share game' }));
+    expect(screen.getByText(/takes over from Q1 · 2 of 2/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Text a link' }));
+
+    // Nothing here can run the game now.
+    expect(await screen.findByRole('complementary', { name: 'Shared with the other phone' }, SLOW)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Next' })).not.toBeInTheDocument();
+    expect(screen.getAllByRole('listitem')).toHaveLength(5);
+    expect((await savedGame(game.id)).handoff).toMatchObject({ n: 2, role: 'assistant', away: true });
+    await goTo(`#/team/${game.teamId}`);
+    expect(await screen.findByText('Shared')).toBeInTheDocument();
+
+    // Take back control (after confirming) and carry on.
+    await goTo(`#/game/${game.id}/live`);
+    vi.spyOn(window, 'confirm').mockReturnValueOnce(true);
+    await user.click(await screen.findByRole('button', { name: 'Take back control' }));
+    expect(await screen.findByRole('button', { name: 'Next' })).toBeInTheDocument();
+    expect((await savedGame(game.id)).handoff).toEqual({ n: 3, role: 'assistant', away: false });
+  });
+
+  it('opens a shared game in progress where the other phone left off', async () => {
+    const user = setup();
+    const { game, handoff } = await plannedGame();
+    const live = nextSegment(startGame(game));
+    const data = await encodeHandoff({ ...handoff(), n: 2, from: 'assistant', game: { ...live, updatedAt: game.updatedAt + 50 } });
+    await saveGame({ ...game, handoff: { n: 1, role: 'coach', away: true, sentAt: Date.now() } });
+    await goTo(`#/receive/${data}`);
+    render(<App />);
+    expect(await screen.findByText(/You take over from Q1 · 2 of 2/)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Open here' }));
+    expect(await screen.findByRole('button', { name: 'Next' })).toBeInTheDocument();
+    expect((await savedGame(game.id)).handoff).toEqual({ n: 2, role: 'coach', away: false });
+  });
+
+  it('shares a finished game for the records and keeps it usable here', async () => {
     const user = setup();
     const { game } = await plannedGame();
     let finished = startGame(game);
     while (finished.status === 'live') finished = nextSegment(finished);
-    await saveGame({ ...finished, handoff: { n: 1, role: 'assistant', away: false } });
+    await saveGame(finished);
     await goTo(`#/game/${game.id}/live`);
     render(<App />);
-    await user.click(await screen.findByRole('button', { name: 'Send back to coach' }));
+    await user.click(await screen.findByRole('button', { name: 'Share game' }));
+    expect(screen.getByText(/for the other phone’s records/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Text a link' }));
-    expect(await screen.findByRole('status')).toHaveTextContent('Sent to the coach.');
-    expect((await savedGame(game.id)).handoff).toMatchObject({ n: 2, role: 'assistant', away: true });
-    expect(screen.getByRole('button', { name: 'Send back again' })).toBeInTheDocument();
+    expect(await screen.findByRole('status', {}, SLOW)).toHaveTextContent('Game shared.');
+    expect((await savedGame(game.id)).handoff).toMatchObject({ n: 1, role: 'coach', away: false });
+    expect(screen.getByRole('heading', { name: 'Final' })).toBeInTheDocument();
+
+    // On the other phone, it's added with its stats.
+    const data = dataFromText(sharedLinks[0]!)!;
+    await otherPhone();
+    await goTo(`#/receive/${data}`);
+    expect(await screen.findByText(/counts in this phone’s season stats/)).toBeInTheDocument();
   });
 });

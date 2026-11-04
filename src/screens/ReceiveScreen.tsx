@@ -45,7 +45,6 @@ export function ReceiveScreen({ data }: { data: string }) {
 
   const { handoff, local, decision } = state;
   const { game, team } = handoff;
-  const fromCoach = handoff.from === 'coach';
   const inApp = isStandalone();
 
   const keep = async () => {
@@ -65,7 +64,7 @@ export function ReceiveScreen({ data }: { data: string }) {
 
   return (
     <main className="screen">
-      <TopBar title={fromCoach ? 'Game from the coach' : 'Game from your assistant'} back={paths.teams()} />
+      <TopBar title="Shared game" back={paths.teams()} />
       <Section title={game.opponent ? `vs ${game.opponent}` : 'Game'}>
         <p className="hint">
           {team.name} · {game.date} · {handoff.players.length} players · {progress(game)}
@@ -74,15 +73,7 @@ export function ReceiveScreen({ data }: { data: string }) {
 
       {(decision.kind === 'add' || decision.kind === 'replace') && (
         <div className="actions">
-          <p>
-            {decision.kind === 'add'
-              ? fromCoach
-                ? 'You’ll run this game on this phone. When it’s over, send it back to the coach from the Final screen.'
-                : 'This adds the game to this phone.'
-              : fromCoach
-                ? 'This is a newer plan. It replaces your copy.'
-                : 'Your assistant’s copy replaces yours, with every swap and segment played. You’re in charge of the game again.'}
-          </p>
+          <p>{whatOpening(game, decision.kind === 'replace')}</p>
           <button type="button" className="btn wide big" onClick={() => void keep()}>
             {inApp ? 'Open game' : 'Open here'}
           </button>
@@ -146,6 +137,16 @@ export function ReceiveScreen({ data }: { data: string }) {
       )}
     </main>
   );
+}
+
+/** What opening the game does, by how far it has got (SH3). */
+function whatOpening(game: Game, replacing: boolean): string {
+  const yours = replacing ? ' It replaces your copy.' : '';
+  if (game.status === 'planned') return `You can run this game on this phone. Share it again whenever the other phone should have it.${yours}`;
+  if (game.status === 'live') {
+    return `This game is in progress. You take over from ${segmentLabel(game.format, game.current).text}, with every swap so far.${yours}`;
+  }
+  return `This is the finished game, with its playing time. It counts in this phone’s season stats.${yours}`;
 }
 
 /** "Planned", "In progress (Q2 · 1 of 2)" or "Final". */

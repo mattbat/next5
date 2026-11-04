@@ -185,18 +185,18 @@ Everything below is visible without scrolling on an iPhone in portrait:
 
 > Data is lost if the app is deleted from the Home Screen or its website data is cleared. This is why B1 to B3 matter.
 
-### Handing a game to an assistant (added 2026-11-03)
+### Sharing a game with an assistant (added 2026-11-03)
 
-The coach plans a game, an assistant runs the substitutions on their own phone, and the finished game comes back to the coach. There is no server.
+The coach plans a game, an assistant can run the substitutions on their own phone, and either phone can share the game with the other at any point. There is no server.
 
 | ID | Requirement |
 |----|-------------|
-| SH1 | **Send to assistant:** from the plan, send the game as a **link** (Messages, WhatsApp, email) or a **file** (AirDrop, Files). The game is packed into the link after the `#`, so it never reaches the web server. It includes the team and the attending players, with skill levels (see P6). |
-| SH2 | **Send back to coach:** the assistant's Final screen sends the finished game back the same two ways. |
-| SH3 | **Receive:** opening a link shows what the game is and **Open here**. In Safari, **Copy for the next5 app** copies it for the Home Screen app, which keeps its own data. The Teams screen has **Paste game** (a copied link) and **Open game file**. |
-| SH4 | **No lost work:** every send carries a handoff number, and the receiving phone decides by it, never by the phones' clocks. A newer copy replaces the old one. The same or an older copy changes nothing. A copy with fewer segments played than this phone's is refused unless the user taps **Replace anyway**. When both phones changed the game since the last send, the user chooses which to keep. |
-| SH5 | **While the assistant has it:** the coach's phone shows "With your assistant", can still change the plan and **Send again** (with a note when the plan changed since sending), but can't start the game. **Take back control** (after confirming) lets the coach run it again. |
-| SH6 | The team's game list shows **With assistant** for a game the coach has sent. |
+| SH1 | **Share game at any point:** before, during or after the game, from the plan screen, the Game Day **Edit** menu or the Final screen. Share as a **link** (Messages, WhatsApp, email) or a **file** (AirDrop, Files). The game is packed into the link after the `#`, so it never reaches the web server. It includes the team and the attending players, with skill levels (see P6). The coach and assistant decide when to share. (Widened from fixed coach/assistant steps on 2026-11-03.) |
+| SH2 | **Typical uses:** the coach shares the plan and shares again after changes; the assistant starts the game, has to leave, and shares the game in progress back for the coach to finish; the coach shares a finished game with an assistant who missed it, so their season stats are complete. |
+| SH3 | **Receive:** opening a link shows what the game is, how far it has got, and **Open here**. In Safari, **Copy for the next5 app** copies it for the Home Screen app, which keeps its own data. The Teams screen has **Paste game** (a copied link) and **Open game file**. |
+| SH4 | **No lost work:** every share carries a handoff number, and the receiving phone decides by it, never by the phones' clocks. A newer copy replaces the old one. The same or an older copy changes nothing. A copy with fewer segments played than this phone's is refused unless the user taps **Replace anyway**. When both phones changed the game since the last share, the user chooses which to keep. |
+| SH5 | **One phone runs a game at a time:** after sharing a game that isn't finished, this phone shows "Shared with the other phone". A planned game can still be edited and **Shared again** (with a note when the plan changed since sharing), but not started. A game in progress is locked: no Next, swaps or other changes. **Take back control** (after confirming) lets this phone run it again. Sharing a finished game doesn't lock anything. |
+| SH6 | The team's game list shows **Shared** for a game the other phone is running. |
 
 ## 12. Documentation and in-app help
 
@@ -305,6 +305,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-03 | Coach and assistant share a game by text link or AirDrop file, without a backend (SH1–SH6). A small server "mailbox" for an automatic return trip may come later. |
 | 2026-11-03 | A game sent to the assistant includes skill levels, because the assistant's phone needs them to re-plan. The app still never shows them on game-day screens. |
 | 2026-11-03 | Dropped: copying a team into a new season (M4), duplicating a game's setup (G11), approximate minutes (S6), and one-tap position fixes (H1). Stretch goals (§16) wait. README screenshots (H-1) wait until the app is more polished. |
+| 2026-11-03 | A game can be shared at any point (planned, in progress, or finished), not only at fixed coach and assistant steps. After sharing a game in progress, the sharing phone is locked until Take back control, so two phones never run the same game. |
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
