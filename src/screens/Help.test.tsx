@@ -55,6 +55,28 @@ describe('help routes', () => {
     expect(go).toHaveBeenCalledWith(-2);
   });
 
+  it('works when iPhone Safari carries the previous page’s history state over to the help page', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await goTo(paths.teams());
+    render(<App />);
+    await goTo(paths.team(team.id));
+    // Safari: the new entry starts with a copy of the team page's state.
+    const copied: unknown = window.history.state;
+    await act(async () => {
+      window.location.hash = paths.help('roster');
+      window.history.replaceState(copied, '');
+      window.dispatchEvent(new HashChangeEvent('hashchange'));
+    });
+    expect(screen.getByRole('heading', { name: 'Teams and players' })).toBeInTheDocument();
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    const go = vi.spyOn(window.history, 'go').mockImplementation(() => {});
+    await user.click(screen.getByRole('link', { name: 'Back' }));
+    expect(back).toHaveBeenCalledOnce();
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(go).toHaveBeenCalledWith(-1);
+  });
+
   it('without an earlier page, Back goes up to the topics and then the Teams screen', () => {
     expect(helpBack('#/help/plan')).toBe('#/help');
     expect(helpBack('#/help')).toBe('#/');

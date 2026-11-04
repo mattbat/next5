@@ -63,30 +63,46 @@ export function navigate(hash: string): void {
  * still right after going back. Help's back button uses it to return to the
  * page it was opened from, the way Safari's own back does, and Done to leave
  * help for the screen it was opened from (H-8).
+ *
+ * Each page also gets its own key. iPhone Safari can carry the previous
+ * page's history state over to a new page when only the # part changes, so a
+ * page showing the key of the page we were just on is a new page, not an old
+ * one we came back to.
  */
 let depth = 0;
 /** On a help page: the depth of the screen help was opened from, if known. */
 let helpFrom: number | null = null;
+let currentKey: string | null = null;
+let currentHash: string | null = null;
 
 interface Stamp {
+  next5Key?: string;
   next5Depth?: number;
   next5HelpFrom?: number | null;
 }
 
 /** Reads this page's place in the visit, or stamps it on a page not seen before. */
 function stampHistory(opened: boolean): void {
+  const hash = window.location.hash;
+  // The same page again (e.g. a repeated event): nothing has moved.
+  if (!opened && hash === currentHash) return;
   const state = (window.history.state ?? {}) as Stamp;
-  if (typeof state.next5Depth === 'number') {
-    depth = state.next5Depth;
+  const known = typeof state.next5Key === 'string' && typeof state.next5Depth === 'number';
+  if (known && (opened || state.next5Key !== currentKey)) {
+    // Opened (or reloaded) on a page, or back or forward to one we've been on.
+    depth = state.next5Depth!;
     helpFrom = state.next5HelpFrom ?? null;
-    return;
+    currentKey = state.next5Key!;
+  } else {
+    // A new page: the first if the app just opened, otherwise one deeper.
+    const inHelp = parseRoute(hash).name === 'help';
+    const from = opened ? null : (helpFrom ?? depth);
+    depth = opened ? 0 : depth + 1;
+    helpFrom = inHelp ? from : null;
+    currentKey = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
+    window.history.replaceState({ ...state, next5Key: currentKey, next5Depth: depth, next5HelpFrom: helpFrom }, '');
   }
-  const inHelp = parseRoute(window.location.hash).name === 'help';
-  // The page the app opened on is the first; any other new page is one deeper.
-  const from = opened ? null : helpFrom ?? depth;
-  depth = opened ? 0 : depth + 1;
-  helpFrom = inHelp ? from : null;
-  window.history.replaceState({ ...state, next5Depth: depth, next5HelpFrom: helpFrom }, '');
+  currentHash = hash;
 }
 
 /** True when there's an earlier next5 page in this visit to go back to. */
