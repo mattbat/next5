@@ -441,7 +441,7 @@ input[type='date'] {
   color: var(--in);
 }
 
-/* Sent to the assistant (SH5). */
+/* Shared with the other phone, which runs the game (SH5). */
 .status-away {
   background: var(--accent-soft);
   color: var(--accent);
@@ -1671,7 +1671,7 @@ button.sub-in {
   margin: 4px 0 14px;
 }
 
-/* "Assistant running the subs? Send to assistant" on the plan screen (SH1). */
+/* "Running the subs on another phone? Share game" on the plan screen (SH1). */
 .send-hint {
   margin: 0 0 8px;
 }

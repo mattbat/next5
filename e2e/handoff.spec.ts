@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test';
 
 /**
  * Two phones (SH1–SH6): the coach plans and texts the game to the assistant,
- * the assistant runs it with an injury sub, and AirDrops it back. Each phone
+ * the assistant starts it, makes an injury sub, then has to leave and
+ * AirDrops the game in progress back for the coach to finish. Each phone
  * is its own browser context, so they share no data, like two iPhones.
  */
 
@@ -22,7 +23,7 @@ async function fakeShareSheet(page: Page) {
 
 const lastLink = (page: Page) => page.evaluate(() => (window as unknown as { sharedLinks: string[] }).sharedLinks.at(-1)!);
 
-test('coach texts a game to the assistant, who runs it and sends it back', async ({ page: coach, browser, baseURL }) => {
+test('coach texts a game to the assistant, who starts it and hands it back mid-game', async ({ page: coach, browser, baseURL }) => {
   // Two phones' worth of steps.
   test.setTimeout(90_000);
   await fakeShareSheet(coach);
@@ -33,10 +34,10 @@ test('coach texts a game to the assistant, who runs it and sends it back', async
   await coach.getByRole('button', { name: '+ New game' }).click();
   await coach.getByLabel('Opponent').fill('Rockets');
   await coach.getByRole('button', { name: 'Generate plan' }).click();
-  await coach.getByRole('button', { name: 'Send to assistant' }).click();
+  await coach.getByRole('button', { name: 'Share game' }).click();
   await coach.getByRole('button', { name: 'Text a link' }).click();
-  await expect(coach.getByRole('status')).toHaveText('Sent to your assistant.');
-  await expect(coach.getByRole('complementary', { name: 'With your assistant' })).toBeVisible();
+  await expect(coach.getByRole('status')).toHaveText('Game shared.');
+  await expect(coach.getByRole('complementary', { name: 'Shared with the other phone' })).toBeVisible();
   const firstLink = await lastLink(coach);
   expect(firstLink).toContain('/next5/#/receive/');
 
@@ -45,7 +46,7 @@ test('coach texts a game to the assistant, who runs it and sends it back', async
   const assistant = await assistantContext.newPage();
   await fakeShareSheet(assistant);
   await assistant.goto(firstLink);
-  await expect(assistant.getByRole('heading', { name: 'Game from the coach' })).toBeVisible();
+  await expect(assistant.getByRole('heading', { name: 'Shared game' })).toBeVisible();
   await assistant.getByRole('button', { name: 'Open here' }).click();
   await assistant.getByRole('button', { name: 'Start game' }).click();
   await expect(assistant.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeVisible();
@@ -64,29 +65,36 @@ test('coach texts a game to the assistant, who runs it and sends it back', async
   await assistant.getByRole('button', { name: 'Next' }).click();
 
   // The coach texts a late plan change; the assistant's started game is protected.
-  await coach.getByRole('button', { name: 'Send again' }).click();
+  await coach.getByRole('button', { name: 'Share again' }).click();
   await coach.getByRole('button', { name: 'Text a link' }).click();
   await assistant.goto(await lastLink(coach));
   await expect(assistant.getByRole('alert')).toContainText('You’ve already started this game');
   await assistant.getByRole('button', { name: 'Keep mine' }).click();
   await expect(assistant.getByRole('heading', { name: 'Q1 · 2 of 2' })).toBeVisible();
 
-  // Assistant: finish the game and AirDrop it back (a download here).
-  for (let i = 0; i < 6; i++) await assistant.getByRole('button', { name: 'Next' }).click();
-  await assistant.getByRole('button', { name: 'End game' }).click();
-  await expect(assistant.getByRole('heading', { name: 'Final' })).toBeVisible();
-  await assistant.getByRole('button', { name: 'Send back to coach' }).click();
+  // Assistant has to leave in Q2: AirDrop the game in progress back (a download here).
+  await assistant.getByRole('button', { name: 'Next' }).click();
+  await expect(assistant.getByRole('heading', { name: 'Q2 · 1 of 2' })).toBeVisible();
+  await assistant.getByRole('button', { name: 'Edit' }).click();
+  await assistant.getByRole('button', { name: 'Share game' }).click();
   const downloading = assistant.waitForEvent('download');
   await assistant.getByRole('button', { name: 'AirDrop a file' }).click();
   const download = await downloading;
-  expect(download.suggestedFilename()).toMatch(/^next5-game-\d{4}-\d{2}-\d{2}-vs-rockets\.json$/);
+  expect(download.suggestedFilename()).toMatch(/^next5-demo-hoopers-game-\d{4}-\d{2}-\d{2}-vs-rockets\.json$/);
   const file = await download.path();
+  // The assistant's phone stops running the game.
+  await expect(assistant.getByText('The other phone is running this game')).toBeVisible();
+  await expect(assistant.getByRole('button', { name: 'Next' })).toHaveCount(0);
 
-  // Coach: open the file from the Teams screen. The finished game, with the injury, is back.
+  // Coach: open the file from the Teams screen and take over where the assistant left off.
   await coach.goto('./');
   await coach.getByLabel('Game file').setInputFiles(file);
-  await expect(coach.getByRole('heading', { name: 'Game from your assistant' })).toBeVisible();
+  await expect(coach.getByRole('heading', { name: 'Shared game' })).toBeVisible();
+  await expect(coach.getByText(/You take over from Q2 · 1 of 2/)).toBeVisible();
   await coach.getByRole('button', { name: 'Open here' }).click();
+  await expect(coach.getByRole('heading', { name: 'Q2 · 1 of 2' })).toBeVisible();
+  for (let i = 0; i < 5; i++) await coach.getByRole('button', { name: 'Next' }).click();
+  await coach.getByRole('button', { name: 'End game' }).click();
   await expect(coach.getByRole('heading', { name: 'Final' })).toBeVisible();
   await expect(coach.getByText(/^Segments played out of 8\./)).toBeVisible();
   await expect(coach.getByRole('heading', { name: 'Changes from the plan' })).toBeVisible();

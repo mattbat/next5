@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Empty, Jersey, Section, TopBar } from '../components/ui';
 import { slug } from '../data/backup';
-import { saveGame } from '../data/repo';
+import { saveGame, sharedAway } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, GameEvent, Player, Team } from '../data/types';
 import {
@@ -23,7 +23,8 @@ import { gameStats, gameStatsCsv, positionSummary } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
-import { SendGameSheet } from './SendGameSheet';
+import { ShareGameSheet } from './ShareGameSheet';
+import { confirmTakeBack, sharedAt } from './shareText';
 import { paths } from '../router';
 import {
   ChoosePlayerSheet,
@@ -59,12 +60,55 @@ export function GameDayScreen({ gameId }: { gameId: string }) {
       </main>
     );
   }
+  if (sharedAway(game)) return <SharedLive game={game} team={team} byId={byId} />;
   return <Live game={game} team={team} roster={roster} byId={byId} />;
+}
+
+/**
+ * A live game this phone shared: the other phone runs it now, so nothing here
+ * can change it until Take back control (SH5). Shows who's on the court as
+ * of the share.
+ */
+function SharedLive({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
+  const label = segmentLabel(game.format, game.current);
+  const current = sortLineup(game.plan[game.current]!, team.positions, byId);
+  const position = (id: string | null) => (id === null ? '' : (team.positions.find((p) => p.id === id)?.name ?? id));
+  return (
+    <main className="screen">
+      <TopBar title={<span className="period-title">{label.text}</span>} back={paths.team(team.id)} />
+      <aside className="callout" aria-label="Shared with the other phone">
+        <strong>The other phone is running this game</strong>
+        <p>
+          Shared {sharedAt(game.handoff?.sentAt)} during {label.text}. When it’s shared back, open it here and carry on.
+        </p>
+      </aside>
+      <Section title="On court when shared">
+        <ul className="list">
+          {current.map((slot) => (
+            <li key={slot.playerId} className="list-item static">
+              <Jersey number={byId.get(slot.playerId)?.number ?? ''} />
+              <span className="list-title">{byId.get(slot.playerId)?.name ?? 'Unknown'}</span>
+              <span className="list-meta">{position(slot.positionId)}</span>
+            </li>
+          ))}
+        </ul>
+      </Section>
+      <footer className="footer static">
+        <div className="actions">
+          <button type="button" className="btn wide big" onClick={() => void confirmTakeBack(game.id)}>
+            Take back control
+          </button>
+          <p className="hint">Only if the other phone has stopped running the game.</p>
+        </div>
+      </footer>
+    </main>
+  );
 }
 
 /** Which sheet is open on the game day screen. */
 type Sheet =
   | { kind: 'menu' }
+  | { kind: 'share' }
   | { kind: 'player'; playerId: string }
   | { kind: 'choose-now'; outId: string; thenOut: boolean }
   | { kind: 'choose-next'; outId: string }
@@ -275,8 +319,12 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           onPlayer={(playerId) => setSheet({ kind: 'player', playerId })}
           onReplan={() => setSheet({ kind: 'replan', preview: replan(game, team, roster) })}
           onOvertime={overtime}
+          onShare={() => setSheet({ kind: 'share' })}
           onClose={close}
         />
+      )}
+      {sheet?.kind === 'share' && (
+        <ShareGameSheet game={game} team={team} roster={roster} onSent={close} onClose={close} />
       )}
       {sheet?.kind === 'player' && player(sheet.playerId) && (
         <PlayerActionsSheet
@@ -363,10 +411,8 @@ function describeEvent(event: GameEvent, game: Game, byId: Map<string, Player>):
 /** The finished game: per-player stats (S3), changes from the plan, and CSV export (S5). */
 function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
   const [message, setMessage] = useState<string | null>(null);
-  const [sending, setSending] = useState(false);
+  const [sharing, setSharing] = useState(false);
   const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
-  // The assistant ran this game; it goes back to the coach (SH2).
-  const fromCoach = game.handoff?.role === 'assistant';
   const stats = gameStats(game).sort((a, b) => name(a.playerId).localeCompare(name(b.playerId)));
 
   const exportCsv = async () => {
@@ -422,11 +468,9 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
       )}
       <footer className="footer static">
         <div className="actions">
-          {fromCoach && (
-            <button type="button" className="btn wide big" onClick={() => setSending(true)}>
-              {game.handoff?.away ? 'Send back again' : 'Send back to coach'}
-            </button>
-          )}
+          <button type="button" className="btn secondary wide" onClick={() => setSharing(true)}>
+            Share game
+          </button>
           <button type="button" className="btn secondary wide" onClick={() => void exportCsv()}>
             Export stats (CSV)
           </button>
@@ -438,21 +482,24 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
           <button type="button" className="btn secondary wide" onClick={() => void saveGame(undoSegment(game))}>
             ↶ Undo end of game
           </button>
-          <a className={`btn wide ${fromCoach ? 'secondary' : 'big'}`} href={paths.team(team.id)}>
+          <a className="btn secondary wide" href={paths.gameSetup(game.id)}>
+            Game setup
+          </a>
+          <a className="btn wide big" href={paths.team(team.id)}>
             Done
           </a>
         </div>
       </footer>
-      {sending && (
-        <SendGameSheet
+      {sharing && (
+        <ShareGameSheet
           game={game}
           team={team}
           roster={[...byId.values()]}
           onSent={(text) => {
             setMessage(text);
-            setSending(false);
+            setSharing(false);
           }}
-          onClose={() => setSending(false)}
+          onClose={() => setSharing(false)}
         />
       )}
     </main>

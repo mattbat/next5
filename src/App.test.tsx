@@ -255,6 +255,31 @@ describe('game workflow', () => {
     }
   });
 
+  it('edits the opponent and deletes a game that has started', async () => {
+    const user = userEvent.setup();
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const team = await createDemoTeam();
+    const roster = await db.players.toArray();
+    const created = await createGame(team);
+    const outcome = planGame(created, team, roster);
+    if (!outcome.ok) throw new Error('plan failed');
+    await saveGame(startGame({ ...created, plan: outcome.plan, warnings: outcome.warnings }));
+    await goTo(`#/game/${created.id}/live`);
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('link', { name: 'Game setup' }));
+    expect(await screen.findByRole('heading', { name: 'Game setup' })).toBeInTheDocument();
+    // Attendance, format and rules can't change once the game has started, so they're not shown.
+    expect(screen.queryByRole('heading', { name: /^Attending/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Rules for this game' })).not.toBeInTheDocument();
+    await user.type(screen.getByLabelText('Opponent'), 'Comets');
+    await user.tab();
+    await waitFor(async () => expect((await db.games.get(created.id))!.opponent).toBe('Comets'));
+    await user.click(screen.getByRole('button', { name: 'Delete game' }));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('everything played'));
+    await waitFor(async () => expect(await db.games.count()).toBe(0));
+  });
+
   it('deletes a game that has not started', async () => {
     const user = userEvent.setup();
     vi.spyOn(window, 'confirm').mockReturnValue(true);

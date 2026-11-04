@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), and a light theme (D10). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (light theme; game handoff and install checked on iPhones; several items dropped)
+Last updated: 2026-11-03 (share a game at any point; dropped items recorded)
 
 ## 3. Platform and technical
 
@@ -110,18 +110,18 @@ Last updated: 2026-11-03 (light theme; game handoff and install checked on iPhon
 | B3 | ✅ | Teams screen reminder when there's a team and no backup, or the last one is over 30 days old. **Later** snoozes it for a week. |
 | B4 | ✅ | Settings shows the version, links to Diagnostics, and has **Check for updates** (the app also checks hourly). |
 
-### Handing a game to an assistant
+### Sharing a game with an assistant
 
 | ID | Status | Notes |
 |----|--------|-------|
-| SH1 | ✅ | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Checked on iPhones from the deployed site (2026-11-03). |
-| SH2 | ✅ | The assistant's Final screen has **Send back to coach** (then **Send back again**). |
-| SH3 | ✅ | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Checked on iPhones, including Paste game in the Home Screen app (2026-11-03). |
+| SH1 | ✅ | **Share game** on the plan screen (any status), in the Game Day **Edit** menu, and on the Final screen → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Link sharing checked on iPhones from the deployed site (2026-11-03). |
+| SH2 | ✅ | All three uses are covered by tests: re-sharing a changed plan, handing a game in progress back (end-to-end), and sharing a finished game for the records. |
+| SH3 | ✅ | `#/receive/…` "Shared game" screen saying what opening it does (run it, take over from a segment, or add a finished game to the season), with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a shared game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Paste checked in the Home Screen app (2026-11-03). |
 | SH4 | ✅ | `decideReceive` in `src/data/handoff.ts`, with an example test per case and property tests that an older copy never wins and played segments are never dropped silently. Team and players merge like a backup restore. |
-| SH5 | ✅ | "With your assistant" callout, **Send again** in place of **Start game**, "changed since you sent it" from `updatedAt > sentAt`, and **Take back control** after confirming (raises the handoff number). |
-| SH6 | ✅ | **With assistant** badge in the game list. |
+| SH5 | ✅ | "Shared with the other phone" callout and **Share again** in place of **Start game** for a planned game; a locked read-only view with **Take back control** for a game in progress; "changed since you shared it" from `updatedAt > sentAt`. Sharing a finished game leaves it in charge here. |
+| SH6 | ✅ | **Shared** badge in the game list while the other phone runs the game. |
 
-The handoff state is an optional, unindexed `handoff` field on games, so the Dexie schema didn't change. A two-browser end-to-end test (`e2e/handoff.spec.ts`) covers coach → assistant by link, a refused late update, and assistant → coach by file.
+The handoff state is an optional, unindexed `handoff` field on games, so the Dexie schema didn't change. A two-browser end-to-end test (`e2e/handoff.spec.ts`) covers coach → assistant by link, a refused late update, and the assistant handing the game in progress back by file for the coach to finish.
 
 ## 12. Documentation and help
 
@@ -172,6 +172,8 @@ In priority order:
 
 ## Small changes requested
 
+- [x] **Edit or delete a started game:** **Game setup** (opponent, date, Delete game) is reachable at any stage: plan → **Setup**, Game Day → **Edit** → **Game setup**, or the Final screen. Once the game has started, attendance, format and rules are hidden there, since they can't change. Deleting a started or finished game asks first and warns that its stats go too. (Requested 2026-11-03.)
+- [x] **Team name in shared game files:** e.g. `next5-8u-thunder-game-2026-11-08-vs-tigers.json`, so files for several teams are easy to tell apart. (Requested 2026-11-03.)
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Stats was added after Roster on 2026-11-03: Games, Roster, Stats, Settings. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)

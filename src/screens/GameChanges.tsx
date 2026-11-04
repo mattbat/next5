@@ -3,6 +3,7 @@ import { Jersey, Sheet } from '../components/ui';
 import type { Game, Player, Position } from '../data/types';
 import { benchFor, statusLabel, type ReplanResult } from '../domain/changes';
 import { describeWarning, segmentLabel, sortLineup } from '../domain/game';
+import { paths } from '../router';
 
 /** Sheets for game-day changes (REQUIREMENTS.md D4–D6, D11). */
 
@@ -286,6 +287,7 @@ export function GameMenuSheet({
   onPlayer,
   onReplan,
   onOvertime,
+  onShare,
   onClose,
 }: {
   game: Game;
@@ -293,6 +295,8 @@ export function GameMenuSheet({
   onPlayer: (playerId: string) => void;
   onReplan: () => void;
   onOvertime: () => void;
+  /** Hand the game to the other phone mid-game (SH1). */
+  onShare: () => void;
   onClose: () => void;
 }) {
   const [showAbsent, setShowAbsent] = useState(false);
@@ -313,6 +317,12 @@ export function GameMenuSheet({
         <button type="button" className="btn secondary wide" onClick={onOvertime}>
           + Add overtime segment
         </button>
+        <button type="button" className="btn secondary wide" onClick={onShare}>
+          Share game
+        </button>
+        <a className="btn secondary wide" href={paths.gameSetup(game.id)}>
+          Game setup
+        </a>
       </div>
       <h3 className="sheet-sub">Players · tap to change</h3>
       <ul className="list">

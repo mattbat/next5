@@ -4,7 +4,7 @@ import { Empty, Info, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from
 import { backUp, slug } from '../data/backup';
 import { db } from '../data/db';
 import { SKILL_LEVELS } from '../data/defaults';
-import { createGame, deleteTeam, updateTeam } from '../data/repo';
+import { createGame, deleteTeam, sharedAway, updateTeam } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
@@ -125,8 +125,8 @@ function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlay
                 {g.opponent ? `vs ${g.opponent}` : 'Game'}
                 <span className="list-sub">{formatDate(g.date)}</span>
               </span>
-              {g.handoff?.away && g.handoff.role === 'coach' && g.status === 'planned' ? (
-                <span className="status status-away">With assistant</span>
+              {sharedAway(g) ? (
+                <span className="status status-away">Shared</span>
               ) : (
                 <span className={`status status-${g.status}`}>{STATUS_LABEL[g.status]}</span>
               )}

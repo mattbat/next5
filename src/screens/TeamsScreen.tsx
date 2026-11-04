@@ -127,7 +127,7 @@ export function TeamsScreen() {
           </button>
         )}
       </Section>
-      <Section title="Receive a game">
+      <Section title="Receive a shared game">
         <div className="footer-row">
           <button type="button" className="btn secondary grow" onClick={() => void pasteGame()}>
             Paste game
