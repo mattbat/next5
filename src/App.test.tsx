@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { db } from './data/db';
+import { logError } from './errorLog';
 import { markIntroSeen } from './help/intro';
 import { createDemoTeam, createGame, saveGame } from './data/repo';
 import { planGame, startGame } from './domain/game';
@@ -42,6 +43,15 @@ describe('router', () => {
     expect(parseRoute('#/nope')).toEqual({ name: 'teams' });
     expect(parseRoute('#/diagnostics')).toEqual({ name: 'diagnostics' });
     expect(parseRoute('#/receive/zAbC')).toEqual({ name: 'receive', data: 'zAbC' });
+  });
+});
+
+describe('diagnostics', () => {
+  it('shows the last unexpected error and whether it was shown', async () => {
+    logError({ message: 'Script error.', source: 'unknown', shown: false });
+    await goTo('#/diagnostics');
+    render(<App />);
+    expect(await screen.findByText(/Script error\. \(from unknown, not shown/)).toBeInTheDocument();
   });
 });
 
