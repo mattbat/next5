@@ -737,8 +737,8 @@ export const TOPICS: Topic[] = [
         <h2>Updates</h2>
         <p>
           next5 checks for a new version every hour while it’s open. When one has downloaded, a banner says{' '}
-          <b>A new version of next5 is ready</b>. Tap <b>Update</b> when it suits you. Your teams and games are kept. The
-          banner never appears during a game. To check straight away, tap <b>Check for updates</b> in Settings.
+          <b>A new version of next5 is ready</b>. Tap <b>Update</b> when it suits you. Your teams and games are kept, and
+          next5 offers to make a backup first, just in case. The banner never appears during a game. To check straight away, tap <b>Check for updates</b> in Settings.
         </p>
         <h2>Version and diagnostics</h2>
         <p>

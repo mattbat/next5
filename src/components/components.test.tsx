@@ -1,15 +1,18 @@
 import { act, render, renderHook, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { markBackedUp } from '../data/backup';
+import { db } from '../data/db';
+import { createTeam } from '../data/repo';
 import { useWakeLock } from '../hooks/useWakeLock';
 
-const pwa = vi.hoisted(() => ({ needRefresh: true, update: vi.fn() }));
+const pwa = vi.hoisted(() => ({ needRefresh: true }));
 vi.mock('virtual:pwa-register/react', async () => {
   const { useState } = await import('react');
   return {
     useRegisterSW: () => {
       const [needRefresh, setNeedRefresh] = useState(pwa.needRefresh);
-      return { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker: pwa.update };
+      return { needRefresh: [needRefresh, setNeedRefresh], updateServiceWorker: vi.fn() };
     },
   };
 });
@@ -46,18 +49,73 @@ describe('ErrorBanner', () => {
 });
 
 describe('UpdateBanner', () => {
-  afterEach(() => {
-    window.location.hash = '';
-    pwa.update.mockReset();
+  beforeEach(async () => {
+    await db.teams.clear();
+    localStorage.clear();
   });
 
-  it('offers to update, and can be dismissed', async () => {
+  afterEach(() => {
+    window.location.hash = '';
+    delete (navigator as { canShare?: unknown }).canShare;
+    delete (navigator as { share?: unknown }).share;
+  });
+
+  it('updates straight away when there’s nothing to back up, and can be dismissed', async () => {
     const user = userEvent.setup();
-    render(<UpdateBanner />);
+    const update = vi.fn(async () => {});
+    const { unmount } = render(<UpdateBanner update={update} />);
     await user.click(screen.getByRole('button', { name: 'Update' }));
-    expect(pwa.update).toHaveBeenCalledWith(true);
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('button', { name: 'Updating…' })).toBeDisabled();
+    unmount();
+
+    render(<UpdateBanner update={update} />);
     await user.click(screen.getByRole('button', { name: 'Later' }));
     expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
+  it('offers a backup first when there are teams (B5)', async () => {
+    const user = userEvent.setup();
+    await createTeam('8U Thunder');
+    const update = vi.fn(async () => {});
+    const share = vi.fn(async () => {});
+    Object.assign(navigator, { canShare: () => true, share });
+    render(<UpdateBanner update={update} />);
+    await user.click(screen.getByRole('button', { name: 'Update' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Update next5' });
+    expect(sheet).toHaveTextContent('Last backup: Never');
+    expect(update).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Back up, then update' }));
+    expect(share).toHaveBeenCalledTimes(1);
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('doesn’t update if the backup is cancelled, but can update without one', async () => {
+    const user = userEvent.setup();
+    await createTeam('8U Thunder');
+    const update = vi.fn(async () => {});
+    const share = vi.fn(async () => {
+      throw new DOMException('cancelled', 'AbortError');
+    });
+    Object.assign(navigator, { canShare: () => true, share });
+    render(<UpdateBanner update={update} />);
+    await user.click(screen.getByRole('button', { name: 'Update' }));
+    await user.click(await screen.findByRole('button', { name: 'Back up, then update' }));
+    expect(await screen.findByText('Backup cancelled. Nothing was updated.')).toBeInTheDocument();
+    expect(update).not.toHaveBeenCalled();
+    await user.click(screen.getByRole('button', { name: 'Update without a backup' }));
+    expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it('skips the question when a backup was made today', async () => {
+    const user = userEvent.setup();
+    await createTeam('8U Thunder');
+    markBackedUp();
+    const update = vi.fn(async () => {});
+    render(<UpdateBanner update={update} />);
+    await user.click(screen.getByRole('button', { name: 'Update' }));
+    expect(update).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   });
 
   it('stays hidden during a live game', () => {

@@ -182,6 +182,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | B2 | Restore from a backup file. Choose either *replace all* or *merge*. |
 | B3 | Remind the coach to back up periodically, for example when no backup has been made in the last 30 days. |
 | B4 | Settings shows the app version and has a manual "Check for updates" action. |
+| B5 | Tapping **Update** offers a backup first ("Back up, then update" or "Update without a backup"). It isn't asked when there are no teams yet or a backup was made in the last day. |
 
 > Data is lost if the app is deleted from the Home Screen or its website data is cleared. This is why B1 to B3 matter.
 

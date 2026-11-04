@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { Info, Section, Segmented, TopBar } from '../components/ui';
 import {
   backUp,
+  formatBackupDate,
   lastBackupAt,
   parseBackup,
   restoreBackup,
@@ -12,11 +13,6 @@ import {
 import { paths } from '../router';
 import { setThemePreference, themePreference, type ThemePreference } from '../theme';
 import { HelpLink } from '../help/parts';
-
-function formatWhen(time: number | null): string {
-  if (time === null) return 'Never';
-  return new Date(time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -120,7 +116,7 @@ export function SettingsScreen() {
           </Info>
         }
       >
-        <p className="hint">Last backup: {formatWhen(last)}</p>
+        <p className="hint">Last backup: {formatBackupDate(last)}</p>
         <button type="button" className="btn wide" onClick={() => void onBackUp()}>
           Back up all teams
         </button>
