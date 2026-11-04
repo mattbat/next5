@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Empty, Info, Jersey, Section, Segmented, TopBar } from '../components/ui';
-import { getGame, saveGame, updateGame } from '../data/repo';
+import { changedSinceSent, getGame, saveGame, takeBack, updateGame } from '../data/repo';
 import type { Game, Player, Team } from '../data/types';
 import { benchFor } from '../domain/changes';
 import { describeError, describeWarning, planGame, segmentLabel, sortLineup, startGame } from '../domain/game';
@@ -19,6 +19,7 @@ import { useGameData } from '../hooks/useGameData';
 import { navigate, paths } from '../router';
 import { ChoosePlayerSheet, type PendingSwap } from './GameChanges';
 import { PlanPlayerSheet, type PlanAction } from './PlanPlayerSheet';
+import { SendGameSheet } from './SendGameSheet';
 
 /**
  * Plan review and editing (G4–G9): step through the segments one at a time to
@@ -58,6 +59,7 @@ interface Notice {
 
 type Sheet =
   | { kind: 'player'; playerId: string }
+  | { kind: 'send' }
   /** Pick the other half of a swap for `playerId`, who is on the court or the bench. */
   | { kind: 'swap'; playerId: string; onCourt: boolean };
 
@@ -69,6 +71,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pending, setPending] = useState<(PendingSwap & { apply: () => void }) | null>(null);
+  const [sentMessage, setSentMessage] = useState<string | null>(null);
 
   const names = new Map(roster.map((p) => [p.id, p.name]));
   const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
@@ -78,6 +81,8 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     positionId === null ? null : (team.positions.find((p) => p.id === positionId)?.name ?? positionId);
 
   const isPlanned = game.status === 'planned';
+  // Sent to the assistant, who runs the game on their phone (SH5).
+  const withAssistant = isPlanned && game.handoff?.away === true && game.handoff.role === 'coach';
   const count = game.plan.length;
   const at = Math.min(segment, Math.max(0, count - 1));
   const label = count > 0 ? segmentLabel(game.format, at) : null;
@@ -200,6 +205,14 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     navigate(paths.gameLive(game.id));
   };
 
+  const onTakeBack = async () => {
+    if (!window.confirm('Take back control? Run the game on this phone only if your assistant can’t. Anything they’ve done on their phone stays there.')) {
+      return;
+    }
+    await takeBack(game.id);
+    setSentMessage(null);
+  };
+
   const go = (index: number) => {
     setSegment(index);
     setView('segments');
@@ -210,7 +223,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   const onCourtIds = new Set(lineup.map((s) => s.playerId));
   const bench = players.filter((p) => !onCourtIds.has(p.id));
   const hasLocks = (s: number) => game.locks.some((l) => l.segment === s && game.attending.includes(l.playerId));
-  const sheetPlayer = sheet ? byId.get(sheet.playerId) : undefined;
+  const sheetPlayer = sheet && sheet.kind !== 'send' ? byId.get(sheet.playerId) : undefined;
   // Segments grouped by period for the jump strip: Q1 [1 2], Q2 [1 2]…
   const periods: { label: string; segments: number[] }[] = [];
   game.plan.forEach((_, i) => {
@@ -244,6 +257,32 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
       />
 
       {count === 0 && <Empty>No plan yet. Go to Setup and tap Generate plan.</Empty>}
+
+      {withAssistant && (
+        <aside className="callout" aria-label="With your assistant">
+          <strong>With your assistant</strong>
+          <p>
+            Sent {formatTime(game.handoff!.sentAt)}. They run the game on their phone and send it back when it’s over.
+            {changedSinceSent(game) && <b> You’ve changed the plan since. Send it again before tip-off.</b>}
+          </p>
+          <button type="button" className="link" onClick={() => void onTakeBack()}>
+            Take back control
+          </button>
+        </aside>
+      )}
+      {sentMessage && (
+        <p className="notice" role="status">
+          {sentMessage}
+        </p>
+      )}
+      {isPlanned && count > 0 && !withAssistant && game.handoff?.role !== 'assistant' && (
+        <p className="hint send-hint">
+          Assistant running the subs?{' '}
+          <button type="button" className="link" onClick={() => setSheet({ kind: 'send' })}>
+            Send to assistant
+          </button>
+        </p>
+      )}
 
       {count > 0 && (
         <Segmented
@@ -475,9 +514,15 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
             <button type="button" className="btn secondary" onClick={() => void regenerate()}>
               ↻ Shuffle
             </button>
-            <button type="button" className="btn big grow" onClick={() => void start()}>
-              Start game
-            </button>
+            {withAssistant ? (
+              <button type="button" className="btn big grow" onClick={() => setSheet({ kind: 'send' })}>
+                Send again
+              </button>
+            ) : (
+              <button type="button" className="btn big grow" onClick={() => void start()}>
+                Start game
+              </button>
+            )}
           </div>
         )}
         {game.status === 'live' && (
@@ -487,6 +532,18 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
         )}
       </footer>
 
+      {sheet?.kind === 'send' && (
+        <SendGameSheet
+          game={game}
+          team={team}
+          roster={roster}
+          onSent={(message) => {
+            setSentMessage(message);
+            close();
+          }}
+          onClose={close}
+        />
+      )}
       {sheet?.kind === 'player' && sheetPlayer && label && (
         <PlanPlayerSheet
           player={sheetPlayer}
@@ -517,4 +574,12 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
       )}
     </main>
   );
+}
+
+function formatTime(time: number | undefined): string {
+  if (time === undefined) return '';
+  const when = new Date(time);
+  const sameDay = when.toDateString() === new Date().toDateString();
+  const clock = when.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  return sameDay ? `at ${clock}` : `${when.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} at ${clock}`;
 }

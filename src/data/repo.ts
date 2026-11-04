@@ -1,4 +1,5 @@
 import { db } from './db';
+import { receivedHandoff, roleOf, type GameHandoff } from './handoff';
 import { DEFAULT_FORMAT, DEFAULT_POSITIONS, DEFAULT_RULES, DEMO_PLAYERS } from './defaults';
 import type { Game, Player, Team } from './types';
 
@@ -143,4 +144,49 @@ export async function toggleAttending(gameId: string, playerId: string): Promise
 
 export async function deleteGame(id: string): Promise<void> {
   await db.games.delete(id);
+}
+
+// Handing a game to the assistant and back (SH1–SH6)
+
+/**
+ * Records that this phone sent the game. The game's updatedAt is set to the
+ * same moment, so any later edit shows as "changed since you sent it".
+ */
+export async function markSent(gameId: string, n: number, now = Date.now()): Promise<void> {
+  await db.transaction('rw', db.games, async () => {
+    const game = await db.games.get(gameId);
+    if (!game) return;
+    await db.games.update(gameId, { handoff: { n, role: roleOf(game), away: true, sentAt: now }, updatedAt: now });
+  });
+}
+
+/** True when the game was edited after it was last sent. */
+export const changedSinceSent = (game: Game): boolean =>
+  !!game.handoff?.away && game.handoff.sentAt !== undefined && game.updatedAt > game.handoff.sentAt;
+
+/** Take back control (SH5): this phone runs the game again. Raising the number makes a crossing copy ask first. */
+export async function takeBack(gameId: string): Promise<void> {
+  await db.transaction('rw', db.games, async () => {
+    const game = await db.games.get(gameId);
+    if (!game?.handoff) return;
+    await updateGame(gameId, { handoff: { n: game.handoff.n + 1, role: game.handoff.role, away: false } });
+  });
+}
+
+/**
+ * Keeps a received game (SH4). The team and players merge the way a backup
+ * does (missing ones added, the more recently changed copy wins); the game
+ * replaces this phone's copy. Call `decideReceive` first.
+ */
+export async function receiveGame(incoming: GameHandoff): Promise<void> {
+  await db.transaction('rw', db.teams, db.players, db.games, async () => {
+    const existingTeam = await db.teams.get(incoming.team.id);
+    if (!existingTeam || incoming.team.updatedAt > existingTeam.updatedAt) await db.teams.put(incoming.team);
+    for (const player of incoming.players) {
+      const existing = await db.players.get(player.id);
+      if (!existing || player.updatedAt > existing.updatedAt) await db.players.put(player);
+    }
+    // Keep the sender's updatedAt, so opening the same link twice is recognised.
+    await db.games.put({ ...incoming.game, handoff: receivedHandoff(incoming) });
+  });
 }

@@ -101,4 +101,18 @@ export interface Game extends Record {
    * S3). Missing for games started before it was recorded.
    */
   startPlan?: Lineup[];
+  /** Handing the game between the coach's and assistant's phones (SH1–SH6). Missing: never handed off. */
+  handoff?: Handoff;
+}
+
+/** This phone's side of a game handoff (SH3). */
+export interface Handoff {
+  /** Goes up by one with every send and every Take back control. */
+  n: number;
+  /** This phone's part: the coach plans and gets the game back; the assistant runs it. */
+  role: 'coach' | 'assistant';
+  /** Sent to the other phone and not back yet. */
+  away: boolean;
+  /** When this phone last sent the game. */
+  sentAt?: number;
 }

@@ -88,6 +88,17 @@ Everything is saved on your phone as you go. There is no Save button. Your data 
 
 Settings also has **Check for updates** and the app version.
 
+### Sharing a game with your assistant
+
+If an assistant runs the subs on their phone, hand them the game and get it back when it's over:
+
+1. **Coach:** open the plan and tap **Send to assistant**. Choose **Text a link** (Messages, WhatsApp, email) or **AirDrop a file** (when you're together; works with no signal).
+2. **Assistant:** tap the link and then **Open here**. If you use the next5 app on your Home Screen, tap **Copy for the next5 app** instead, then open next5 and tap **Paste game** on the Teams screen. For an AirDropped file, tap **Open game file** on the Teams screen.
+3. **During the game** the assistant runs it as usual. The coach's phone shows **With your assistant**. You can still change the plan and **Send again** until tip-off; once the assistant has started, their phone won't let an old plan wipe out their swaps.
+4. **After the game** the assistant taps **Send back to coach** on the Final screen. The coach opens it the same way, and the game, with every swap and the playing time, is back on the coach's phone.
+
+If the assistant can't finish (a dead battery, say), the coach taps **Take back control**.
+
 ### Updates
 
 When a new version is ready, a banner says **A new version of next5 is ready**. Tap **Update** when convenient; your teams and games are kept. The banner never appears during a live game.
@@ -142,7 +153,8 @@ src/
   domain/       Game logic shared by screens: labels, Next/Undo, stats (game.ts)
                 and game-day changes: swaps, statuses, re-plan, overtime (changes.ts)
   data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts),
-                backup files and restore (backup.ts), share sheet / download (share.ts)
+                backup files and restore (backup.ts), share sheet / download (share.ts),
+                handing a game to the assistant by link or file (handoff.ts)
   screens/      One component per screen
   components/   Shared UI (top bar, toggles, sheets, update banner, install hint)
   hooks/        useGameData, useWakeLock

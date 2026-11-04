@@ -1,9 +1,10 @@
 import { useLiveQuery } from 'dexie-react-hooks';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Empty, Section, TopBar } from '../components/ui';
 import { InstallHint } from '../components/InstallHint';
 import { db } from '../data/db';
 import { backUp, backupReminderDue, lastBackupAt, snoozeReminder } from '../data/backup';
+import { dataFromText, encodeHandoff, parseHandoff } from '../data/handoff';
 import { createDemoTeam, createTeam } from '../data/repo';
 import { navigate, paths } from '../router';
 
@@ -18,11 +19,36 @@ export function TeamsScreen() {
   const [name, setName] = useState('');
   const [reminderHidden, setReminderHidden] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
+  const [receiveError, setReceiveError] = useState<string | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
   const showReminder = !reminderHidden && backupReminderDue((teams?.length ?? 0) > 0);
 
   const runBackup = async () => {
     setBackupMessage(await backUp());
     setReminderHidden(true);
+  };
+
+  // Receiving a game from the coach or assistant (SH3).
+  const pasteGame = async () => {
+    let text: string;
+    try {
+      text = await navigator.clipboard.readText();
+    } catch {
+      return setReceiveError('Couldn’t read what you copied. Copy the game link again, then tap Paste game.');
+    }
+    const data = dataFromText(text);
+    if (!data) return setReceiveError('What you copied isn’t a next5 game link. Copy the link from the message, then try again.');
+    setReceiveError(null);
+    navigate(paths.receive(data));
+  };
+
+  const openFile = async (file: File | undefined) => {
+    if (!file) return;
+    const parsed = parseHandoff(await file.text());
+    if (fileInput.current) fileInput.current.value = '';
+    if (!parsed.ok) return setReceiveError(parsed.message);
+    setReceiveError(null);
+    navigate(paths.receive(await encodeHandoff(parsed.handoff)));
   };
 
   const add = async () => {
@@ -99,6 +125,29 @@ export function TeamsScreen() {
           >
             Load demo team
           </button>
+        )}
+      </Section>
+      <Section title="Receive a game">
+        <div className="footer-row">
+          <button type="button" className="btn secondary grow" onClick={() => void pasteGame()}>
+            Paste game
+          </button>
+          <button type="button" className="btn secondary grow" onClick={() => fileInput.current?.click()}>
+            Open game file
+          </button>
+        </div>
+        <input
+          ref={fileInput}
+          type="file"
+          accept="application/json,.json"
+          className="file-input"
+          aria-label="Game file"
+          onChange={(e) => void openFile(e.target.files?.[0])}
+        />
+        {receiveError && (
+          <p className="error" role="alert">
+            {receiveError}
+          </p>
         )}
       </Section>
       <p className="footnote">
