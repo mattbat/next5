@@ -1,22 +1,62 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512">
+  <!-- next5 app icon, option V2z (chosen 2026-11-04). Other options: docs/icon/icon-options.html.
+       Full-bleed square: iOS and Android cut their own corner shape.
+       Run `npm run icons` after changing this file to regenerate the PNG icons. -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#1c2433"/>
-      <stop offset="1" stop-color="#0b0f17"/>
+    <linearGradient id="court" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1f3a80"/>
+      <stop offset="1" stop-color="#0b1636"/>
     </linearGradient>
     <linearGradient id="ball" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#ff9a4a"/>
       <stop offset="1" stop-color="#f26a0c"/>
     </linearGradient>
+    <linearGradient id="rim" gradientUnits="userSpaceOnUse" x1="60" y1="60" x2="452" y2="452">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/>
+      <stop offset=".42" stop-color="#fff" stop-opacity=".18"/>
+      <stop offset=".62" stop-color="#fff" stop-opacity=".06"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".6"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".34"/>
+      <stop offset=".5" stop-color="#fff" stop-opacity=".08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity=".16"/>
+    </linearGradient>
+    <filter id="frost" filterUnits="userSpaceOnUse" x="-64" y="-64" width="640" height="640">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <filter id="soft" filterUnits="userSpaceOnUse" x="-64" y="-64" width="640" height="640">
+      <feGaussianBlur stdDeviation="10"/>
+    </filter>
+    <!-- Royal blue court with basketball seams -->
+    <g id="courtArt">
+      <rect width="512" height="512" fill="url(#court)"/>
+      <g fill="none" stroke="#5b7fd6" stroke-width="16" opacity=".45">
+        <path d="M-40 300h680"/>
+        <path d="M300 -40v680"/>
+        <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/>
+        <path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/>
+      </g>
+    </g>
+    <!-- The 5, drawn as a shape so it never depends on installed fonts -->
+    <path id="five" d="M318 142H208l-12 102c20-13 41-19 63-19 47 0 79 32 79 77 0 46-34 78-82 78-34 0-63-15-78-42" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <g id="fiveArt">
+      <use xlink:href="#five" href="#five" stroke="url(#ball)" stroke-width="54" transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+    </g>
+    <mask id="chevron">
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <circle cx="256" cy="256" r="168" fill="url(#ball)"/>
-  <g fill="none" stroke="#1a0d02" stroke-width="12" stroke-linecap="round" opacity="0.55">
-    <path d="M88 256h336"/>
-    <path d="M256 88v336"/>
-    <path d="M142 132c50 40 72 86 72 124s-22 84-72 124"/>
-    <path d="M370 132c-50 40-72 86-72 124s22 84 72 124"/>
+
+  <use xlink:href="#courtArt" href="#courtArt"/>
+  <use xlink:href="#fiveArt" href="#fiveArt"/>
+  <!-- Glass "next" chevron: shadow, frosted copy of what is behind it, then light -->
+  <path d="M318 196l74 74-74 74" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
+  <g mask="url(#chevron)">
+    <use xlink:href="#courtArt" href="#courtArt" filter="url(#frost)"/>
+    <use xlink:href="#fiveArt" href="#fiveArt" filter="url(#frost)" transform="translate(-14 0)"/>
+    <rect width="512" height="512" fill="#fff" opacity=".5"/>
+    <rect width="512" height="512" fill="url(#sheen)"/>
+    <rect width="512" height="512" fill="url(#rim)" opacity=".7"/>
   </g>
-  <circle cx="256" cy="256" r="98" fill="#0b0f17"/>
-  <text x="256" y="300" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="132" font-weight="800" fill="#ffffff">5</text>
 </svg>
