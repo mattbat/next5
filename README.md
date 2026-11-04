@@ -30,7 +30,7 @@ It opens full screen like any other app and works in gyms with no signal.
 
 ### Help in the app
 
-The first time next5 opens, a short intro shows what it does (tap **Skip** to go straight in). After that, tap **Help** at the top left of the Teams screen, or **Settings → Help and guide**, for a full guide with pictures: setting up a team, planning, changing the plan, game day, injuries and re-planning, stats, sharing with an assistant, backups, and common questions. Screens with something to explain have a **?** link to the right page. **Help → Replay the intro** shows the intro again.
+The first time next5 opens, a short intro shows what it does (tap **Skip** to go straight in). After that, tap **Help** at the top left of the Teams screen, or **Settings → Help and guide**, for a full guide with pictures: setting up a team, planning, changing the plan, game day, injuries and re-planning, stats, sharing with an assistant, backups, and common questions. Screens with something to explain have a **?** link to the right page. **‹** goes back a page, and **Done** returns you to the screen you were on. **Help → Replay the intro** shows the intro again.
 
 ### Quick start
 

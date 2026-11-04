@@ -1,6 +1,15 @@
 import { Empty, TopBar } from '../components/ui';
 import { GROUPS, TOPICS, topicById } from '../help/topics';
-import { helpBack, paths } from '../router';
+import { helpBack, leaveHelp, navigate, paths } from '../router';
+
+/** Closes help, back to the screen it was opened from. */
+function Done() {
+  return (
+    <button type="button" className="link" onClick={() => leaveHelp() || navigate(paths.teams())}>
+      Done
+    </button>
+  );
+}
 
 /** The in-app guide: a list of topics, and one page per topic (H-1, H-3, H-4). */
 export function HelpScreen({ topic }: { topic: string | null }) {
@@ -11,7 +20,7 @@ export function HelpScreen({ topic }: { topic: string | null }) {
   if (!page) {
     return (
       <main className="screen">
-        <TopBar title="Help" back={paths.help()} />
+        <TopBar title="Help" back={paths.help()} historyBack action={<Done />} />
         <Empty>
           That help page doesn’t exist. <a href={paths.help()}>See all help topics</a>.
         </Empty>
@@ -22,7 +31,7 @@ export function HelpScreen({ topic }: { topic: string | null }) {
   const next = TOPICS[index + 1];
   return (
     <main className="screen help">
-      <TopBar title="Help" back={helpBack(hash)} />
+      <TopBar title="Help" back={helpBack(hash)} historyBack action={<Done />} />
       <article className="help-page" aria-labelledby="help-title">
         <p className="help-group">{page.group}</p>
         <h1 id="help-title" className="help-title">
@@ -56,7 +65,7 @@ export function HelpScreen({ topic }: { topic: string | null }) {
 function HelpIndex({ back }: { back: string }) {
   return (
     <main className="screen help">
-      <TopBar title="Help" back={back} />
+      <TopBar title="Help" back={back} historyBack action={<Done />} />
       <p className="help-lead">
         How next5 works, from setting up your team to running subs on game day. New here? Start with{' '}
         <a href={paths.help('start')}>Quick start</a>.

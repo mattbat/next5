@@ -15,6 +15,28 @@ import { HelpLink } from '../help/parts';
 
 type Tab = 'games' | 'roster' | 'stats' | 'settings';
 
+const TAB_KEY = 'next5.teamTab.';
+
+/** The tab last open on this team during this visit; Games the first time. */
+function lastTab(teamId: string): Tab {
+  try {
+    const tab = sessionStorage.getItem(TAB_KEY + teamId);
+    if (tab === 'roster' || tab === 'stats' || tab === 'settings') return tab;
+  } catch {
+    // Storage unavailable.
+  }
+  return 'games';
+}
+
+/** Opens the team on Games next time, e.g. after archiving or deleting it from Settings. */
+function forgetTab(teamId: string): void {
+  try {
+    sessionStorage.removeItem(TAB_KEY + teamId);
+  } catch {
+    // Storage unavailable.
+  }
+}
+
 export function TeamScreen({ teamId }: { teamId: string }) {
   // null = not found; undefined = still loading.
   const team = useLiveQuery(async () => (await db.teams.get(teamId)) ?? null, [teamId]);
@@ -23,7 +45,16 @@ export function TeamScreen({ teamId }: { teamId: string }) {
     () => db.games.where('teamId').equals(teamId).reverse().sortBy('date'),
     [teamId],
   );
-  const [tab, setTab] = useState<Tab>('games');
+  // Coming back to the team (from a player, a game or help) opens the tab you left.
+  const [tab, setTabState] = useState<Tab>(() => lastTab(teamId));
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    try {
+      sessionStorage.setItem(TAB_KEY + teamId, next);
+    } catch {
+      // Storage unavailable: the tab just isn't remembered.
+    }
+  };
 
   if (team === undefined || players === undefined) return <main className="screen" />;
   if (team === null) {
@@ -329,7 +360,10 @@ function TeamSettings({ team }: { team: Team }) {
           className="btn secondary wide"
           onClick={() => {
             void setTeamArchived(team.id, !team.archived);
-            if (!team.archived) navigate(paths.teams());
+            if (!team.archived) {
+              forgetTab(team.id);
+              navigate(paths.teams());
+            }
           }}
         >
           {team.archived ? 'Unarchive team' : 'Archive team'}
@@ -347,6 +381,7 @@ function TeamSettings({ team }: { team: Team }) {
           className="btn danger wide"
           onClick={() => {
             if (window.confirm(`Delete ${team.name} with all its players and games? This can't be undone.`)) {
+              forgetTab(team.id);
               void deleteTeam(team.id).then(() => navigate(paths.teams()));
             }
           }}

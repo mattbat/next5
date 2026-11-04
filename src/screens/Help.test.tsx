@@ -4,20 +4,25 @@
 import { existsSync } from 'node:fs';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { db } from '../data/db';
 import { createDemoTeam } from '../data/repo';
 import { INTRO_KEY, introSeen } from '../help/intro';
 import { SHOTS } from '../help/shots';
 import { GROUPS, TOPICS } from '../help/topics';
-import { helpBack, noteHelpOrigin, parseRoute, paths } from '../router';
+import { helpBack, parseRoute, paths } from '../router';
 
 beforeEach(async () => {
   await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
   localStorage.clear();
+  sessionStorage.clear();
   document.documentElement.dataset.theme = 'dark';
   window.location.hash = '#/';
+});
+
+afterEach(() => {
+  vi.restoreAllMocks();
 });
 
 async function goTo(hash: string) {
@@ -35,19 +40,24 @@ describe('help routes', () => {
     expect(parseRoute('#/welcome')).toEqual({ name: 'welcome' });
   });
 
-  it('goes back to the screen help was opened from', () => {
-    // Opened as a topic from a screen: back returns to that screen, from the topic and from the index.
-    noteHelpOrigin('#/game/g1/plan', '#/help/edit-plan');
-    expect(helpBack('#/help/edit-plan')).toBe('#/game/g1/plan');
-    noteHelpOrigin('#/help/edit-plan', '#/help');
-    expect(helpBack('#/help')).toBe('#/game/g1/plan');
-    // Another topic opened from the index goes back to the index.
-    noteHelpOrigin('#/help', '#/help/rules');
-    expect(helpBack('#/help/rules')).toBe('#/help');
-    // Opened from Settings at the index.
-    noteHelpOrigin('#/settings', '#/help');
-    expect(helpBack('#/help')).toBe('#/settings');
+  it('Back returns to the previous page, and Done to the screen help was opened from', async () => {
+    const user = userEvent.setup();
+    await goTo(paths.settings());
+    render(<App />);
+    await goTo(paths.help('backup'));
+    await goTo(paths.help('rules'));
+    const back = vi.spyOn(window.history, 'back').mockImplementation(() => {});
+    const go = vi.spyOn(window.history, 'go').mockImplementation(() => {});
+    await user.click(screen.getByRole('link', { name: 'Back' }));
+    expect(back).toHaveBeenCalledOnce();
+    // Two help pages deep: Done goes back past both, to Settings.
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(go).toHaveBeenCalledWith(-2);
+  });
+
+  it('without an earlier page, Back goes up to the topics and then the Teams screen', () => {
     expect(helpBack('#/help/plan')).toBe('#/help');
+    expect(helpBack('#/help')).toBe('#/');
   });
 });
 

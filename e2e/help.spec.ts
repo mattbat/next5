@@ -43,6 +43,8 @@ test('a first-time coach sees the intro, fitting the screen, and can start with 
 test('the guide opens from the Teams screen and every topic reads well on a phone', async ({ page }) => {
   await page.goto('./');
   await page.getByRole('button', { name: 'Skip' }).click();
+  await page.getByRole('button', { name: 'Load demo team' }).click();
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
   await page.getByRole('link', { name: 'Help' }).click();
   await expect(page.getByRole('heading', { name: 'Help' })).toBeVisible();
   await expectNoHorizontalScroll(page);
@@ -64,4 +66,19 @@ test('the guide opens from the Teams screen and every topic reads well on a phon
   await expect(page.getByRole('heading', { name: 'Backups and your data' })).toBeVisible();
   await page.getByRole('link', { name: 'Back', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Settings' })).toBeVisible();
+
+  // From the Roster tab, read two topics, then Done: back on the Roster tab.
+  await page.goto('./');
+  await page.getByRole('link', { name: /Demo Hoopers/ }).click();
+  await page.getByRole('radio', { name: /Roster/ }).click();
+  await page.getByRole('link', { name: /Positions and skill levels/ }).click();
+  await expect(page.getByRole('heading', { name: 'Teams and players' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'More help' }).getByRole('link', { name: /Next/ }).click();
+  await expect(page.getByRole('heading', { name: 'Team settings' })).toBeVisible();
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Teams and players' })).toBeVisible();
+  await page.getByRole('navigation', { name: 'More help' }).getByRole('link', { name: /Next/ }).click();
+  await page.getByRole('button', { name: 'Done' }).click();
+  await expect(page.getByRole('radio', { name: /Roster/ })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByRole('heading', { name: 'Demo Hoopers' })).toBeVisible();
 });

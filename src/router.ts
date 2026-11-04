@@ -59,36 +59,60 @@ export function navigate(hash: string): void {
 }
 
 /**
- * Where Help was opened from, so its back button returns there: the screen
- * before the first help page, and that first page (often a topic opened from
- * a "Help" link on a screen).
+ * How many pages deep this visit is, stamped on each history entry so it is
+ * still right after going back. Help's back button uses it to return to the
+ * page it was opened from, the way Safari's own back does, and Done to leave
+ * help for the screen it was opened from (H-8).
  */
-let helpOrigin: { from: string; entry: string } | null = null;
+let depth = 0;
+/** On a help page: the depth of the screen help was opened from, if known. */
+let helpFrom: number | null = null;
 
-const isHelp = (hash: string) => parseRoute(hash).name === 'help';
-const hashOf = (url: string) => {
-  const i = url.indexOf('#');
-  return i === -1 ? '' : url.slice(i);
-};
-
-/** Remembers the screen Help was opened from. Called on every route change. */
-export function noteHelpOrigin(oldHash: string, newHash: string): void {
-  if (isHelp(newHash) && !isHelp(oldHash)) helpOrigin = { from: oldHash || paths.teams(), entry: newHash };
+interface Stamp {
+  next5Depth?: number;
+  next5HelpFrom?: number | null;
 }
 
-/** Where a help page's back button goes: the screen it was opened from, or the list of topics. */
+/** Reads this page's place in the visit, or stamps it on a page not seen before. */
+function stampHistory(opened: boolean): void {
+  const state = (window.history.state ?? {}) as Stamp;
+  if (typeof state.next5Depth === 'number') {
+    depth = state.next5Depth;
+    helpFrom = state.next5HelpFrom ?? null;
+    return;
+  }
+  const inHelp = parseRoute(window.location.hash).name === 'help';
+  // The page the app opened on is the first; any other new page is one deeper.
+  const from = opened ? null : helpFrom ?? depth;
+  depth = opened ? 0 : depth + 1;
+  helpFrom = inHelp ? from : null;
+  window.history.replaceState({ ...state, next5Depth: depth, next5HelpFrom: helpFrom }, '');
+}
+
+/** True when there's an earlier next5 page in this visit to go back to. */
+export function canGoBack(): boolean {
+  return depth > 0;
+}
+
+/** Leaves help for the screen it was opened from. False if that isn't known (e.g. opened from a link). */
+export function leaveHelp(): boolean {
+  if (helpFrom === null) return false;
+  window.history.go(helpFrom - depth);
+  return true;
+}
+
+/** Where a help page's back button goes when there's no earlier page (e.g. opened from a link). */
 export function helpBack(hash: string): string {
   const route = parseRoute(hash);
-  const atIndex = route.name === 'help' && route.topic === null;
-  if (helpOrigin && (atIndex || hash === helpOrigin.entry)) return helpOrigin.from;
-  return atIndex ? paths.teams() : paths.help();
+  return route.name === 'help' && route.topic !== null ? paths.help() : paths.teams();
 }
 
 export function useRoute(): Route {
   const [route, setRoute] = useState(() => parseRoute(window.location.hash));
   useEffect(() => {
-    const onChange = (e: HashChangeEvent) => {
-      noteHelpOrigin(hashOf(e.oldURL ?? ''), window.location.hash);
+    stampHistory(true);
+    const onChange = () => {
+      stampHistory(false);
       setRoute(parseRoute(window.location.hash));
       window.scrollTo(0, 0);
     };

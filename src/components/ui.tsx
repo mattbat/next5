@@ -1,15 +1,19 @@
 import { useState, type ReactNode } from 'react';
+import { canGoBack } from '../router';
 
 /** Small shared building blocks used across screens. */
 
 export function TopBar({
   title,
   back,
+  historyBack = false,
   lead,
   action,
 }: {
   title: ReactNode;
   back?: string;
+  /** Back returns to the previous page, like Safari's back; `back` is used when there isn't one. */
+  historyBack?: boolean;
   /** Shown on the left when there's no back button. */
   lead?: ReactNode;
   action?: ReactNode;
@@ -17,7 +21,16 @@ export function TopBar({
   return (
     <header className="topbar">
       {back ? (
-        <a className="topbar-back" href={back} aria-label="Back">
+        <a
+          className="topbar-back"
+          href={back}
+          aria-label="Back"
+          onClick={(e) => {
+            if (!historyBack || !canGoBack()) return;
+            e.preventDefault();
+            window.history.back();
+          }}
+        >
           ‹
         </a>
       ) : (
