@@ -182,7 +182,10 @@ Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
   - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
   - Offline is fine: the app can save the ping and send it next time it's online.
   - Must never send player names, team names or game data. Kids' data stays on the phone.
-- [ ] **Top edge of text looks a little blurry.** Needs a look on a real iPhone. next5 doesn't add any blur itself (no `backdrop-filter` in the CSS). The app draws under the status bar (`viewport-fit=cover` plus the `black-translucent` status bar), and recent iOS versions blur or fade content as it scrolls under the status bar. That's the likely cause. Questions to answer: does it show only while scrolling, or always? In Safari, the Home Screen app, or both? Screenshot needed. A possible fix: a solid bar behind the status bar so text never scrolls under it.
+- [ ] **Top edge of text looks a little blurry.** Screenshot checked 2026-11-04 (Teams screen, dark theme, Home Screen app). next5 adds no blur itself (no `backdrop-filter`, `filter` or `text-shadow` near the top). The screenshot shows a faint lighter haze behind the middle of the top row (Help · next5 · Settings), from just under the clock down to about the top row's text. Its shape points to iOS drawing its own soft edge under the status bar. The app draws content up there (`viewport-fit=cover` with the `black-translucent` status bar), so the top row sits inside that haze. Plan for later, cheapest first:
+  1. Push the top row a little lower (more padding than `--safe-top + 4px`) so it sits clear of the haze. Compare before and after screenshots on the iPhone.
+  2. If that's not enough, give the top bar a solid background that reaches up behind the status bar.
+  3. Last resort: switch the status bar style from `black-translucent` to `default`, so iOS stops drawing content under the status bar (the app's top bar moves down below it).
 
 ## Small changes requested
 
