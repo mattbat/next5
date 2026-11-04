@@ -1,5 +1,5 @@
 import { Intro } from './components/Intro';
-import { navigate, paths, useRoute } from './router';
+import { canGoBack, navigate, paths, useRoute } from './router';
 import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
 import { GameDayScreen } from './screens/GameDayScreen';
 import { GameSetupScreen } from './screens/GameSetupScreen';
@@ -32,6 +32,7 @@ export function App() {
     case 'help':
       return <HelpScreen topic={route.topic} />;
     case 'welcome':
-      return <Intro offerDemo={false} onClose={() => navigate(paths.help())} />;
+      // Back to the page it was replayed from, rather than a new page on top of it.
+      return <Intro offerDemo={false} onClose={() => (canGoBack() ? window.history.back() : navigate(paths.teams()))} />;
   }
 }

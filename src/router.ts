@@ -95,7 +95,9 @@ function stampHistory(opened: boolean): void {
     currentKey = state.next5Key!;
   } else {
     // A new page: the first if the app just opened, otherwise one deeper.
-    const inHelp = parseRoute(hash).name === 'help';
+    // The replayed intro counts as part of help, so leaving help skips past it.
+    const name = parseRoute(hash).name;
+    const inHelp = name === 'help' || name === 'welcome';
     const from = opened ? null : (helpFrom ?? depth);
     depth = opened ? 0 : depth + 1;
     helpFrom = inHelp ? from : null;
