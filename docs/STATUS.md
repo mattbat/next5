@@ -171,6 +171,19 @@ In priority order:
 5. ~~Light theme (D10)~~ Done. ~~Archive teams (M1)~~ Done. Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
+## Ideas to discuss
+
+Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
+
+- [ ] **Usage metrics: how many people install the app?**
+  - **Conflicts with N4** ("No analytics, tracking, or network calls beyond fetching app updates"). Doing this means changing that requirement first.
+  - A PWA has no app store, so there's no real "download" count. The closest thing is counting first launches, or counting launches from the Home Screen (`display-mode: standalone`).
+  - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
+  - Offline is fine: the app can save a "launched" ping and send it next time it's online. Counts would come in late but wouldn't be lost.
+  - Must never send player names, team names or game data. Kids' data stays on the phone.
+  - Smallest version: one anonymous ping the first time the app opens on a device, plus an off switch in Settings.
+- [ ] **Top edge of text looks a little blurry.** Needs a look on a real iPhone. next5 doesn't add any blur itself (no `backdrop-filter` in the CSS). The app draws under the status bar (`viewport-fit=cover` plus the `black-translucent` status bar), and recent iOS versions blur or fade content as it scrolls under the status bar. That's the likely cause. Questions to answer: does it show only while scrolling, or always? In Safari, the Home Screen app, or both? Screenshot needed. A possible fix: a solid bar behind the status bar so text never scrolls under it.
+
 ## Small changes requested
 
 - [x] **Edit or delete a started game:** **Game setup** (opponent, date, Delete game) is reachable at any stage: plan → **Setup**, Game Day → **Edit** → **Game setup**, or the Final screen. Once the game has started, attendance, format and rules are hidden there, since they can't change. Deleting a started or finished game asks first and warns that its stats go too. (Requested 2026-11-03.)
