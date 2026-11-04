@@ -186,6 +186,18 @@ export function lastBackupAt(): number | null {
   return read(LAST_BACKUP_KEY);
 }
 
+/** "Never", or a date like "Nov 3, 2026". */
+export function formatBackupDate(time: number | null): string {
+  if (time === null) return 'Never';
+  return new Date(time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+/** True when a backup was made in the last day, so there's no need to offer another. */
+export function backedUpRecently(now = Date.now()): boolean {
+  const last = lastBackupAt();
+  return last !== null && now - last < DAY;
+}
+
 export function markBackedUp(now = Date.now()): void {
   write(LAST_BACKUP_KEY, now);
 }
