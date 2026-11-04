@@ -73,7 +73,7 @@ Success means the coach never has to work out a rotation in her head or on paper
 |----|------|-----------|
 | H1 | **Position coverage** | Every lineup has to meet the team's position requirements (see §6). "At least 2 Guards" means the lineup contains at least 2 players marked as able to play Guard. One player can only count toward one position, so a lineup with 2 Guards and 1 Center needs 3 different players. The generator never produces a lineup that doesn't meet the requirements. A pregame edit that would leave a required position uncovered is blocked, with a message naming the missing position. **During a game, a substitution the coach picks is never blocked** (injuries may make an ideal lineup impossible): the app warns which position is uncovered and lets the coach go ahead. |
 
-If the attending players *can't* cover the required positions (for example, nobody eligible to play Center showed up), the app stops before generating. It explains exactly what is missing and offers two fixes for this game only: make a player eligible for that position, or lower that position's requirement. Position coverage can be turned off entirely for a team, for example for 8U.
+If the attending players *can't* cover the required positions (for example, nobody eligible to play Center showed up), the app stops before generating. It explains exactly what is missing and offers two fixes for this game only: make a player eligible for that position, or lower that position's requirement. (The one-tap fixes were dropped on 2026-11-03: the explanation is enough, and the coach can change attendance, a player's positions or the team's requirement.) Position coverage can be turned off entirely for a team, for example for 8U.
 
 ### Optional rules (independent toggles)
 Each team has default settings for these rules, and each game can change them.
@@ -94,7 +94,7 @@ The rule engine must be easy to extend so that more rules can be added later. Ex
 
 | ID | Requirement |
 |----|-------------|
-| P1 | Each team defines its own list of positions. The default is Guard / Forward / Center, and the list can be edited, for example to PG / SG / SF / PF / C. |
+| P1 | Each team has a list of positions: Guard / Forward / Center. (Editing the list, for example to PG / SG / SF / PF / C, was dropped on 2026-11-03.) |
 | P2 | For each player, the coach picks which positions they can play. |
 | P3 | For each position a player can play, the coach sets a skill level (see the table below). |
 | P4 | Each team defines a **lineup requirement**: the minimum number of players needed at each position, for example "at least 2 Guards, at least 1 Center." |
@@ -119,7 +119,7 @@ The names are encouraging and describe the player's role at that position, not h
 | M1 | Create, edit, archive, and delete teams. Several teams can be active at the same time. |
 | M2 | Enter the roster, positions, lineup requirement, default format, and default rules once per team. Every new game for that team starts from these settings. |
 | M3 | Edit the roster during the season: add players, mark a player inactive (keeping their history), or change positions and skill levels. Past games are not affected. |
-| M4 | Start a new season by copying a team, including its roster, positions, and settings, but not its games. |
+| M4 | ~~Start a new season by copying a team.~~ Dropped 2026-11-03: teams are mostly new each season. |
 
 ## 8. Pregame planning
 
@@ -136,7 +136,7 @@ The names are encouraging and describe the player's role at that position, not h
 | G8 | **Regenerate:** either regenerate the **whole plan** from scratch, or regenerate **from segment N onward** with as few changes as possible, keeping everything before N. Locked items are always kept. |
 | G9 | **Swap:** swap any player into or out of any segment. Swaps that break optional rules show a warning but are allowed. Swaps that break position coverage (H1) are blocked. |
 | G10 | Save the plan and come back to it later. Plans can be prepared days in advance. |
-| G11 | Duplicate a previous game's setup (attendance, format, rules, locks) as the starting point for a new game. |
+| G11 | ~~Duplicate a previous game's setup.~~ Dropped 2026-11-03: every new game starts with all active players attending and the team's default format and rules (M2), which is enough. |
 
 ## 9. Game day
 
@@ -172,7 +172,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | S3 | **Per-game stats:** for each player, planned segments, segments actually played, segments sat, and positions played. |
 | S4 | **Per-season stats:** for each player on the team, games attended, total segments played, percentage of available segments played, and segments by position. |
 | S5 | **Export** season stats and per-game stats as CSV (opens in Excel, Numbers, or Google Sheets) through the iOS share sheet. Skill levels are never included (see P6). |
-| S6 | Stats are counted in segments. Approximate minutes may also be shown, calculated from segment length, but they are labeled as estimates. |
+| S6 | Stats are counted in segments, with percentages. (Approximate minutes were dropped on 2026-11-03.) |
 
 ## 11. Data and backup
 
@@ -304,6 +304,8 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-02 | CI and deployment run on GitHub Actions. The code, CI, and hosting all stay on GitHub. |
 | 2026-11-03 | Coach and assistant share a game by text link or AirDrop file, without a backend (SH1–SH6). A small server "mailbox" for an automatic return trip may come later. |
 | 2026-11-03 | A game sent to the assistant includes skill levels, because the assistant's phone needs them to re-plan. The app still never shows them on game-day screens. |
+| 2026-11-03 | Dropped: copying a team into a new season (M4), duplicating a game's setup (G11), approximate minutes (S6), and one-tap position fixes (H1). Stretch goals (§16) wait. README screenshots (H-1) wait until the app is more polished. |
+| 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions

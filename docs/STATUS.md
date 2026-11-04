@@ -2,17 +2,17 @@
 
 Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this file in the same change that implements something.
 
-**Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
+**Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · ➖ Dropped · 📱 Needs checking on a real iPhone
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), and a light theme (D10). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (light theme)
+Last updated: 2026-11-03 (light theme; game handoff and install checked on iPhones; several items dropped)
 
 ## 3. Platform and technical
 
 | ID | Status | Notes |
 |----|--------|-------|
-| T1 | ✅ 📱 | Installable PWA with a manifest, icons and standalone display. |
+| T1 | ✅ | Installable PWA with a manifest, icons and standalone display. Installed and used on an iPhone (2026-11-03). |
 | T2 | ✅ | No App Store or developer account. |
 | T3 | ✅ | Deploys to GitHub Pages from `main` only after every CI job passes. |
 | T4 | ✅ | `/next5/` base path and hash routing. |
@@ -29,7 +29,7 @@ Last updated: 2026-11-03 (light theme)
 |----|--------|-------|
 | Quarters / halves, segments per period | ✅ | Defaults: quarters × 2, halves × 4. |
 | Overtime / extra segments | ✅ | See D11. |
-| H1 Position coverage | 🟡 | Always enforced in generated plans. During a game, a coach-picked swap that leaves a position uncovered is allowed after a warning (decision 2026-11-03). When coverage is impossible the app explains what's missing, but doesn't yet offer one-tap "for this game only" fixes. |
+| H1 Position coverage | ✅ | Always enforced in generated plans. During a game, a coach-picked swap that leaves a position uncovered is allowed after a warning (decision 2026-11-03). When coverage is impossible the app explains what's missing. The one-tap "for this game only" fixes were dropped (decision 2026-11-03). |
 | R1 Equal playing time | ✅ | Includes fair share for absences. |
 | R2 Don't sit too long | ✅ | Limit is ⌈(players − 5) ÷ 5⌉. |
 | R3 Balance skill | ✅ | Off by default. |
@@ -40,7 +40,7 @@ Last updated: 2026-11-03 (light theme)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| P1 | 🟡 | Guard, Forward and Center per team; the position list can't be edited yet. |
+| P1 | ✅ | Guard, Forward and Center per team. Editing the list was dropped (decision 2026-11-03): the three defaults are enough. |
 | P2 | ✅ | |
 | P3 | ✅ | Rising, Steady and Go-To. |
 | P4 | ✅ | Steppers on the team's Settings tab. |
@@ -54,7 +54,7 @@ Last updated: 2026-11-03 (light theme)
 | M1 | 🟡 | Create, rename and delete. Archive is not built. |
 | M2 | ✅ | New games start from the team's defaults. |
 | M3 | ✅ | Add players, mark them inactive, edit positions and skill. Past games keep their lineups. |
-| M4 | ⬜ | Copying a team into a new season. |
+| M4 | ➖ | Dropped (decision 2026-11-03): teams are mostly new each season. |
 
 ## 8. Pregame planning
 
@@ -71,7 +71,7 @@ Last updated: 2026-11-03 (light theme)
 | G8 | ✅ | **↻ Shuffle** regenerates the whole plan, and **↻ Redo from here** regenerates from the current segment on. Both keep every lock; Redo also keeps the earlier segments. Decision 2026-11-03: "Redo from here" makes a new shuffle for the rest of the game, because the fewest-changes version of it would return the same plan (edits already re-fill with fewest changes). |
 | G9 | ✅ | Tap a court player → **Swap with someone on the bench** (players who can play the open position are listed first), or tap a bench player → **Put in for someone**. The swap is kept as locks, so later edits don't undo it. Swaps that leave a required position uncovered are blocked; swaps that break other rules warn first ("Swap anyway"). |
 | G10 | ✅ | Everything saves immediately. |
-| G11 | ⬜ | Duplicating a previous game's setup. |
+| G11 | ➖ | Dropped (decision 2026-11-03). New games already start with every active player attending and the team's default format and rules. |
 
 ## 9. Game day
 
@@ -99,7 +99,7 @@ Last updated: 2026-11-03 (light theme)
 | S3 | ✅ | The Final screen shows a table per player: Plan (the plan at the start), Played, Sat, and Positions (e.g. "G 3 · F 1"). Played below plan is highlighted. Players subbed out partway through a segment get credit for it. Segments a player was injured, resting or not yet there aren't counted as sat. |
 | S4 | ✅ | New **Stats** tab on the team (tabs are Games, Roster, Stats, Settings). One row per active player, plus inactive players who played: games, segments played, % of available segments played, and segments by position. Counts finished games only. |
 | S5 | ✅ | **Export stats (CSV)** on the Final screen and **Export season stats (CSV)** on the Stats tab, through the share sheet (download where sharing isn't available). Files are UTF-8 with a byte-order mark and CRLF line endings, so Excel opens names with accents correctly. Skill levels are never included. |
-| S6 | ⬜ | Approximate minutes. |
+| S6 | ➖ | Dropped (decision 2026-11-03): segments and % are enough. |
 
 ## 11. Data and backup
 
@@ -114,9 +114,9 @@ Last updated: 2026-11-03 (light theme)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| SH1 | ✅ 📱 | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Still to check on an iPhone: how Messages shows a long link. |
+| SH1 | ✅ | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Checked on iPhones from the deployed site (2026-11-03). |
 | SH2 | ✅ | The assistant's Final screen has **Send back to coach** (then **Send back again**). |
-| SH3 | ✅ 📱 | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Still to check on an iPhone: the paste permission prompt in the Home Screen app. |
+| SH3 | ✅ | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Checked on iPhones, including Paste game in the Home Screen app (2026-11-03). |
 | SH4 | ✅ | `decideReceive` in `src/data/handoff.ts`, with an example test per case and property tests that an older copy never wins and played segments are never dropped silently. Team and players merge like a backup restore. |
 | SH5 | ✅ | "With your assistant" callout, **Send again** in place of **Start game**, "changed since you sent it" from `updatedAt > sentAt`, and **Take back control** after confirming (raises the handoff number). |
 | SH6 | ✅ | **With assistant** badge in the game list. |
@@ -127,7 +127,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| H-1 | 🟡 | The coach section of the README is written. Screenshots are not added yet. |
+| H-1 | 🟡 | The coach section of the README is written. Screenshots wait until the app is more polished, so they don't need redoing (decision 2026-11-03). |
 | H-2 | ✅ | The developer section of the README, including how the engine works. |
 | H-3 | ⬜ | First-run walkthrough. For now, the empty states and "Load demo team" stand in for it. |
 | H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid. |
@@ -155,7 +155,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 ## 16. Stretch goals
 
-⬜ favorite lineups, automatic cloud backup, and real sync. Sharing a game between a coach and an assistant is done (SH1–SH6).
+⬜ On hold (decision 2026-11-03): favorite lineups, automatic cloud backup, and real sync. Sharing a game between a coach and an assistant is done (SH1–SH6).
 
 ---
 
@@ -167,7 +167,7 @@ In priority order:
 2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
-5. ~~Light theme (D10)~~ Done. Editable positions (P1), archive and copy teams (M1, M4).
+5. ~~Light theme (D10)~~ Done. Archive teams (M1). Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
 ## Small changes requested
