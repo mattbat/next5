@@ -196,3 +196,20 @@ test('switches to the light theme, which lasts after reopening (D10)', async ({ 
   expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBe('#f4f6fa');
   expect(await background()).toBe('rgb(244, 246, 250)');
 });
+
+test('archives a team and brings it back (M1)', async ({ page }) => {
+  await page.goto('./');
+  await page.getByRole('button', { name: 'Load demo team' }).click();
+  await page.getByRole('radio', { name: 'Settings' }).click();
+  await page.getByRole('button', { name: 'Archive team' }).click();
+
+  await expect(page.getByText('All your teams are archived.', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Show archived teams (1)' }).click();
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('list', { name: 'Archived teams' }).getByRole('link', { name: /Demo Hoopers/ }).click();
+  await expect(page.getByRole('complementary', { name: 'Archived team' })).toBeVisible();
+  await expectNoHorizontalScroll(page);
+  await page.getByRole('button', { name: 'Unarchive' }).click();
+  await page.getByRole('link', { name: 'Back' }).click();
+  await expect(page.getByRole('link', { name: /Demo Hoopers/ })).toBeVisible();
+});

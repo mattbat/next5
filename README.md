@@ -80,6 +80,7 @@ Playing time is counted in lineups, not minutes. The goal is best-effort fairnes
 
 Everything is saved on your phone as you go. There is no Save button. Your data is **lost if you delete the app from the Home Screen** or clear Safari's website data, so back it up now and then:
 
+- **Archive a past season's team:** open the team → **Settings** tab → **Archive team**. It leaves your Teams list but keeps its players, games and stats. Tap **Show archived teams** on the Teams screen to open it again, and **Unarchive** to bring it back.
 - **Light or dark:** next5 is dark by default, which is easiest to read in most gyms. On the Teams screen tap **Settings** (top right) → **Appearance** to pick **Light**, or **Match phone** to follow your iPhone's setting.
 - **Back up:** on the Teams screen tap **Settings** (top right) → **Back up all teams**. The share sheet opens: choose **Save to Files** (iCloud Drive is a good place) or AirDrop it to another device. To back up just one team, open the team → **Settings** tab → **Back up this team**.
 - **Restore:** **Settings** → **Restore from a backup file** and pick the file. next5 shows what's in it, then:

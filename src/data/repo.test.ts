@@ -11,6 +11,7 @@ import {
   deleteTeam,
   newId,
   saveGame,
+  setTeamArchived,
   toggleAttending,
   updatePlayer,
   updateTeam,
@@ -92,6 +93,17 @@ describe('repo', () => {
     expect(await db.teams.count()).toBe(0);
     expect(await db.players.count()).toBe(0);
     expect(await db.games.count()).toBe(0);
+  });
+
+  it('archives and unarchives a team, keeping its players and games (M1)', async () => {
+    const team = await createDemoTeam();
+    await createGame(team);
+    await setTeamArchived(team.id, true);
+    expect(await db.teams.get(team.id)).toMatchObject({ archived: true });
+    expect(await db.players.where('teamId').equals(team.id).count()).toBe(10);
+    expect(await db.games.where('teamId').equals(team.id).count()).toBe(1);
+    await setTeamArchived(team.id, false);
+    expect(await db.teams.get(team.id)).toMatchObject({ archived: false });
   });
 
   it('drops the locks of a player who stops attending (G1, G6)', async () => {

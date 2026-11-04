@@ -51,6 +51,14 @@ export async function updateTeam(id: string, changes: Partial<Omit<Team, 'id' | 
   await db.teams.update(id, { ...changes, updatedAt: Date.now() });
 }
 
+/**
+ * Archives a team (M1): it leaves the teams list but keeps its players,
+ * games and stats, and can be unarchived at any time.
+ */
+export async function setTeamArchived(id: string, archived: boolean): Promise<void> {
+  await updateTeam(id, { archived });
+}
+
 /** Deletes a team with its players and games. */
 export async function deleteTeam(id: string): Promise<void> {
   await db.transaction('rw', db.teams, db.players, db.games, async () => {

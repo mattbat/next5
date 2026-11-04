@@ -42,6 +42,34 @@ describe('router', () => {
 });
 
 describe('teams', () => {
+  it('archives a team from its Settings tab, keeps it under Show archived, and unarchives it (M1)', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await createGame(team);
+    await goTo(`#/team/${team.id}`);
+    render(<App />);
+    await user.click(await screen.findByRole('radio', { name: 'Settings' }));
+    await user.click(screen.getByRole('button', { name: 'Archive team' }));
+    await goTo(window.location.hash);
+
+    // Back on the teams list: the team is hidden, and listed under archived teams.
+    expect(await screen.findByText(/All your teams are archived/)).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /Demo Hoopers/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Load demo team' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Show archived teams (1)' }));
+    await user.click(within(screen.getByRole('list', { name: 'Archived teams' })).getByRole('link', { name: /Demo Hoopers/ }));
+    await goTo(window.location.hash);
+
+    // Its games are kept, but new games wait until it's unarchived.
+    expect(await screen.findByRole('complementary', { name: 'Archived team' })).toBeInTheDocument();
+    expect(screen.getAllByRole('link', { name: /Game/ })).toHaveLength(1);
+    expect(screen.queryByRole('button', { name: '+ New game' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Unarchive' }));
+    expect(await screen.findByRole('button', { name: '+ New game' })).toBeInTheDocument();
+    expect(screen.queryByRole('complementary', { name: 'Archived team' })).not.toBeInTheDocument();
+    expect((await db.teams.get(team.id))?.archived).toBe(false);
+  });
+
   it('shows the install hint and an empty state, and can dismiss the hint', async () => {
     const user = userEvent.setup();
     render(<App />);
