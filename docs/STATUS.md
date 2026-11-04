@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · ➖ Dropped · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), and archiving teams (M1). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (archive teams)
+Last updated: 2026-11-04 (in-app help, intro and screenshots)
 
 ## 3. Platform and technical
 
@@ -127,13 +127,14 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| H-1 | 🟡 | The coach section of the README is written. Screenshots wait until the app is more polished, so they don't need redoing (decision 2026-11-03). |
+| H-1 | ✅ | The coach section of the README, now with screenshots and a pointer to the in-app guide. The screenshots are the same images the app uses (`public/help/`), taken by `npm run screenshots`, so they're easy to retake when screens change. |
 | H-2 | ✅ | The developer section of the README, including how the engine works. |
-| H-3 | ⬜ | First-run walkthrough. For now, the empty states and "Load demo team" stand in for it. |
-| H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid. |
+| H-3 | ✅ | Six skippable intro cards on first open (only when there are no teams yet), with screenshots: what next5 does, the roster, generating a plan, swaps and locks, game day, and data on the phone. Swipe or Next/Back. The last card offers **Try the demo team**, **Set up my own team** and **Read the full guide**. Seen once per device; **Help → Replay the intro** shows it again. 📱 Swiping needs checking on an iPhone. |
+| H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid, plus **?** links to the matching help topic on the plan, game setup, roster, team rules, stats, the Game Day Edit menu, the share sheet, a received game, the Final screen and Settings → Back up. |
 | H-5 | ✅ | Plain-language errors and warnings. |
 | H-6 | ✅ | |
 | H-7 | ✅ | |
+| H-8 | ✅ 📱 | **Help** on the Teams screen (top left) and **Settings → Help and guide** open 16 topics in six groups: getting started (quick start, words next5 uses, installing, teams and players, team settings), before the game (planning, reading the plan, changing it, how the rotation is built), game day (running a game, when things change), after the game (summary and season stats), sharing and data (sharing with an assistant, backups, appearance and updates) and questions. Each topic has screenshots in the current theme (tap to enlarge) and Previous/Next links. Back returns to the screen help was opened from. The 36 images (18 screens × 2 themes, WebP, about 1.2 MB) are precached, so help works offline. Needs reading through on an iPhone. |
 
 ## 13–14. Design, quality and tests
 
@@ -177,4 +178,5 @@ In priority order:
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Stats was added after Roster on 2026-11-03: Games, Roster, Stats, Settings. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
+- [x] **"Something went wrong. Script error." banner when tapping Share in Safari:** a script that isn't next5's (Safari's Share sheet, or an extension) threw an error, which browsers report only as "Script error." with no details. The error banner now ignores those, and still shows next5's own errors. (Reported 2026-11-04.) 📱 Check on the deployed site.
 - [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)

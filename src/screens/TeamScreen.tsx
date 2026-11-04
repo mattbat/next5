@@ -11,6 +11,7 @@ import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
 import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
 import { RULE_HELP } from './ruleHelp';
+import { HelpLink } from '../help/parts';
 
 type Tab = 'games' | 'roster' | 'stats' | 'settings';
 
@@ -82,6 +83,9 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
       }
     >
       {players.length === 0 && <Empty>No players yet. Tap + Add to build your roster.</Empty>}
+      <p className="hint">
+        <HelpLink topic="roster">Positions and skill levels</HelpLink>
+      </p>
       <ul className="list">
         {players.map((p) => (
           <li key={p.id}>
@@ -181,7 +185,7 @@ function SeasonStats({ team, players, games }: { team: Team; players: Player[]; 
         <Empty>No finished games yet. Stats appear here after your first game ends.</Empty>
       ) : (
         <p className="hint">
-          From {finished} finished game{finished === 1 ? '' : 's'}.
+          From {finished} finished game{finished === 1 ? '' : 's'}. <HelpLink topic="final">Reading stats</HelpLink>
         </p>
       )}
       {finished > 0 && (
@@ -305,7 +309,7 @@ function TeamSettings({ team }: { team: Team }) {
         </div>
       </Section>
 
-      <Section title="Default rules">
+      <Section title="Default rules" aside={<HelpLink topic="rules">How rules work</HelpLink>}>
         {(Object.keys(RULE_HELP) as (keyof typeof RULE_HELP)[]).map((key) => (
           <Toggle
             key={key}

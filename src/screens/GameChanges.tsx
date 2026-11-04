@@ -4,6 +4,7 @@ import type { Game, Player, Position } from '../data/types';
 import { benchFor, statusLabel, type ReplanResult } from '../domain/changes';
 import { describeWarning, segmentLabel, sortLineup } from '../domain/game';
 import { paths } from '../router';
+import { HelpLink } from '../help/parts';
 
 /** Sheets for game-day changes (REQUIREMENTS.md D4–D6, D11). */
 
@@ -323,6 +324,7 @@ export function GameMenuSheet({
         <a className="btn secondary wide" href={paths.gameSetup(game.id)}>
           Game setup
         </a>
+        <HelpLink topic="changes">Help with injuries, rests and subs</HelpLink>
       </div>
       <h3 className="sheet-sub">Players · tap to change</h3>
       <ul className="list">

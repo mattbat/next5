@@ -2,7 +2,18 @@ import { useState, type ReactNode } from 'react';
 
 /** Small shared building blocks used across screens. */
 
-export function TopBar({ title, back, action }: { title: ReactNode; back?: string; action?: ReactNode }) {
+export function TopBar({
+  title,
+  back,
+  lead,
+  action,
+}: {
+  title: ReactNode;
+  back?: string;
+  /** Shown on the left when there's no back button. */
+  lead?: ReactNode;
+  action?: ReactNode;
+}) {
   return (
     <header className="topbar">
       {back ? (
@@ -10,7 +21,7 @@ export function TopBar({ title, back, action }: { title: ReactNode; back?: strin
           ‹
         </a>
       ) : (
-        <span className="topbar-spacer" />
+        <span className="topbar-spacer">{lead}</span>
       )}
       <h1 className="topbar-title">{title}</h1>
       <span className="topbar-action">{action}</span>

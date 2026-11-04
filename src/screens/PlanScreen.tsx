@@ -21,6 +21,7 @@ import { ChoosePlayerSheet, type PendingSwap } from './GameChanges';
 import { PlanPlayerSheet, type PlanAction } from './PlanPlayerSheet';
 import { ShareGameSheet } from './ShareGameSheet';
 import { confirmTakeBack, sharedAt } from './shareText';
+import { HelpLink } from '../help/parts';
 
 /**
  * Plan review and editing (G4–G9): step through the segments one at a time to
@@ -426,7 +427,8 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           )}
           {isPlanned && (
             <p className="hint">
-              Tap a player to swap or lock them. Every change keeps your locks and changes as little else as possible.
+              Tap a player to swap or lock them. Every change keeps your locks and changes as little else as possible.{' '}
+              <HelpLink topic="edit-plan">Changing the plan</HelpLink>
             </p>
           )}
         </section>

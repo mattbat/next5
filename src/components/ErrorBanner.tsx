@@ -10,7 +10,13 @@ export function ErrorBanner() {
   useEffect(() => {
     const show = (reason: unknown) => setMessage(reason instanceof Error ? reason.message : String(reason));
     const onRejection = (e: PromiseRejectionEvent) => show(e.reason);
-    const onError = (e: ErrorEvent) => show(e.error ?? e.message);
+    const onError = (e: ErrorEvent) => {
+      // A script from somewhere else (e.g. a Safari extension when the Share
+      // sheet opens) reports only "Script error." with no details. It isn't
+      // next5's, and there's nothing the coach can do about it.
+      if (!e.error && /^Script error\.?$/i.test(e.message)) return;
+      show(e.error ?? e.message);
+    };
     window.addEventListener('unhandledrejection', onRejection);
     window.addEventListener('error', onError);
     return () => {

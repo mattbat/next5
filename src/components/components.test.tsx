@@ -35,6 +35,14 @@ describe('ErrorBanner', () => {
     });
     expect(screen.getByRole('alert')).toHaveTextContent('Oops');
   });
+
+  it('ignores detail-less errors from other sites’ scripts, e.g. when Safari’s Share sheet opens', () => {
+    render(<ErrorBanner />);
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.' }));
+    });
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
 });
 
 describe('UpdateBanner', () => {

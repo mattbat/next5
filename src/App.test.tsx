@@ -7,6 +7,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from './App';
 import { db } from './data/db';
+import { markIntroSeen } from './help/intro';
 import { createDemoTeam, createGame, saveGame } from './data/repo';
 import { planGame, startGame } from './domain/game';
 import { parseRoute } from './router';
@@ -15,6 +16,8 @@ beforeEach(async () => {
   await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
   window.location.hash = '#/';
   localStorage.clear();
+  // The first-run intro has its own tests (Help.test.tsx).
+  markIntroSeen();
 });
 
 afterEach(() => {

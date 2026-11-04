@@ -2,6 +2,8 @@ import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { Empty, Section, TopBar } from '../components/ui';
 import { InstallHint } from '../components/InstallHint';
+import { Intro } from '../components/Intro';
+import { introSeen } from '../help/intro';
 import { db } from '../data/db';
 import { backUp, backupReminderDue, lastBackupAt, snoozeReminder } from '../data/backup';
 import { dataFromText, encodeHandoff, parseHandoff } from '../data/handoff';
@@ -26,6 +28,8 @@ export function TeamsScreen() {
   const [receiveError, setReceiveError] = useState<string | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const showReminder = !reminderHidden && backupReminderDue((teams?.length ?? 0) > 0);
+  // The first-run intro (H-3), until it's skipped or finished.
+  const [introClosed, setIntroClosed] = useState(introSeen);
 
   const runBackup = async () => {
     setBackupMessage(await backUp());
@@ -62,10 +66,17 @@ export function TeamsScreen() {
     navigate(paths.team(team.id));
   };
 
+  if (teams?.length === 0 && !introClosed) return <Intro offerDemo onClose={() => setIntroClosed(true)} />;
+
   return (
     <main className="screen with-footer">
       <TopBar
         title={<span className="brand">next<span>5</span></span>}
+        lead={
+          <a className="link" href={paths.help()}>
+            Help
+          </a>
+        }
         action={
           <a className="link" href={paths.settings()}>
             Settings
