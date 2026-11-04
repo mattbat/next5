@@ -17,6 +17,10 @@ export function TeamsScreen() {
     return map;
   });
   const [name, setName] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+  // Archived teams (M1) leave the main list but keep everything.
+  const active = teams?.filter((t) => !t.archived);
+  const archived = teams?.filter((t) => t.archived) ?? [];
   const [reminderHidden, setReminderHidden] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
   const [receiveError, setReceiveError] = useState<string | null>(null);
@@ -106,8 +110,11 @@ export function TeamsScreen() {
             No teams yet. Add your team at the bottom of the screen, or load a demo team with made-up players to try things out.
           </Empty>
         )}
+        {active && active.length === 0 && archived.length > 0 && (
+          <Empty>All your teams are archived. Add a new team at the bottom of the screen.</Empty>
+        )}
         <ul className="list">
-          {teams?.map((team) => (
+          {active?.map((team) => (
             <li key={team.id}>
               <a className="list-item" href={paths.team(team.id)}>
                 <span className="list-title">{team.name}</span>
@@ -117,6 +124,29 @@ export function TeamsScreen() {
             </li>
           ))}
         </ul>
+        {archived.length > 0 && (
+          <button
+            type="button"
+            className="link archived-toggle"
+            aria-expanded={showArchived}
+            onClick={() => setShowArchived(!showArchived)}
+          >
+            {showArchived ? 'Hide' : 'Show'} archived teams ({archived.length})
+          </button>
+        )}
+        {showArchived && (
+          <ul className="list" aria-label="Archived teams">
+            {archived.map((team) => (
+              <li key={team.id}>
+                <a className="list-item inactive" href={paths.team(team.id)}>
+                  <span className="list-title">{team.name}</span>
+                  <span className="chip muted">Archived</span>
+                  <span className="chevron">›</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
         {teams && teams.length === 0 && (
           <button
             type="button"

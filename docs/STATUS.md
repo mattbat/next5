@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · ➖ Dropped · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), and a light theme (D10). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), and archiving teams (M1). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (share a game at any point; dropped items recorded)
+Last updated: 2026-11-03 (archive teams)
 
 ## 3. Platform and technical
 
@@ -51,7 +51,7 @@ Last updated: 2026-11-03 (share a game at any point; dropped items recorded)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| M1 | 🟡 | Create, rename and delete. Archive is not built. |
+| M1 | ✅ | Create, rename, archive and delete. A team's Settings tab → **Archive team** hides it from the Teams list and keeps its players, games and stats; the Teams screen's **Show archived teams** lists them. An archived team opens as usual with an "Archived" banner and **Unarchive**, and **+ New game** is hidden until it's unarchived. Uses the existing `archived` field, so the schema didn't change. |
 | M2 | ✅ | New games start from the team's defaults. |
 | M3 | ✅ | Add players, mark them inactive, edit positions and skill. Past games keep their lineups. |
 | M4 | ➖ | Dropped (decision 2026-11-03): teams are mostly new each season. |
@@ -167,7 +167,7 @@ In priority order:
 2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
-5. ~~Light theme (D10)~~ Done. Archive teams (M1). Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
+5. ~~Light theme (D10)~~ Done. ~~Archive teams (M1)~~ Done. Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
 ## Small changes requested

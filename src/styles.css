@@ -1653,6 +1653,11 @@ button.sub-in {
   margin-top: 0;
 }
 
+.archived-toggle {
+  display: block;
+  margin: 8px auto 0;
+}
+
 /* Confirmation messages (e.g. "Backup ready"). */
 .notice {
   margin: 8px 0;

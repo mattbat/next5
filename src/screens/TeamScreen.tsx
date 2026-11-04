@@ -4,7 +4,7 @@ import { Empty, Info, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from
 import { backUp, slug } from '../data/backup';
 import { db } from '../data/db';
 import { SKILL_LEVELS } from '../data/defaults';
-import { createGame, deleteTeam, sharedAway, updateTeam } from '../data/repo';
+import { createGame, deleteTeam, setTeamArchived, sharedAway, updateTeam } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
@@ -37,6 +37,17 @@ export function TeamScreen({ teamId }: { teamId: string }) {
   return (
     <main className="screen">
       <TopBar title={team.name} back={paths.teams()} />
+      {team.archived && (
+        <aside className="callout" aria-label="Archived team">
+          <strong>Archived</strong>
+          <p>This team is hidden from your teams list. Its games and stats are kept.</p>
+          <div className="footer-row">
+            <button type="button" className="btn small" onClick={() => void setTeamArchived(team.id, false)}>
+              Unarchive
+            </button>
+          </div>
+        </aside>
+      )}
       <Segmented
         label="Team sections"
         value={tab}
@@ -104,19 +115,24 @@ function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlay
     <Section
       title="Games"
       aside={
-        <button
-          type="button"
-          className="btn small"
-          onClick={() => void createGame(team).then((g) => navigate(paths.gameSetup(g.id)))}
-        >
-          + New game
-        </button>
+        // Unarchive the team to plan new games for it.
+        team.archived ? undefined : (
+          <button
+            type="button"
+            className="btn small"
+            onClick={() => void createGame(team).then((g) => navigate(paths.gameSetup(g.id)))}
+          >
+            + New game
+          </button>
+        )
       }
     >
       {games.length === 0 && !hasPlayers && (
         <Empty>No players yet. Add your roster on the Roster tab, then come back here to plan a game.</Empty>
       )}
-      {games.length === 0 && hasPlayers && <Empty>No games yet. Tap + New game to plan your next one.</Empty>}
+      {games.length === 0 && hasPlayers && (
+        <Empty>{team.archived ? 'This team has no games.' : 'No games yet. Tap + New game to plan your next one.'}</Empty>
+      )}
       <ul className="list">
         {games.map((g) => (
           <li key={g.id}>
@@ -302,6 +318,24 @@ function TeamSettings({ team }: { team: Team }) {
       </Section>
 
       <TeamBackup team={team} />
+
+      <Section title="Archive">
+        <button
+          type="button"
+          className="btn secondary wide"
+          onClick={() => {
+            void setTeamArchived(team.id, !team.archived);
+            if (!team.archived) navigate(paths.teams());
+          }}
+        >
+          {team.archived ? 'Unarchive team' : 'Archive team'}
+        </button>
+        <p className="hint">
+          {team.archived
+            ? 'Puts this team back in your teams list.'
+            : 'For a past season: hides the team from your teams list. Its players, games and stats are kept, and you can unarchive it any time.'}
+        </p>
+      </Section>
 
       <Section title="Danger zone">
         <button
