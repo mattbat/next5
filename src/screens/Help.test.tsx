@@ -154,6 +154,44 @@ describe('first-run intro (H-3)', () => {
     await user.click(screen.getByRole('button', { name: 'Read the full guide' }));
     expect(window.location.hash).toBe('#/help/start');
   });
+
+  it('skipping a replay returns to Help, whose Done then leaves help', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem(INTRO_KEY, '1');
+    render(<App />);
+    await goTo(paths.help());
+    await goTo(paths.welcome());
+    const back = vi.spyOn(window.history, 'back');
+    await user.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(back).toHaveBeenCalledOnce();
+    expect(await screen.findByRole('link', { name: 'Replay the intro' })).toBeInTheDocument();
+    const go = vi.spyOn(window.history, 'go').mockImplementation(() => {});
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(go).toHaveBeenCalledWith(-1);
+  });
+
+  it('Done after a replay’s full guide skips past the intro too', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Skip' }));
+    await goTo(paths.help());
+    await goTo(paths.welcome());
+    for (let i = 0; i < 5; i++) await user.click(screen.getByRole('button', { name: 'Next' }));
+    await user.click(screen.getByRole('button', { name: 'Read the full guide' }));
+    await goTo(window.location.hash);
+    const go = vi.spyOn(window.history, 'go').mockImplementation(() => {});
+    await user.click(screen.getByRole('button', { name: 'Done' }));
+    expect(go).toHaveBeenCalledWith(-3);
+  });
+
+  it('closing an intro opened from a link goes to the Teams screen', async () => {
+    const user = userEvent.setup();
+    localStorage.setItem(INTRO_KEY, '1');
+    await goTo(paths.welcome());
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(window.location.hash).toBe('#/');
+  });
 });
 
 describe('help guide', () => {

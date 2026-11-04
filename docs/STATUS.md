@@ -129,7 +129,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 |----|--------|-------|
 | H-1 | ✅ | The coach section of the README, now with screenshots and a pointer to the in-app guide. The screenshots are the same images the app uses (`public/help/`), taken by `npm run screenshots`, so they're easy to retake when screens change. |
 | H-2 | ✅ | The developer section of the README, including how the engine works. |
-| H-3 | ✅ | Six skippable intro cards on first open (only when there are no teams yet), with screenshots: what next5 does, the roster, generating a plan, swaps and locks, game day, and data on the phone. Swipe or Next/Back. The last card offers **Try the demo team**, **Set up my own team** and **Read the full guide**. Seen once per device; **Help → Replay the intro** shows it again. 📱 Swiping needs checking on an iPhone. |
+| H-3 | ✅ | Six skippable intro cards on first open (only when there are no teams yet), with screenshots: what next5 does, the roster, generating a plan, swaps and locks, game day, and data on the phone. Swipe or Next/Back. The last card offers **Try the demo team**, **Set up my own team** and **Read the full guide**. Seen once per device; **Help → Replay the intro** shows it again; Skip or Done returns to the page it was replayed from, and help's Done then skips past the intro. 📱 Swiping needs checking on an iPhone. |
 | H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid, plus **?** links to the matching help topic on the plan, game setup, roster, team rules, stats, the Game Day Edit menu, the share sheet, a received game, the Final screen and Settings → Back up. |
 | H-5 | ✅ | Plain-language errors and warnings. |
 | H-6 | ✅ | |
