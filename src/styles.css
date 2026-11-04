@@ -1,4 +1,6 @@
-/* next5 — dark, high-contrast, gym-friendly. Designed for iPhone 17 (≈402pt wide). */
+/* next5 — high-contrast, gym-friendly, dark by default with a light theme (D10).
+   Designed for iPhone 17 (≈402pt wide). Colors are tokens on :root; the light
+   theme redefines them under [data-theme='light'] (see src/theme.ts). */
 
 :root {
   --bg: #0b0f17;
@@ -16,6 +18,15 @@
   --out: #f43f5e;
   --out-bg: rgba(244, 63, 94, 0.14);
   --warn: #fbbf24;
+  /* Text on the tinted message backgrounds. */
+  --in-text: #bbf7d0;
+  --out-text: #fecdd3;
+  --warn-text: #fde68a;
+  --warn-bg: rgba(251, 191, 36, 0.1);
+  --out-surface: #3b0d17;
+  --accent-soft: rgba(255, 122, 26, 0.16);
+  --backdrop: rgba(0, 0, 0, 0.55);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
   --radius: 16px;
   --radius-sm: 10px;
   --tap: 48px;
@@ -24,6 +35,33 @@
   --font: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Roboto, system-ui, sans-serif;
   --font-display: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, system-ui, sans-serif;
   color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f4f6fa;
+  --surface: #ffffff;
+  --surface-2: #e6eaf1;
+  --line: #d3d9e4;
+  --text: #0b0f17;
+  --text-2: #475266;
+  --text-3: #5f6a7d;
+  --accent: #c2410c;
+  --accent-press: #9a3412;
+  --accent-ink: #ffffff;
+  --in: #15803d;
+  --in-bg: rgba(21, 128, 61, 0.12);
+  --out: #be123c;
+  --out-bg: rgba(190, 18, 60, 0.1);
+  --warn: #b45309;
+  --in-text: #14532d;
+  --out-text: #9f1239;
+  --warn-text: #78350f;
+  --warn-bg: rgba(217, 119, 6, 0.12);
+  --out-surface: #ffe4e6;
+  --accent-soft: rgba(194, 65, 12, 0.12);
+  --backdrop: rgba(15, 23, 42, 0.4);
+  --shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+  color-scheme: light;
 }
 
 * {
@@ -405,7 +443,7 @@ input[type='date'] {
 
 /* Sent to the assistant (SH5). */
 .status-away {
-  background: rgba(255, 122, 26, 0.16);
+  background: var(--accent-soft);
   color: var(--accent);
 }
 
@@ -658,8 +696,12 @@ input[type='date'] {
   margin: 8px 0 16px;
   padding: 14px 16px;
   border-radius: var(--radius);
-  background: linear-gradient(135deg, rgba(255, 122, 26, 0.18), rgba(255, 122, 26, 0.06));
-  border: 1px solid rgba(255, 122, 26, 0.35);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--accent) 18%, transparent),
+    color-mix(in srgb, var(--accent) 6%, transparent)
+  );
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .callout p {
@@ -677,7 +719,7 @@ input[type='date'] {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--out-bg);
-  color: #fecdd3;
+  color: var(--out-text);
   font-size: 15px;
 }
 
@@ -691,8 +733,8 @@ input[type='date'] {
   padding: 10px 14px 10px 38px;
   position: relative;
   border-radius: var(--radius-sm);
-  background: rgba(251, 191, 36, 0.1);
-  color: #fde68a;
+  background: var(--warn-bg);
+  color: var(--warn-text);
   font-size: 15px;
   margin-bottom: 6px;
 }
@@ -734,7 +776,7 @@ input[type='date'] {
   position: fixed;
   inset: 0;
   z-index: 20;
-  background: rgba(0, 0, 0, 0.55);
+  background: var(--backdrop);
   display: flex;
   align-items: flex-end;
   animation: fade 160ms ease;
@@ -1277,8 +1319,8 @@ button.sub-in {
   padding: 8px 12px;
   border: 1px solid color-mix(in srgb, var(--warn) 50%, transparent);
   border-radius: 12px;
-  background: rgba(251, 191, 36, 0.12);
-  color: #fde68a;
+  background: var(--warn-bg);
+  color: var(--warn-text);
   font-size: 14px;
   text-align: left;
 }
@@ -1375,14 +1417,14 @@ button.sub-in {
   margin: 4px 0 12px;
   padding: 12px 14px;
   border-radius: var(--radius-sm);
-  background: rgba(251, 191, 36, 0.1);
+  background: var(--warn-bg);
   border: 1px solid color-mix(in srgb, var(--warn) 45%, transparent);
 }
 
 .confirm strong {
   display: block;
   margin-bottom: 8px;
-  color: #fde68a;
+  color: var(--warn-text);
 }
 
 .confirm .warnings {
@@ -1560,7 +1602,7 @@ button.sub-in {
   border-radius: var(--radius);
   background: var(--surface-2);
   border: 1px solid var(--line);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow);
   font-size: 15px;
 }
 
@@ -1581,11 +1623,11 @@ button.sub-in {
   margin: 0 auto;
   padding: 10px 8px 10px 16px;
   border-radius: var(--radius);
-  background: #3b0d17;
+  background: var(--out-surface);
   border: 1px solid var(--out);
-  color: #fecdd3;
+  color: var(--out-text);
   font-size: 15px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow);
 }
 
 .error-banner span {
@@ -1617,7 +1659,7 @@ button.sub-in {
   padding: 10px 14px;
   border-radius: var(--radius-sm);
   background: var(--in-bg);
-  color: #bbf7d0;
+  color: var(--in-text);
   font-size: 15px;
 }
 

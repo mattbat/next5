@@ -180,3 +180,19 @@ test('handles an injury, re-plans, and goes to overtime', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Changes from the plan' })).toBeVisible();
   await expect(page.getByText(/added 1 overtime segment/)).toBeVisible();
 });
+
+test('switches to the light theme, which lasts after reopening (D10)', async ({ page }) => {
+  await page.goto('./');
+  const background = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  expect(await background()).toBe('rgb(11, 15, 23)');
+  await page.getByRole('link', { name: 'Settings' }).click();
+  await page.getByRole('radio', { name: 'Light' }).click();
+  expect(await background()).toBe('rgb(244, 246, 250)');
+  await expectNoHorizontalScroll(page);
+
+  // The theme is set before the app loads, so reopening never flashes dark.
+  await page.reload();
+  expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
+  expect(await page.locator('meta[name="theme-color"]').getAttribute('content')).toBe('#f4f6fa');
+  expect(await background()).toBe('rgb(244, 246, 250)');
+});
