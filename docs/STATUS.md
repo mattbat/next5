@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), and handing a game to an assistant (SH1–SH6). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (handing a game to an assistant and back)
+Last updated: 2026-11-03 (game handoff checked on iPhones; editable positions dropped)
 
 ## 3. Platform and technical
 
@@ -40,7 +40,7 @@ Last updated: 2026-11-03 (handing a game to an assistant and back)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| P1 | 🟡 | Guard, Forward and Center per team; the position list can't be edited yet. |
+| P1 | ✅ | Guard, Forward and Center per team. Editing the list was dropped (decision 2026-11-03): the three defaults are enough. |
 | P2 | ✅ | |
 | P3 | ✅ | Rising, Steady and Go-To. |
 | P4 | ✅ | Steppers on the team's Settings tab. |
@@ -114,9 +114,9 @@ Last updated: 2026-11-03 (handing a game to an assistant and back)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| SH1 | ✅ 📱 | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Still to check on an iPhone: how Messages shows a long link. |
+| SH1 | ✅ | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Checked on iPhones from the deployed site (2026-11-03). |
 | SH2 | ✅ | The assistant's Final screen has **Send back to coach** (then **Send back again**). |
-| SH3 | ✅ 📱 | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Still to check on an iPhone: the paste permission prompt in the Home Screen app. |
+| SH3 | ✅ | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Checked on iPhones, including Paste game in the Home Screen app (2026-11-03). |
 | SH4 | ✅ | `decideReceive` in `src/data/handoff.ts`, with an example test per case and property tests that an older copy never wins and played segments are never dropped silently. Team and players merge like a backup restore. |
 | SH5 | ✅ | "With your assistant" callout, **Send again** in place of **Start game**, "changed since you sent it" from `updatedAt > sentAt`, and **Take back control** after confirming (raises the handoff number). |
 | SH6 | ✅ | **With assistant** badge in the game list. |
@@ -167,7 +167,7 @@ In priority order:
 2. ~~Planning: step through segments (G5a), manual lineups and locks (G6), auto-fill (G7), regenerate from a point (G8), swap in the plan (G9).~~ Done.
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
-5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
+5. Light theme (D10), archive and copy teams (M1, M4). Editable positions (P1) dropped (decision 2026-11-03).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
 ## Small changes requested

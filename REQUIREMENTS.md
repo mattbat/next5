@@ -94,7 +94,7 @@ The rule engine must be easy to extend so that more rules can be added later. Ex
 
 | ID | Requirement |
 |----|-------------|
-| P1 | Each team defines its own list of positions. The default is Guard / Forward / Center, and the list can be edited, for example to PG / SG / SF / PF / C. |
+| P1 | Each team has a list of positions: Guard / Forward / Center. (Editing the list, for example to PG / SG / SF / PF / C, was dropped on 2026-11-03.) |
 | P2 | For each player, the coach picks which positions they can play. |
 | P3 | For each position a player can play, the coach sets a skill level (see the table below). |
 | P4 | Each team defines a **lineup requirement**: the minimum number of players needed at each position, for example "at least 2 Guards, at least 1 Center." |
@@ -304,6 +304,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-02 | CI and deployment run on GitHub Actions. The code, CI, and hosting all stay on GitHub. |
 | 2026-11-03 | Coach and assistant share a game by text link or AirDrop file, without a backend (SH1–SH6). A small server "mailbox" for an automatic return trip may come later. |
 | 2026-11-03 | A game sent to the assistant includes skill levels, because the assistant's phone needs them to re-plan. The app still never shows them on game-day screens. |
+| 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions
