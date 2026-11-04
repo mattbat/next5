@@ -1,0 +1,886 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Icon review page from 2026-11-04. Open it in a browser. The chosen icon is V2z. -->
+</head><body>
+<title>next5 Icon Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;800&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one review sheet. Explainer up top, then one row per option with the icon at three real sizes. */
+:root {
+  --bg: #f4f6fa; --surface: #ffffff; --line: #d3d9e4;
+  --fg: #0b0f17; --fg-2: #475266; --accent: #c2410c;
+  --wall-dark: linear-gradient(160deg, #2a3350, #11151f);
+  --wall-light: linear-gradient(160deg, #dfe7f3, #b9c6da);
+  --display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --body: "Barlow", system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0b0f17; --surface: #141a26; --line: #273145; --fg: #f4f6fb; --fg-2: #a3adc2; --accent: #ff7a1a; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0b0f17; --surface: #141a26; --line: #273145; --fg: #f4f6fb; --fg-2: #a3adc2; --accent: #ff7a1a; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font: 16px/1.55 var(--body); }
+.wrap { max-width: 980px; margin: 0 auto; padding-block: 32px 64px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 800; line-height: 1.05; margin: 0; text-wrap: balance; letter-spacing: .01em; }
+h1 { font-size: clamp(2.2rem, 6vw, 3.4rem); }
+h2 { font-size: 1.9rem; }
+h3 { font-size: 1.5rem; }
+p { margin: 0; max-width: 65ch; }
+.muted { color: var(--fg-2); }
+.eyebrow { font: 600 .78rem/1 var(--body); letter-spacing: .12em; text-transform: uppercase; color: var(--accent); }
+.stack { display: grid; gap: 12px; }
+.current { display: grid; grid-template-columns: 200px 1fr; gap: 28px; align-items: start; }
+.current ol { margin: 0; padding-left: 1.2em; display: grid; gap: 8px; max-width: 65ch; }
+@media (max-width: 640px) { .current { grid-template-columns: 1fr; } }
+code { font-size: .88em; background: var(--surface); border: 1px solid var(--line); padding: 1px 5px; border-radius: 4px; }
+.ico { display: block; border-radius: 22.37%; overflow: hidden; flex: none; }
+.ico svg { display: block; width: 100%; height: 100%; }
+.ico.shadow { box-shadow: 0 8px 24px rgba(0,0,0,.28); }
+.dock { display: flex; flex-wrap: wrap; gap: 18px 22px; padding: 22px; border-radius: 22px; background: var(--wall-dark); justify-content: center; }
+.dock.light { background: var(--wall-light); }
+.app { display: grid; justify-items: center; gap: 5px; width: 64px; }
+.app span { font: 500 11px/1 -apple-system, system-ui, sans-serif; color: #fff; }
+.dock.light .app span { color: #111; }
+.options { display: grid; gap: 18px; }
+.opt { display: grid; grid-template-columns: 168px 1fr; gap: 24px; padding: 22px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.opt .meta { display: grid; gap: 8px; align-content: start; min-width: 0; }
+.letter { font-family: var(--display); font-weight: 800; color: var(--accent); margin-right: .3em; }
+.sizes { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; margin-top: 6px; }
+.tile { display: grid; justify-items: center; gap: 6px; padding: 12px 14px 8px; border-radius: 12px; background: var(--wall-dark); }
+.tile.light { background: var(--wall-light); }
+.tile small { font: 500 10px/1 var(--body); color: rgba(255,255,255,.75); letter-spacing: .04em; }
+.tile.light small { color: rgba(0,0,0,.6); }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font: 600 .72rem/1 var(--body); letter-spacing: .06em; text-transform: uppercase; padding: 5px 8px; border-radius: 999px; border: 1px solid var(--line); color: var(--fg-2); }
+@media (max-width: 560px) { .opt { grid-template-columns: 1fr; } .opt > .ico { width: 128px !important; height: 128px !important; } }
+.swatches { display: flex; flex-wrap: wrap; gap: 8px 18px; font-size: .9rem; color: var(--fg-2); }
+.swatches span { display: inline-flex; align-items: center; gap: 8px; }
+.swatches i { width: 22px; height: 22px; border-radius: 6px; display: inline-block; }
+.fg-scroll { overflow-x: auto; }
+.fg { display: grid; gap: 10px; min-width: 560px; }
+.fg-row { display: grid; grid-template-columns: 130px repeat(3, 1fr); gap: 12px; align-items: center; padding: 12px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+.fg-head { background: none; border: 0; padding-block: 0; font: 600 .78rem/1 var(--body); letter-spacing: .1em; text-transform: uppercase; color: var(--fg-2); }
+.fg-head span { text-align: center; }
+.fg-name { display: grid; gap: 4px; }
+.fg-name b { font-family: var(--display); font-size: 1.3rem; font-weight: 800; }
+.fg-name small { color: var(--fg-2); font-size: .8rem; line-height: 1.3; }
+.fg-cell { display: grid; grid-template-columns: auto auto; gap: 6px 10px; align-items: end; justify-content: center; }
+.fg-cell .tile { padding: 8px; }
+.fg-cell > small { grid-column: 1 / -1; text-align: center; font: 600 .75rem/1 var(--body); color: var(--fg-2); letter-spacing: .06em; }
+.chosen { padding: 12px 16px; border: 1px solid var(--accent); border-radius: 12px; max-width: none; }
+.chosen a { color: var(--accent); }
+.foot { border-top: 1px solid var(--line); padding-top: 20px; }
+</style>
+
+<!-- Shared icon drawings. Every icon is a full-bleed 512 square; iOS rounds the corners itself. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c2433"/><stop offset="1" stop-color="#0b0f17"/></linearGradient>
+    <linearGradient id="ball" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a4a"/><stop offset="1" stop-color="#f26a0c"/></linearGradient>
+    <linearGradient id="orangebg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff8f3a"/><stop offset="1" stop-color="#e85d04"/></linearGradient>
+    <clipPath id="ballclip"><circle cx="256" cy="256" r="184"/></clipPath>
+    <clipPath id="bigclip"><circle cx="300" cy="300" r="300"/></clipPath>
+    <!-- A drawn "5", so it never depends on fonts installed on the build machine -->
+    <path id="five" d="M318 142H208l-12 102c20-13 41-19 63-19 47 0 79 32 79 77 0 46-34 78-82 78-34 0-63-15-78-42" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- A: current icon, as shipped -->
+    <symbol id="vA" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#0b0f17"/>
+      <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+      <circle cx="256" cy="256" r="168" fill="url(#ball)"/>
+      <g fill="none" stroke="#1a0d02" stroke-width="12" stroke-linecap="round" opacity="0.55">
+        <path d="M88 256h336"/><path d="M256 88v336"/>
+        <path d="M142 132c50 40 72 86 72 124s-22 84-72 124"/><path d="M370 132c-50 40-72 86-72 124s22 84 72 124"/>
+      </g>
+      <circle cx="256" cy="256" r="98" fill="#0b0f17"/>
+      <text x="256" y="300" text-anchor="middle" font-family="Helvetica Neue, Arial, sans-serif" font-size="132" font-weight="800" fill="#fff">5</text>
+    </symbol>
+
+    <!-- B: current idea, tidied -->
+    <symbol id="vB" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <circle cx="256" cy="256" r="184" fill="url(#ball)"/>
+      <g clip-path="url(#ballclip)" fill="none" stroke="#1a0d02" stroke-width="13" opacity="0.6">
+        <path d="M60 256h392"/><path d="M256 60v392"/>
+        <path d="M128 112c58 44 82 94 82 144s-24 100-82 144"/><path d="M384 112c-58 44-82 94-82 144s24 100 82 144"/>
+      </g>
+      <circle cx="256" cy="256" r="104" fill="#0b0f17"/>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.5) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- C: whole ball, big ink 5 -->
+    <symbol id="vC" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <circle cx="256" cy="256" r="196" fill="url(#ball)"/>
+      <g clip-path="url(#ballclip)" transform="translate(256 256) scale(1.065) translate(-256 -256)" fill="none" stroke="#1a0d02" stroke-width="10" opacity="0.4">
+        <path d="M60 256h392"/><path d="M256 60v392"/>
+        <path d="M128 112c58 44 82 94 82 144s-24 100-82 144"/><path d="M384 112c-58 44-82 94-82 144s24 100 82 144"/>
+      </g>
+      <use href="#five" stroke="#ff8a33" stroke-width="80" transform="translate(256 262) scale(.78) translate(-258 -261)"/>
+      <use href="#five" stroke="#1a0d02" stroke-width="46" transform="translate(256 262) scale(.78) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- D: rotation arrow around the 5 -->
+    <symbol id="vD" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <path d="M256 84a172 172 0 1 1-149 86" fill="none" stroke="url(#ball)" stroke-width="40" stroke-linecap="round"/>
+      <path d="M62 150l52-6 22 48" fill="none" stroke="#ff9a4a" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.72) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- E: five on the floor -->
+    <symbol id="vE" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <g fill="none" stroke="#3a4766" stroke-width="10">
+        <path d="M60 64h392"/>
+        <rect x="186" y="64" width="140" height="170"/>
+        <path d="M186 234a70 70 0 0 0 140 0"/>
+        <path d="M84 64v90a172 172 0 0 0 344 0V64"/>
+      </g>
+      <g fill="url(#ball)">
+        <circle cx="146" cy="214" r="40"/><circle cx="366" cy="214" r="40"/>
+        <circle cx="256" cy="320" r="40"/>
+        <circle cx="160" cy="410" r="40"/>
+      </g>
+      <circle cx="352" cy="410" r="40" fill="#22c55e"/>
+      <path d="M352 432v-44m-18 18 18-18 18 18" fill="none" stroke="#06290f" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- F: jersey 5 -->
+    <symbol id="vF" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <path d="M182 70h40c4 32 16 50 34 50s30-18 34-50h40c4 46 26 74 64 90v270c0 12-8 20-20 20H138c-12 0-20-8-20-20V160c38-16 60-44 64-90z" fill="url(#ball)"/>
+      <use href="#five" stroke="#0b0f17" stroke-width="42" transform="translate(256 318) scale(.62) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- G: 5 with a next chevron -->
+    <symbol id="vG" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#five" stroke="url(#ball)" stroke-width="54" transform="translate(212 262) scale(1.1) translate(-258 -261)"/>
+      <path d="M380 196l64 64-64 64" fill="none" stroke="#fff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- H: orange field, cropped ball -->
+    <symbol id="vH" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#orangebg)"/>
+      <g fill="none" stroke="#1a0d02" stroke-width="14" opacity="0.32">
+        <path d="M-40 300h680"/><path d="M300 -40v680"/>
+        <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/>
+        <path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/>
+      </g>
+      <use href="#five" stroke="#e85d04" stroke-width="96" transform="translate(256 262) scale(.72) translate(-258 -261)"/>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.72) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- ===== Round 2 ===== -->
+    <!-- Glass kit: a rim light from the top left, frosted blurs, soft shadows -->
+    <linearGradient id="rim" gradientUnits="userSpaceOnUse" x1="60" y1="60" x2="452" y2="452">
+      <stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".42" stop-color="#fff" stop-opacity=".18"/>
+      <stop offset=".62" stop-color="#fff" stop-opacity=".06"/><stop offset="1" stop-color="#fff" stop-opacity=".6"/>
+    </linearGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity=".34"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity=".16"/>
+    </linearGradient>
+    <filter id="frost" filterUnits="userSpaceOnUse" x="-64" y="-64" width="640" height="640"><feGaussianBlur stdDeviation="16"/></filter>
+    <filter id="soft" filterUnits="userSpaceOnUse" x="-64" y="-64" width="640" height="640"><feGaussianBlur stdDeviation="10"/></filter>
+    <filter id="glow" filterUnits="userSpaceOnUse" x="-64" y="-64" width="640" height="640">
+      <feGaussianBlur stdDeviation="14" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <radialGradient id="ember" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9a4a"/><stop offset="1" stop-color="#ff7a1a" stop-opacity="0"/></radialGradient>
+    <radialGradient id="rose" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f43f5e"/><stop offset="1" stop-color="#f43f5e" stop-opacity="0"/></radialGradient>
+
+    <g id="ballArt">
+      <circle cx="256" cy="256" r="184" fill="url(#ball)"/>
+      <g clip-path="url(#ballclip)" fill="none" stroke="#1a0d02" stroke-width="13" opacity="0.6">
+        <path d="M60 256h392"/><path d="M256 60v392"/>
+        <path d="M128 112c58 44 82 94 82 144s-24 100-82 144"/><path d="M384 112c-58 44-82 94-82 144s24 100 82 144"/>
+      </g>
+    </g>
+
+    <!-- I: glass lens over the ball -->
+    <clipPath id="lensI"><circle cx="256" cy="256" r="122"/></clipPath>
+    <symbol id="vI" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ballArt" transform="translate(256 256) scale(1.08) translate(-256 -256)"/>
+      <circle cx="256" cy="272" r="122" fill="#000" opacity=".35" filter="url(#soft)"/>
+      <g clip-path="url(#lensI)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#ballArt" filter="url(#frost)" transform="translate(256 256) scale(1.3) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".12"/>
+        <ellipse cx="236" cy="176" rx="86" ry="34" fill="#fff" opacity=".4" filter="url(#soft)"/>
+      </g>
+      <circle cx="256" cy="256" r="120" fill="none" stroke="url(#rim)" stroke-width="5"/>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.5) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- J: a glass 5 sitting on the ball -->
+    <mask id="m5J"><use href="#five" stroke="#fff" stroke-width="76" transform="translate(256 262) scale(.8) translate(-258 -261)"/></mask>
+    <mask id="m5Jrim"><use href="#five" stroke="#fff" stroke-width="76" transform="translate(256 262) scale(.8) translate(-258 -261)"/><use href="#five" stroke="#000" stroke-width="66" transform="translate(256 262) scale(.8) translate(-258 -261)"/></mask>
+    <symbol id="vJ" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ballArt" transform="translate(256 256) scale(1.07) translate(-256 -256)"/>
+      <use href="#five" stroke="#1a0d02" stroke-width="76" opacity=".45" filter="url(#soft)" transform="translate(256 278) scale(.8) translate(-258 -261)"/>
+      <g mask="url(#m5J)">
+        <use href="#ballArt" filter="url(#frost)" transform="translate(256 256) scale(1.2) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".3"/>
+        <rect width="512" height="512" fill="url(#sheen)"/>
+      </g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Jrim)"/>
+    </symbol>
+
+    <!-- K: glass rotation ring -->
+    <mask id="mRingK">
+      <path d="M256 84a172 172 0 1 1-149 86" fill="none" stroke="#fff" stroke-width="58" stroke-linecap="round"/>
+      <path d="M58 152l58-8 24 54" fill="none" stroke="#fff" stroke-width="54" stroke-linecap="round" stroke-linejoin="round"/>
+    </mask>
+    <g id="blobsK">
+      <circle cx="380" cy="150" r="190" fill="url(#ember)"/>
+      <circle cx="130" cy="400" r="170" fill="url(#ember)" opacity=".75"/>
+    </g>
+    <symbol id="vK" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#0b0f17"/>
+      <use href="#blobsK" opacity=".55"/>
+      <g mask="url(#mRingK)">
+        <use href="#blobsK" filter="url(#frost)" transform="translate(256 256) scale(1.15) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".16"/>
+        <rect width="512" height="512" fill="url(#sheen)"/>
+      </g>
+      <g mask="url(#mRingK)"><rect width="512" height="512" fill="url(#rim)" opacity=".7"/></g>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.72) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- L: next 5 with a glass chevron -->
+    <mask id="mChevL"><path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></mask>
+    <g id="fiveL"><use href="#five" stroke="url(#ball)" stroke-width="54" transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g>
+    <symbol id="vL" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#fiveL"/>
+      <path d="M318 196l74 74-74 74" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
+      <g mask="url(#mChevL)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".2"/>
+        <rect width="512" height="512" fill="url(#sheen)"/>
+        <rect width="512" height="512" fill="url(#rim)" opacity=".5"/>
+      </g>
+    </symbol>
+
+    <!-- M: frosted disc on orange -->
+    <clipPath id="discM"><circle cx="256" cy="256" r="150"/></clipPath>
+    <g id="seamsM" fill="none" stroke="#1a0d02" stroke-width="16" opacity=".38">
+      <path d="M-40 300h680"/><path d="M300 -40v680"/>
+      <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/><path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/>
+    </g>
+    <symbol id="vM" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#orangebg)"/>
+      <use href="#seamsM"/>
+      <circle cx="256" cy="276" r="150" fill="#7a2a00" opacity=".4" filter="url(#soft)"/>
+      <g clip-path="url(#discM)">
+        <rect width="512" height="512" fill="url(#orangebg)"/>
+        <use href="#seamsM" filter="url(#frost)" transform="translate(256 256) scale(1.15) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".42"/>
+        <ellipse cx="236" cy="150" rx="100" ry="38" fill="#fff" opacity=".5" filter="url(#soft)"/>
+      </g>
+      <circle cx="256" cy="256" r="148" fill="none" stroke="url(#rim)" stroke-width="6"/>
+      <use href="#five" stroke="#0b0f17" stroke-width="46" transform="translate(256 262) scale(.6) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- N: scoreboard digit -->
+    <g id="segs">
+      <rect x="196" y="78" width="120" height="36" rx="18"/><!-- a -->
+      <rect x="160" y="112" width="36" height="128" rx="18"/><!-- f -->
+      <rect x="196" y="238" width="120" height="36" rx="18"/><!-- g -->
+      <rect x="316" y="272" width="36" height="128" rx="18"/><!-- c -->
+      <rect x="196" y="398" width="120" height="36" rx="18"/><!-- d -->
+    </g>
+    <symbol id="vN" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="#07090e"/>
+      <g fill="#ffffff" opacity=".05">
+        <rect x="316" y="112" width="36" height="128" rx="18"/><rect x="160" y="272" width="36" height="128" rx="18"/>
+      </g>
+      <g fill="#ff7a1a" filter="url(#glow)"><use href="#segs"/></g>
+      <g fill="#ffd2a8" opacity=".55"><use href="#segs" transform="translate(256 256) scale(.98) translate(-256 -256)"/></g>
+    </symbol>
+
+    <!-- O: coach's clipboard -->
+    <symbol id="vO" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <rect x="112" y="92" width="288" height="360" rx="30" fill="#e9edf4"/>
+      <g fill="none" stroke="#b6c0d2" stroke-width="7">
+        <path d="M142 150h228"/><rect x="206" y="150" width="100" height="120"/><path d="M206 270a50 50 0 0 0 100 0"/>
+        <path d="M156 150v62a100 100 0 0 0 200 0v-62"/>
+      </g>
+      <g fill="url(#ball)">
+        <circle cx="178" cy="250" r="26"/><circle cx="334" cy="250" r="26"/><circle cx="256" cy="330" r="26"/>
+        <circle cx="186" cy="396" r="26"/><circle cx="326" cy="396" r="26"/>
+      </g>
+      <rect x="190" y="62" width="132" height="62" rx="16" fill="#3a4766"/>
+      <rect x="236" y="76" width="40" height="14" rx="7" fill="#1c2433"/>
+    </symbol>
+
+    <!-- P: sub swap, IN and OUT -->
+    <marker id="headIn" markerUnits="userSpaceOnUse" markerWidth="96" markerHeight="96" refX="24" refY="48" orient="auto"><path d="M0 0L84 48 0 96z" fill="#22c55e"/></marker>
+    <marker id="headOut" markerUnits="userSpaceOnUse" markerWidth="96" markerHeight="96" refX="24" refY="48" orient="auto"><path d="M0 0L84 48 0 96z" fill="#f43f5e"/></marker>
+    <symbol id="vP" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <path d="M111 188A160 160 0 0 1 380 156" fill="none" stroke="#22c55e" stroke-width="38" stroke-linecap="round" marker-end="url(#headIn)"/>
+      <path d="M401 324A160 160 0 0 1 132 356" fill="none" stroke="#f43f5e" stroke-width="38" stroke-linecap="round" marker-end="url(#headOut)"/>
+      <use href="#five" stroke="#fff" stroke-width="46" transform="translate(256 262) scale(.6) translate(-258 -261)"/>
+    </symbol>
+
+    <!-- ===== Round 3: L's glass chevron + the ball from B, C and M ===== -->
+    <g id="chevShadow"><path d="M318 196l74 74-74 74" fill="none" stroke="#000" stroke-opacity=".5" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/></g>
+    <g id="glassTop">
+      <rect width="512" height="512" fill="#fff" opacity=".2"/>
+      <rect width="512" height="512" fill="url(#sheen)"/>
+      <rect width="512" height="512" fill="url(#rim)" opacity=".5"/>
+    </g>
+    <!-- L without its background, for reuse -->
+    <g id="markL">
+      <use href="#fiveL"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)">
+        <rect width="512" height="512" fill="#0b0f17"/>
+        <use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/>
+        <use href="#glassTop"/>
+      </g>
+    </g>
+
+    <!-- Q: the 5 is cut from a basketball -->
+    <mask id="m5Q"><use href="#five" stroke="#fff" stroke-width="54" transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <g id="ball5Q"><g mask="url(#m5Q)"><g transform="translate(218 262) translate(-256 -256)">
+      <circle cx="256" cy="256" r="184" fill="url(#ball)"/>
+      <g fill="none" stroke="#1a0d02" stroke-width="8" opacity=".32">
+        <path d="M60 256h392"/><path d="M256 60v392"/>
+        <path d="M128 112c58 44 82 94 82 144s-24 100-82 144"/><path d="M384 112c-58 44-82 94-82 144s24 100 82 144"/>
+      </g></g></g></g>
+    <symbol id="vQ" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ball5Q"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#ball5Q" filter="url(#frost)" transform="translate(-14 0)"/>
+        <use href="#glassTop"/>
+      </g>
+    </symbol>
+
+    <!-- R: the bowl of the 5 is a basketball -->
+    <g id="ballBowlR">
+      <path d="M318 142H208l-12 102" fill="none" stroke="url(#ball)" stroke-width="46" stroke-linecap="round" stroke-linejoin="round"/>
+      <use href="#ballArt" transform="translate(258 302) scale(.54) translate(-256 -256)"/>
+    </g>
+    <g id="markR"><use href="#ballBowlR" transform="translate(212 262) scale(1.1) translate(-258 -261)"/></g>
+    <symbol id="vR" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#markR"/>
+      <use href="#chevShadow" transform="translate(14 0)"/>
+      <g mask="url(#mChevL)" transform="translate(14 0)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#markR" filter="url(#frost)" transform="translate(-28 0)"/>
+        <use href="#glassTop"/>
+      </g>
+    </symbol>
+
+    <!-- S: C's ball and dark 5, glass chevron over the ball's edge -->
+    <mask id="mChevS"><path d="M346 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></mask>
+    <g id="ballS">
+      <use href="#ballArt" transform="translate(-44 0)"/>
+      <use href="#five" stroke="#ff8a33" stroke-width="76" transform="translate(212 262) scale(.7) translate(-258 -261)"/>
+      <use href="#five" stroke="#1a0d02" stroke-width="46" transform="translate(212 262) scale(.7) translate(-258 -261)"/>
+    </g>
+    <symbol id="vS" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ballS"/>
+      <use href="#chevShadow" transform="translate(28 0)"/>
+      <g mask="url(#mChevS)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#ballS" filter="url(#frost)" transform="translate(-14 0)"/>
+        <use href="#glassTop"/>
+      </g>
+    </symbol>
+
+    <!-- T: M's orange court, navy 5, frosted chevron -->
+    <g id="courtT">
+      <rect width="512" height="512" fill="url(#orangebg)"/>
+      <use href="#seamsM"/>
+      <use href="#five" stroke="#0b0f17" stroke-width="54" transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+    </g>
+    <symbol id="vT" viewBox="0 0 512 512">
+      <use href="#courtT"/>
+      <path d="M318 200l74 74-74 74" fill="none" stroke="#7a2a00" stroke-opacity=".45" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
+      <g mask="url(#mChevL)">
+        <use href="#courtT" filter="url(#frost)" transform="translate(-14 0)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".42"/>
+        <rect width="512" height="512" fill="url(#sheen)"/>
+        <rect width="512" height="512" fill="url(#rim)" opacity=".6"/>
+      </g>
+    </symbol>
+
+    <!-- U: L in front of a big shadowy ball -->
+    <g id="ghostBall">
+      <circle cx="256" cy="256" r="226" fill="#1f2a40"/>
+      <g fill="none" stroke="#2f3d5c" stroke-width="12">
+        <path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/>
+      </g>
+    </g>
+    <symbol id="vU" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ghostBall"/>
+      <use href="#fiveL"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)">
+        <rect width="512" height="512" fill="url(#bg)"/>
+        <use href="#ghostBall" filter="url(#frost)"/>
+        <use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/>
+        <use href="#glassTop"/>
+      </g>
+    </symbol>
+
+    <!-- V: M's orange court, frosted glass 5, navy chevron -->
+    <mask id="m5V"><use href="#five" stroke="#fff" stroke-width="60" transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <mask id="m5Vrim"><use href="#five" stroke="#fff" stroke-width="60" transform="translate(218 262) scale(1.1) translate(-258 -261)"/><use href="#five" stroke="#000" stroke-width="52" transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <g id="courtV"><rect width="512" height="512" fill="url(#orangebg)"/><use href="#seamsM"/></g>
+    <symbol id="vV" viewBox="0 0 512 512">
+      <use href="#courtV"/>
+      <use href="#five" stroke="#7a2a00" stroke-width="60" opacity=".45" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5V)">
+        <use href="#courtV" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".45"/>
+        <rect width="512" height="512" fill="url(#sheen)"/>
+      </g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#0b0f17" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- W: B's ball and disc with L inside -->
+    <symbol id="vW" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg)"/>
+      <use href="#ballArt" transform="translate(256 256) scale(1.08) translate(-256 -256)"/>
+      <circle cx="256" cy="256" r="122" fill="#0b0f17"/>
+      <use href="#markL" transform="translate(256 256) scale(.5) translate(-262 -262)"/>
+    </symbol>
+
+    <!-- ===== Round 4: Q, T, U, V refined, with palettes ===== -->
+    <linearGradient id="bg_navy" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1c2433"/><stop offset="1" stop-color="#0b0f17"/></linearGradient>
+    <g id="ghost_navy"><circle cx="256" cy="256" r="226" fill="#1f2a40"/>
+      <g fill="none" stroke="#2f3d5c" stroke-width="12"><path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/></g></g>
+    <linearGradient id="bg_royal" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f3a80"/><stop offset="1" stop-color="#0b1636"/></linearGradient>
+    <g id="ghost_royal"><circle cx="256" cy="256" r="226" fill="#24438f"/>
+      <g fill="none" stroke="#3456ab" stroke-width="12"><path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/></g></g>
+    <linearGradient id="bg_petrol" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#114654"/><stop offset="1" stop-color="#061c23"/></linearGradient>
+    <g id="ghost_petrol"><circle cx="256" cy="256" r="226" fill="#15505f"/>
+      <g fill="none" stroke="#22697b" stroke-width="12"><path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/></g></g>
+    <g id="glassBright">
+      <rect width="512" height="512" fill="#fff" opacity=".5"/>
+      <rect width="512" height="512" fill="url(#sheen)"/>
+      <rect width="512" height="512" fill="url(#rim)" opacity=".7"/>
+    </g>
+    <g id="courtBlue"><rect width="512" height="512" fill="url(#bg_royal)"/>
+      <g fill="none" stroke="#5b7fd6" stroke-width="16" opacity=".45">
+        <path d="M-40 300h680"/><path d="M300 -40v680"/>
+        <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/><path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/></g></g>
+    <symbol id="vU1" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/>
+      <use href="#ghost_navy"/>
+      <use href="#fiveL"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy" filter="url(#frost)"/><use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/>
+      <use href="#ghost_royal"/>
+      <use href="#fiveL"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal" filter="url(#frost)"/><use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU3" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_petrol)"/>
+      <use href="#ghost_petrol"/>
+      <use href="#fiveL"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><rect width="512" height="512" fill="url(#bg_petrol)"/><use href="#ghost_petrol" filter="url(#frost)"/><use href="#fiveL" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vQ1" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/>
+      
+      <use href="#ball5Q"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ball5Q" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vQ2" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/>
+      <use href="#ghost_royal"/>
+      <use href="#ball5Q"/>
+      <use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal" filter="url(#frost)"/><use href="#ball5Q" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <g id="courtT1"><rect width="512" height="512" fill="url(#orangebg)"/><use href="#seamsM"/><use href="#five" stroke="#13285e" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g>
+    <symbol id="vT1" viewBox="0 0 512 512">
+      <use href="#courtT1"/>
+      <path d="M318 200l74 74-74 74" fill="none" stroke="#7a2a00" stroke-opacity=".45" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
+      <g mask="url(#mChevL)"><use href="#courtT1" filter="url(#frost)" transform="translate(-14 0)"/><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vT2" viewBox="0 0 512 512">
+      <use href="#courtT"/>
+      <path d="M318 200l74 74-74 74" fill="none" stroke="#7a2a00" stroke-opacity=".45" stroke-width="60" stroke-linecap="round" stroke-linejoin="round" filter="url(#soft)"/>
+      <g mask="url(#mChevL)"><use href="#courtT" filter="url(#frost)" transform="translate(-14 0)"/>
+        <rect width="512" height="512" fill="#2f5bd3" opacity=".72"/><rect width="512" height="512" fill="url(#sheen)"/><rect width="512" height="512" fill="url(#rim)" opacity=".7"/></g>
+    </symbol>
+    <symbol id="vV1" viewBox="0 0 512 512">
+      <use href="#courtV"/>
+      <use href="#five" stroke="#7a2a00" stroke-width="60" opacity=".45" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5V)"><use href="#courtV" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#fff" opacity=".5"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#1d3a8a" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vV2" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <use href="#five" stroke="#030816" stroke-width="60" opacity=".55" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5V)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+
+    <!-- ===== Round 5: U1, U2, V2 variations and typefaces (OFL fonts, converted to shapes) ===== -->
+    <path id="g_Graduate" d="M273.5 185.6V136.1H162.5V228.7H273L316.1 273.9V375.1L271.8 422H164.2L119.9 375.1V321.3H155.3V358.9L181.3 385.3H255.1L276.9 362.7V286.3L253.8 262.9H128.4V102H307.6V185.6Z"/>
+    <path id="g_Saira_Condensed" d="M190.4 359.5Q210.6 359.5 218.9 357.2Q227.2 354.9 230.2 346.8Q233.2 338.8 233.2 319Q233.2 299.2 230.2 291Q227.2 282.7 218.9 280.2Q210.6 277.6 190.4 277.6Q161.4 277.6 131.1 280.9V102H293.4V165H197.8V218.3Q209.3 215.6 230.9 215.6Q274.1 215.6 290.4 239.7Q306.7 263.8 306.7 312.1Q306.7 353.5 298.7 376.9Q290.6 400.4 270 411.2Q249.3 422 210.2 422Q192.3 422 169.5 419.5Q146.7 416.9 129.3 413.3V356.3Q167 359.5 190.4 359.5Z"/>
+    <path id="g_Russo_One" d="M258.6 422Q183.3 422 91.8 413V352.1Q191.4 358.9 240.5 358.9Q250.9 358.9 257 352.8Q263.1 346.7 263.1 336.4V313.8Q263.1 286.8 236 286.8H105.3V102H321.7V165.1H186.5V223.7H258.6Q302.7 223.7 323.5 243.7Q344.2 263.8 344.2 304.8V336.4Q344.2 380.5 323.5 401.3Q302.7 422 258.6 422Z"/>
+    <path id="g_Archivo_Black" d="M179.1 179.7 175.5 227.3Q175.5 226.3 184.6 221.1Q193.8 215.8 208.9 211.3Q223.9 206.7 242.7 206.7Q293 206.7 322.5 235.3Q351.9 263.8 351.9 313.7Q351.9 343.8 335.9 368.5Q319.9 393.2 290.7 407.6Q261.4 422 223 422Q155.8 422 119.9 393.2Q84.1 364.4 84.1 315H164.5Q164.5 333.8 177.3 346.3Q190.1 358.9 213.4 358.9Q236.7 358.9 249.3 345.9Q261.9 332.9 261.9 312.3Q261.9 291.3 249.3 278.2Q236.7 265.2 213.9 265.2Q196.5 265.2 187.6 270.9Q178.7 276.6 174.8 281.7Q170.9 286.7 170 288.1L97.8 278L111 102H328.6V179.7Z"/>
+    <path id="g_Anton" d="M217 422Q180.6 422 157.6 404Q134.6 386 134.6 348.7V301.8H200.2V328.8Q200.2 337.3 201.2 345.1Q202.1 353 205.7 358Q209.3 363.1 217 363.1Q227.2 363.1 230.5 356.2Q233.7 349.3 233.7 338.5V276.5Q233.7 268.8 232.7 261.3Q231.7 253.8 228.3 248.7Q224.9 243.7 217.4 243.7Q199.5 243.7 199.5 269.7H141.6V102H291.9V161.1H201.4V205.6Q206.1 199.8 214.1 195.4Q222 191 232.8 191Q254.3 191 267.8 199.3Q281.3 207.5 288.6 222.2Q295.8 236.9 298.6 256.3Q301.4 275.6 301.4 297.8Q301.4 326.3 298.4 349.2Q295.5 372 286.8 388.3Q278.1 404.6 261.4 413.3Q244.6 422 217 422Z"/>
+    <linearGradient id="bg_deep" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16296a"/><stop offset="1" stop-color="#050b22"/></linearGradient>
+    <g id="courtDeep"><rect width="512" height="512" fill="url(#bg_deep)"/>
+      <g fill="none" stroke="#6d8fe6" stroke-width="16" opacity=".5"><path d="M-40 300h680"/><path d="M300 -40v680"/>
+        <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/><path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/></g></g>
+    <g id="courtNavy"><rect width="512" height="512" fill="url(#bg_navy)"/>
+      <g fill="none" stroke="#3d4d70" stroke-width="16" opacity=".8"><path d="M-40 300h680"/><path d="M300 -40v680"/>
+        <path d="M60 80c90 70 130 150 130 220s-40 150-130 220"/><path d="M540 80c-90 70-130 150-130 220s40 150 130 220"/></g></g>
+    <mask id="mChev0"><path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></mask>
+    <symbol id="vU2x" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal" transform="translate(300 300) scale(1.25) translate(-256 -256)"/>
+      <use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal" transform="translate(300 300) scale(1.25) translate(-256 -256)"/></g><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2y" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><g fill="none" stroke="#ff7a1a" stroke-width="12" opacity=".22"><circle cx="256" cy="256" r="226"/><path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/></g>
+      <use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><g fill="none" stroke="#ff7a1a" stroke-width="12" opacity=".22"><circle cx="256" cy="256" r="226"/><path d="M30 256h452"/><path d="M256 30v452"/>
+        <path d="M110 76c66 50 94 108 94 180s-28 130-94 180"/><path d="M402 76c-66 50-94 108-94 180s28 130 94 180"/></g></g><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="mChevm24"><path d="M294 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="60" stroke-linecap="round" stroke-linejoin="round"/></mask>
+    <symbol id="vU1x" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+      <use href="#chevShadow" transform="translate(-24 0)"/>
+      <g mask="url(#mChevm24)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2x"><use href="#five" stroke="#fff" stroke-width="60"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <symbol id="vV2x" viewBox="0 0 512 512">
+      <use href="#courtDeep"/>
+      <use href="#five" stroke="#030816" stroke-width="60" opacity=".55" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5_V2x)"><use href="#courtDeep" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".9"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <mask id="m5_V2y"><use href="#five" stroke="#fff" stroke-width="60"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <symbol id="vV2y" viewBox="0 0 512 512">
+      <use href="#courtNavy"/>
+      <use href="#five" stroke="#030816" stroke-width="60" opacity=".55" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5_V2y)"><use href="#courtNavy" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vV2z" viewBox="0 0 512 512">
+      <use href="#courtBlue"/><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/><use href="#chevShadow"/>
+      <g mask="url(#mChevL)"><use href="#courtBlue" filter="url(#frost)"/><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU1a" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2a" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><use href="#five" stroke="url(#ball)" stroke-width="54"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2a"><use href="#five" stroke="#fff" stroke-width="60"  transform="translate(218 262) scale(1.1) translate(-258 -261)"/></mask>
+    <symbol id="vV2a" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <use href="#five" stroke="#030816" stroke-width="60" opacity=".55" filter="url(#soft)" transform="translate(218 278) scale(1.1) translate(-258 -261)"/>
+      <g mask="url(#m5_V2a)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <rect width="512" height="512" fill="url(#rim)" mask="url(#m5Vrim)"/>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vU1b" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2b" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2b"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="#fff" /></g></mask>
+    <symbol id="vV2b" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <g transform="translate(218 278) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="#030816" opacity=".55" filter="url(#soft)"/></g>
+      <g mask="url(#m5_V2b)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <g mask="url(#m5_V2b)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Graduate" fill="none" stroke="url(#rim)" stroke-width="12"/></g></g>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vU1c" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2c" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2c"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="#fff" /></g></mask>
+    <symbol id="vV2c" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <g transform="translate(218 278) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="#030816" opacity=".55" filter="url(#soft)"/></g>
+      <g mask="url(#m5_V2c)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <g mask="url(#m5_V2c)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Saira_Condensed" fill="none" stroke="url(#rim)" stroke-width="12"/></g></g>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vU1d" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2d" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2d"><g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="#fff" /></g></mask>
+    <symbol id="vV2d" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <g transform="translate(218 278) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="#030816" opacity=".55" filter="url(#soft)"/></g>
+      <g mask="url(#m5_V2d)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <g mask="url(#m5_V2d)"><g transform="translate(218 262) scale(0.913) translate(-218 -262)"><use href="#g_Russo_One" fill="none" stroke="url(#rim)" stroke-width="12"/></g></g>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vU1e" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2e" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2e"><g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="#fff" /></g></mask>
+    <symbol id="vV2e" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <g transform="translate(218 278) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="#030816" opacity=".55" filter="url(#soft)"/></g>
+      <g mask="url(#m5_V2e)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <g mask="url(#m5_V2e)"><g transform="translate(218 262) scale(0.858) translate(-218 -262)"><use href="#g_Archivo_Black" fill="none" stroke="url(#rim)" stroke-width="12"/></g></g>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+    <symbol id="vU1f" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_navy)"/><use href="#ghost_navy"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_navy)"/><g filter="url(#frost)"><use href="#ghost_navy"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <symbol id="vU2f" viewBox="0 0 512 512">
+      <rect width="512" height="512" fill="url(#bg_royal)"/><use href="#ghost_royal"/>
+      <g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="url(#ball)" /></g>
+      <use href="#chevShadow" transform="translate(0 0)"/>
+      <g mask="url(#mChev0)"><rect width="512" height="512" fill="url(#bg_royal)"/><g filter="url(#frost)"><use href="#ghost_royal"/></g><g filter="url(#frost)" transform="translate(-14 0)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="url(#ball)" /></g></g><use href="#glassBright"/></g>
+    </symbol>
+    <mask id="m5_V2f"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="#fff" /></g></mask>
+    <symbol id="vV2f" viewBox="0 0 512 512">
+      <use href="#courtBlue"/>
+      <g transform="translate(218 278) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="#030816" opacity=".55" filter="url(#soft)"/></g>
+      <g mask="url(#m5_V2f)"><use href="#courtBlue" filter="url(#frost)" transform="translate(256 256) scale(1.12) translate(-256 -256)"/>
+        <rect width="512" height="512" fill="#ff7a1a" opacity=".82"/><rect width="512" height="512" fill="url(#sheen)"/></g>
+      <g mask="url(#m5_V2f)"><g transform="translate(218 262) scale(1.000) translate(-218 -262)"><use href="#g_Anton" fill="none" stroke="url(#rim)" stroke-width="12"/></g></g>
+      <path d="M318 186l74 74-74 74" fill="none" stroke="#fff" stroke-width="48" stroke-linecap="round" stroke-linejoin="round"/>
+    </symbol>
+  </defs>
+</svg>
+
+<main class="wrap">
+  <header class="stack">
+    <div class="eyebrow">next5 · Home Screen icon review</div>
+    <h1>Icon options</h1>
+    <p class="chosen"><b>Chosen 2026-11-04: V2z</b>, royal blue court, solid orange 5 and a white glass chevron. It is now <code>public/favicon.svg</code>. Everything else here is kept for later. <a href="#opt-V2z">Jump to V2z</a></p>
+    <p class="muted">The icon you have today, what it is trying to say, and five rounds of alternatives. Every option is shown at the sizes iPhone actually uses: the Home Screen (60 pt), Spotlight (40 pt) and Settings (29 pt). Refer to options by letter when you comment.</p>
+  </header>
+
+  <section class="current">
+    <span class="ico shadow" style="width:200px;height:200px"><svg viewBox="0 0 512 512"><use href="#vA"/></svg></span>
+    <div class="stack">
+      <h2>The current icon</h2>
+      <p>It is one SVG, <code>public/favicon.svg</code>. A navy square holds an orange basketball with four seams. A navy disc sits in the middle of the ball with a white “5” on it: the next five players on the floor. The colors are the app’s own: the navy page background and the orange accent. <code>npm run icons</code> turns the SVG into the PNGs iPhone and Android use.</p>
+      <p><strong>What I noticed:</strong></p>
+      <ol>
+        <li>The disc covers the spot where the seams cross. At Home Screen size it looks more like a ring, a dial or a life buoy than a basketball.</li>
+        <li>The seams are drawn slightly past the edge of the ball, so small nubs stick out at the top, bottom, left and right.</li>
+        <li>The “5” is typed text in Helvetica Neue or Arial. The PNG generator uses whatever fonts are on the machine that runs it, so the 5 can change shape from one machine to the next. Drawing it as a shape fixes that. Options B–H do this.</li>
+        <li>The SVG has its own rounded corners. iPhone cuts its own corner shape too, so the Home Screen PNG ends up with slightly darker corners. A full square with no corners is the cleaner source.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="stack">
+    <h2>All options on a Home Screen</h2>
+    <div class="dock" id="dockDark"></div>
+    <div class="dock light" id="dockLight"></div>
+  </section>
+
+  <section class="stack">
+    <div class="eyebrow">Round 5</div>
+    <h2>U1, U2 and V2: typefaces</h2>
+    <p class="muted">Six styles of 5 in each of the three favorites. Each one comes from a free, open-license font and is converted to a shape, so it looks the same on every machine. Name a cell by its code, like “U2c”.</p>
+    <div class="fg-scroll"><div class="fg" id="fontGrid"></div></div>
+    <h2>U1, U2 and V2: more layouts</h2>
+    <p class="muted">These all use the current rounded 5, so you can judge the layout and the font separately.</p>
+    <div class="options" id="options5"></div>
+  </section>
+
+  <section class="stack">
+    <div class="eyebrow">Round 4</div>
+    <h2>Q, T, U and V, with new colors</h2>
+    <p class="muted">Orange’s complement, its opposite on the color wheel, is blue. So every palette here pairs the app’s orange with a blue: the app’s navy, a richer royal blue, or a dark petrol blue-green. The glass chevron is brighter now, closer to G’s white arrow.</p>
+    <div class="swatches">
+      <span><i style="background:#ff7a1a"></i>Orange</span>
+      <span><i style="background:#1c2433"></i>Navy</span>
+      <span><i style="background:#1f3a80"></i>Royal blue</span>
+      <span><i style="background:#114654"></i>Petrol</span>
+      <span><i style="background:#ffffff;border:1px solid var(--line)"></i>White</span>
+    </div>
+    <div class="options" id="options4"></div>
+  </section>
+
+  <section class="stack">
+    <div class="eyebrow">Round 3</div>
+    <h2>L with a basketball</h2>
+    <p class="muted">Each of these keeps L’s orange 5 and glass chevron and brings in the ball from B, C or M. Q–U sit on navy like L. T and V use M’s orange court. W puts L inside B’s ball.</p>
+    <div class="options" id="options3"></div>
+  </section>
+
+  <section class="stack">
+    <div class="eyebrow">Round 2</div>
+    <h2>Liquid Glass and new ideas</h2>
+    <p class="muted">Options I–M use the iOS 26 Liquid Glass look: frosted, see-through layers with a bright rim along the top-left edge and a soft shadow underneath. N–P are new ideas without glass.</p>
+    <p class="muted">A web app’s icon is a flat PNG, so the glass is part of the picture. It won’t catch the light or move when the phone tilts the way glass icons in Apple’s own apps do. If the Home Screen is set to Tinted or Clear, iOS may recolor it.</p>
+    <div class="options" id="options2"></div>
+  </section>
+
+  <section class="stack">
+    <div class="eyebrow">Round 1</div>
+    <h2>First options</h2>
+    <div class="options" id="options"></div>
+  </section>
+
+  <p class="foot muted">To switch icons later: copy the chosen option’s drawing out of this file into <code>public/favicon.svg</code> as a full 512 × 512 square, then run <code>npm run icons</code> to rebuild the PNGs. The drawings for every option are the <code>&lt;symbol id="v…"&gt;</code> elements near the top of this file.</p>
+</main>
+
+<script>
+const options = [
+  { id: "A", name: "Current", idea: "As shipped today, shown for comparison.", tags: ["ball", "5"] },
+  { id: "B", name: "Current, tidied", idea: "Same idea. Bigger ball, seams kept inside it, the 5 drawn as a shape, no baked-in corners. The smallest change.", tags: ["ball", "5", "small change"] },
+  { id: "C", name: "Whole ball", idea: "Drop the disc so the ball reads as a ball. A big dark 5 sits on top of the seams.", tags: ["ball", "5"] },
+  { id: "D", name: "Rotation", idea: "An orange arrow circles a white 5. It says rotation and “who’s next” instead of basketball.", tags: ["rotation", "5"] },
+  { id: "E", name: "Five on the floor", idea: "Five players on a half court. The green one with the arrow is the next sub coming in. Says what the app does, but busier.", tags: ["court", "players", "IN"] },
+  { id: "F", name: "Jersey", idea: "An orange jersey with a navy 5. Youth sports, team, a number on your back.", tags: ["jersey", "5"] },
+  { id: "G", name: "Next 5", idea: "The name as a mark: a big orange 5 and a white “next” chevron. The most legible at small sizes.", tags: ["wordmark", "5"] },
+  { id: "H", name: "Orange court", idea: "Bright orange tile with large, cropped ball seams and a white 5. Stands out on any wallpaper.", tags: ["ball", "5", "bright"] },
+  { id: "I", r: 2, name: "Glass lens", idea: "The current idea in glass. The navy disc becomes a frosted lens over the ball, so you still see the seams through it.", tags: ["glass", "ball", "5"] },
+  { id: "J", r: 2, name: "Glass 5", idea: "A frosted glass 5 resting on the ball. The ball shows through the 5, blurred, with a light edge and a shadow.", tags: ["glass", "ball", "5"] },
+  { id: "K", r: 2, name: "Glass rotation", idea: "D in glass. The rotation arrow is a frosted ring over a soft orange glow, with a solid white 5.", tags: ["glass", "rotation", "5"] },
+  { id: "L", r: 2, name: "Next 5, glass", idea: "G with a glass chevron that overlaps the 5. You see the 5 blurred through the arrow.", tags: ["glass", "wordmark", "5"] },
+  { id: "M", r: 2, name: "Frosted on orange", idea: "H with a big frosted disc and a navy 5. The brightest of the glass options.", tags: ["glass", "ball", "bright"] },
+  { id: "N", r: 2, name: "Scoreboard", idea: "An orange scoreboard digit glowing on a black panel. The unlit segments are just visible, like a real gym clock.", tags: ["scoreboard", "5"] },
+  { id: "O", r: 2, name: "Coach’s clipboard", idea: "A clipboard with five players drawn on a half court. Planning the lineup, the other half of what the app does.", tags: ["clipboard", "players"] },
+  { id: "P", r: 2, name: "Sub swap", idea: "A green IN arrow and a red OUT arrow circling a white 5, in the same colors the app uses for IN and OUT.", tags: ["swap", "IN/OUT", "5"] },
+  { id: "Q", r: 3, name: "Ball 5", idea: "L, but the 5 is cut from a basketball: the orange 5 carries the seams. The glass chevron shows the seams blurred.", tags: ["glass", "ball", "5"] },
+  { id: "R", r: 3, name: "Ball for a bowl", idea: "The round part of the 5 is a whole basketball, with the 5’s flag on top. The glass chevron follows it.", tags: ["glass", "ball", "5"] },
+  { id: "S", r: 3, name: "C with a chevron", idea: "C’s ball and dark 5, moved left. The glass chevron sits over the ball’s right edge and bends the seams behind it.", tags: ["glass", "ball", "5"] },
+  { id: "T", r: 3, name: "L on the court", idea: "M’s orange court and seams with L’s layout. The 5 is navy and the chevron is frosted white glass.", tags: ["glass", "ball", "bright"] },
+  { id: "U", r: 3, name: "L over a shadow ball", idea: "L as it is, with a big, dim basketball in the navy behind it. Quiet up close, still a ball at a glance.", tags: ["glass", "ball", "5"] },
+  { id: "V", r: 3, name: "Glass 5 on the court", idea: "M’s orange court with a frosted glass 5 and a solid navy chevron. L with the glass and solid parts swapped.", tags: ["glass", "ball", "bright"] },
+  { id: "W", r: 3, name: "L inside B", idea: "B’s ball and navy disc, with L’s 5 and glass chevron in the middle.", tags: ["glass", "ball", "5"] },
+  { id: "U1", r: 4, name: "U, navy", idea: "U with a brighter, whiter glass chevron so it reads like G’s white arrow at a glance. Same navy as the app.", tags: ["navy", "glass", "ball"] },
+  { id: "U2", r: 4, name: "U, royal blue", idea: "A deeper, more saturated blue. Blue is orange’s opposite on the color wheel, so this is the strongest pairing.", tags: ["royal blue", "glass", "ball"] },
+  { id: "U3", r: 4, name: "U, petrol", idea: "A dark blue-green. Still opposite orange, a little warmer and less expected than navy.", tags: ["petrol", "glass", "ball"] },
+  { id: "Q1", r: 4, name: "Q, navy", idea: "Q with the brighter chevron. The seams on the 5 are faint, so the 5 reads first and the ball second.", tags: ["navy", "glass", "ball 5"] },
+  { id: "Q2", r: 4, name: "Q, royal blue", idea: "Q on royal blue with U’s shadow ball behind it. The two ideas in one.", tags: ["royal blue", "glass", "ball 5"] },
+  { id: "T1", r: 4, name: "T, blue 5", idea: "M’s orange court with a deep blue 5 instead of navy, and a white glass chevron.", tags: ["orange", "blue 5", "glass"] },
+  { id: "T2", r: 4, name: "T, blue glass", idea: "Orange court, navy 5, and a blue-tinted glass chevron for the opposite-color accent.", tags: ["orange", "blue glass"] },
+  { id: "V1", r: 4, name: "V, blue chevron", idea: "V with a royal blue chevron in place of navy. Frosted white 5 on the orange court.", tags: ["orange", "glass 5", "blue"] },
+  { id: "V2", r: 4, name: "V, reversed", idea: "A royal blue court with blue seams and an orange glass 5, plus G’s white chevron. U’s colors turned inside out.", tags: ["royal blue", "orange glass", "white"] },
+  { id: "U2x", r: 5, name: "U2, big ball", idea: "The shadow ball is larger and pushed to the bottom right, so it reads as a ball rolling out of the frame.", tags: ["royal blue", "glass"] },
+  { id: "U2y", r: 5, name: "U2, orange seams", idea: "No shadow ball fill. Just the ball’s seams drawn faintly in orange, so the ball and the 5 share a color.", tags: ["royal blue", "glass"] },
+  { id: "U1x", r: 5, name: "U1, tighter", idea: "The chevron moves left and overlaps more of the 5, so more of the 5 shows through the glass.", tags: ["navy", "glass"] },
+  { id: "V2x", r: 5, name: "V2, deeper blue", idea: "A darker, richer blue court with brighter seams. The orange glass 5 stands out more.", tags: ["deep blue", "orange glass"] },
+  { id: "V2y", r: 5, name: "V2 on navy", idea: "V2 in the app’s own navy instead of royal blue.", tags: ["navy", "orange glass"] },
+  { id: "V2z", r: 5, name: "V2, solid 5", idea: "V2’s court with a solid orange 5 and a white glass chevron, so the glass and solid parts trade places again.", tags: ["royal blue", "glass"] },
+];
+const ico = (id, px, cls = "") => `<span class="ico ${cls}" style="width:${px}px;height:${px}px"><svg viewBox="0 0 512 512" role="img" aria-label="Option ${id}"><use href="#v${id}"/></svg></span>`;
+const dockHtml = options.map(o => `<div class="app">${ico(o.id, 60)}<span>${o.id} · next5</span></div>`).join("");
+document.getElementById("dockDark").innerHTML = dockHtml;
+document.getElementById("dockLight").innerHTML = dockHtml;
+const card = o => `
+  <article class="opt" id="opt-${o.id}">
+    ${ico(o.id, 168, "shadow")}
+    <div class="meta">
+      <h3><span class="letter">${o.id}</span>${o.name}</h3>
+      <p class="muted">${o.idea}</p>
+      <div class="tags">${o.tags.map(t => `<span class="tag">${t}</span>`).join("")}</div>
+      <div class="sizes">
+        <div class="tile">${ico(o.id, 60)}<small>60 pt</small></div>
+        <div class="tile">${ico(o.id, 40)}<small>40 pt</small></div>
+        <div class="tile">${ico(o.id, 29)}<small>29 pt</small></div>
+        <div class="tile light">${ico(o.id, 60)}<small>60 pt</small></div>
+        <div class="tile light">${ico(o.id, 29)}<small>29 pt</small></div>
+      </div>
+    </div>
+  </article>`;
+const fonts = [{"id": "a", "name": "Rounded", "font": "drawn by hand (current)"}, {"id": "b", "name": "Varsity", "font": "Graduate"}, {"id": "c", "name": "Sport", "font": "Saira Condensed ExtraBold"}, {"id": "d", "name": "Squared", "font": "Russo One"}, {"id": "e", "name": "Heavy", "font": "Archivo Black"}, {"id": "f", "name": "Tall", "font": "Anton"}];
+document.getElementById("fontGrid").innerHTML = `<div class="fg-row fg-head"><span></span><span>U1 · navy</span><span>U2 · royal blue</span><span>V2 · reversed</span></div>` +
+  fonts.map(f => `<div class="fg-row"><div class="fg-name"><b><span class="letter">${f.id}</span>${f.name}</b><small>${f.font}</small></div>` +
+    ["U1","U2","V2"].map(b => `<div class="fg-cell" id="cell-${b}${f.id}">${ico(b+f.id, 96, "shadow")}<div class="tile">${ico(b+f.id, 29)}</div><small>${b}${f.id}</small></div>`).join("") + `</div>`).join("");
+document.getElementById("options5").innerHTML = options.filter(o => o.r === 5).map(card).join("");
+document.getElementById("options4").innerHTML = options.filter(o => o.r === 4).map(card).join("");
+document.getElementById("options3").innerHTML = options.filter(o => o.r === 3).map(card).join("");
+document.getElementById("options2").innerHTML = options.filter(o => o.r === 2).map(card).join("");
+document.getElementById("options").innerHTML = options.filter(o => !o.r).map(card).join("");
+</script>
+</body></html>

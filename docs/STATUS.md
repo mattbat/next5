@@ -139,7 +139,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Dynamic Type and VoiceOver are only partly addressed. |
+| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Dynamic Type and VoiceOver are only partly addressed. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. |
 | N1 | 📱 | Not measured on a device. |
 | N2 | ✅ | Tested: well under 1 second (the test allows 3 seconds for CI). |
 | N3 | ✅ | |
