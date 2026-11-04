@@ -37,6 +37,7 @@ describe('router', () => {
     expect(parseRoute('#/game/g1/live')).toEqual({ name: 'game-live', gameId: 'g1' });
     expect(parseRoute('#/nope')).toEqual({ name: 'teams' });
     expect(parseRoute('#/diagnostics')).toEqual({ name: 'diagnostics' });
+    expect(parseRoute('#/receive/zAbC')).toEqual({ name: 'receive', data: 'zAbC' });
   });
 });
 

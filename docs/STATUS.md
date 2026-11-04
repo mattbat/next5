@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), and stats with CSV export (S3–S5). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), and handing a game to an assistant (SH1–SH6). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (game and season stats, CSV export)
+Last updated: 2026-11-03 (handing a game to an assistant and back)
 
 ## 3. Platform and technical
 
@@ -110,6 +110,19 @@ Last updated: 2026-11-03 (game and season stats, CSV export)
 | B3 | ✅ | Teams screen reminder when there's a team and no backup, or the last one is over 30 days old. **Later** snoozes it for a week. |
 | B4 | ✅ | Settings shows the version, links to Diagnostics, and has **Check for updates** (the app also checks hourly). |
 
+### Handing a game to an assistant
+
+| ID | Status | Notes |
+|----|--------|-------|
+| SH1 | ✅ 📱 | Plan screen → **Send to assistant** → **Text a link** or **AirDrop a file**. Links are gzip + base64url after `#/receive/` (plain JSON where iOS can't compress); a finished 12-player game stays under 8 KB. Where sharing isn't available the link is copied, or the file downloads. Still to check on an iPhone: how Messages shows a long link. |
+| SH2 | ✅ | The assistant's Final screen has **Send back to coach** (then **Send back again**). |
+| SH3 | ✅ 📱 | `#/receive/…` screen with **Open here** and, in Safari, **Copy for the next5 app**. Teams screen → **Receive a game**: **Paste game**, **Open game file** (a backup file is turned away with a pointer to Settings). Still to check on an iPhone: the paste permission prompt in the Home Screen app. |
+| SH4 | ✅ | `decideReceive` in `src/data/handoff.ts`, with an example test per case and property tests that an older copy never wins and played segments are never dropped silently. Team and players merge like a backup restore. |
+| SH5 | ✅ | "With your assistant" callout, **Send again** in place of **Start game**, "changed since you sent it" from `updatedAt > sentAt`, and **Take back control** after confirming (raises the handoff number). |
+| SH6 | ✅ | **With assistant** badge in the game list. |
+
+The handoff state is an optional, unindexed `handoff` field on games, so the Dexie schema didn't change. A two-browser end-to-end test (`e2e/handoff.spec.ts`) covers coach → assistant by link, a refused late update, and assistant → coach by file.
+
 ## 12. Documentation and help
 
 | ID | Status | Notes |
@@ -142,7 +155,7 @@ Last updated: 2026-11-03 (game and season stats, CSV export)
 
 ## 16. Stretch goals
 
-All ⬜: favorite lineups, automatic cloud backup, sharing and sync.
+⬜ favorite lineups, automatic cloud backup, and real sync. Sharing a game between a coach and an assistant is done (SH1–SH6).
 
 ---
 
@@ -155,6 +168,7 @@ In priority order:
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
 5. Light theme (D10), editable positions (P1), archive and copy teams (M1, M4).
+6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
 ## Small changes requested
 

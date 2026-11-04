@@ -403,6 +403,12 @@ input[type='date'] {
   color: var(--in);
 }
 
+/* Sent to the assistant (SH5). */
+.status-away {
+  background: rgba(255, 122, 26, 0.16);
+  color: var(--accent);
+}
+
 /* Checkbox rows */
 
 /* Hidden native inputs stay inside their own row, so they can never widen the page. */
@@ -1621,6 +1627,15 @@ button.sub-in {
 
 .restore .hint {
   margin: 4px 0 14px;
+}
+
+/* "Assistant running the subs? Send to assistant" on the plan screen (SH1). */
+.send-hint {
+  margin: 0 0 8px;
+}
+
+.send-hint .link {
+  padding: 0 4px;
 }
 
 .callout .footer-row {

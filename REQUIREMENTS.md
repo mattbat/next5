@@ -99,7 +99,7 @@ The rule engine must be easy to extend so that more rules can be added later. Ex
 | P3 | For each position a player can play, the coach sets a skill level (see the table below). |
 | P4 | Each team defines a **lineup requirement**: the minimum number of players needed at each position, for example "at least 2 Guards, at least 1 Center." |
 | P5 | For display, the app gives each player in a lineup one position from the ones they can play, chosen so that the requirement is met. Where there is a choice, it prefers each player's highest skill level. This assigned position is what the Plan and Game Day screens show. |
-| P6 | Skill levels appear only on the team and roster editing screens. They never appear on the Game Day screen, plan grids, stats, or exports, so they can't be seen over the coach's shoulder. |
+| P6 | Skill levels appear only on the team and roster editing screens. They never appear on the Game Day screen, plan grids, stats, or exports, so they can't be seen over the coach's shoulder. The one exception is a game handed to the assistant (SH1), which carries them so the assistant's phone can re-plan; the app still never shows them there. |
 
 ### Skill level names
 The names are encouraging and describe the player's role at that position, not how good they are:
@@ -185,6 +185,19 @@ Everything below is visible without scrolling on an iPhone in portrait:
 
 > Data is lost if the app is deleted from the Home Screen or its website data is cleared. This is why B1 to B3 matter.
 
+### Handing a game to an assistant (added 2026-11-03)
+
+The coach plans a game, an assistant runs the substitutions on their own phone, and the finished game comes back to the coach. There is no server.
+
+| ID | Requirement |
+|----|-------------|
+| SH1 | **Send to assistant:** from the plan, send the game as a **link** (Messages, WhatsApp, email) or a **file** (AirDrop, Files). The game is packed into the link after the `#`, so it never reaches the web server. It includes the team and the attending players, with skill levels (see P6). |
+| SH2 | **Send back to coach:** the assistant's Final screen sends the finished game back the same two ways. |
+| SH3 | **Receive:** opening a link shows what the game is and **Open here**. In Safari, **Copy for the next5 app** copies it for the Home Screen app, which keeps its own data. The Teams screen has **Paste game** (a copied link) and **Open game file**. |
+| SH4 | **No lost work:** every send carries a handoff number, and the receiving phone decides by it, never by the phones' clocks. A newer copy replaces the old one. The same or an older copy changes nothing. A copy with fewer segments played than this phone's is refused unless the user taps **Replace anyway**. When both phones changed the game since the last send, the user chooses which to keep. |
+| SH5 | **While the assistant has it:** the coach's phone shows "With your assistant", can still change the plan and **Send again** (with a note when the plan changed since sending), but can't start the game. **Take back control** (after confirming) lets the coach run it again. |
+| SH6 | The team's game list shows **With assistant** for a game the coach has sent. |
+
 ## 12. Documentation and in-app help
 
 | ID | Requirement |
@@ -265,7 +278,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 - **v1 preparation:** keep all storage access behind a single data layer so that the storage backend can be swapped or mirrored later.
 
 ### Sharing and sync
-- **Cheapest step:** share a single game plan as a file that another coach imports. This needs no backend.
+- **Cheapest step:** share a single game plan as a file that another coach imports. This needs no backend. Done for one coach and one assistant as SH1–SH6 (2026-11-03).
 - **Real sync** across coaches or devices needs a backend. Options include the free tiers of Firebase, Supabase, or Cloudflare D1/KV. This conflicts with "no hosting costs" unless a free tier is enough.
 - **Design implication for v1:** every record gets a stable unique ID and an `updatedAt` timestamp from the start, so a sync layer can be added later.
 
@@ -289,6 +302,8 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-02 | The target device is iPhone 17. |
 | 2026-11-02 | The whole app has automated tests, with the rotation engine tested most thoroughly. The tests run in CI, and deploying requires them all to pass. |
 | 2026-11-02 | CI and deployment run on GitHub Actions. The code, CI, and hosting all stay on GitHub. |
+| 2026-11-03 | Coach and assistant share a game by text link or AirDrop file, without a backend (SH1–SH6). A small server "mailbox" for an automatic return trip may come later. |
+| 2026-11-03 | A game sent to the assistant includes skill levels, because the assistant's phone needs them to re-plan. The app still never shows them on game-day screens. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions

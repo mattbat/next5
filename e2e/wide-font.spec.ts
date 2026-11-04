@@ -55,6 +55,9 @@ test('every screen fits a narrow phone even with a wide font', async ({ page }) 
   await page.getByRole('radio', { name: 'Grid' }).click();
   await expect(page.getByRole('table')).toBeVisible();
   await expectFits(page, 'Plan: grid');
+  await page.getByRole('button', { name: 'Send to assistant' }).click();
+  await expectFits(page, 'Send to assistant');
+  await page.getByRole('button', { name: 'Done' }).click();
   await page.getByRole('button', { name: 'Start game' }).click();
   await expect(page.getByRole('heading', { name: 'Q1 · 1 of 2' })).toBeVisible();
   await expectFits(page, 'Game Day');

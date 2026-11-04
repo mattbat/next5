@@ -8,7 +8,7 @@ import { createGame, deleteTeam, updateTeam } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
-import { navigate, paths } from '../router';
+import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
 import { RULE_HELP } from './ruleHelp';
 
@@ -100,12 +100,6 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
 const STATUS_LABEL = { planned: 'Planned', live: 'In progress', final: 'Final' } as const;
 
 function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlayers: boolean }) {
-  const open = (game: Game) => {
-    // Live games open Game Day; finished games open their stats summary (S2, S3).
-    if (game.status !== 'planned') return paths.gameLive(game.id);
-    if (game.plan.length > 0) return paths.gamePlan(game.id);
-    return paths.gameSetup(game.id);
-  };
   return (
     <Section
       title="Games"
@@ -126,12 +120,16 @@ function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlay
       <ul className="list">
         {games.map((g) => (
           <li key={g.id}>
-            <a className="list-item" href={open(g)}>
+            <a className="list-item" href={gamePath(g)}>
               <span className="list-title">
                 {g.opponent ? `vs ${g.opponent}` : 'Game'}
                 <span className="list-sub">{formatDate(g.date)}</span>
               </span>
-              <span className={`status status-${g.status}`}>{STATUS_LABEL[g.status]}</span>
+              {g.handoff?.away && g.handoff.role === 'coach' && g.status === 'planned' ? (
+                <span className="status status-away">With assistant</span>
+              ) : (
+                <span className={`status status-${g.status}`}>{STATUS_LABEL[g.status]}</span>
+              )}
               <span className="chevron">›</span>
             </a>
           </li>

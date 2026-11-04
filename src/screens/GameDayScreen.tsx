@@ -23,6 +23,7 @@ import { gameStats, gameStatsCsv, positionSummary } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { SendGameSheet } from './SendGameSheet';
 import { paths } from '../router';
 import {
   ChoosePlayerSheet,
@@ -362,7 +363,10 @@ function describeEvent(event: GameEvent, game: Game, byId: Map<string, Player>):
 /** The finished game: per-player stats (S3), changes from the plan, and CSV export (S5). */
 function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
   const [message, setMessage] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
   const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
+  // The assistant ran this game; it goes back to the coach (SH2).
+  const fromCoach = game.handoff?.role === 'assistant';
   const stats = gameStats(game).sort((a, b) => name(a.playerId).localeCompare(name(b.playerId)));
 
   const exportCsv = async () => {
@@ -418,6 +422,11 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
       )}
       <footer className="footer static">
         <div className="actions">
+          {fromCoach && (
+            <button type="button" className="btn wide big" onClick={() => setSending(true)}>
+              {game.handoff?.away ? 'Send back again' : 'Send back to coach'}
+            </button>
+          )}
           <button type="button" className="btn secondary wide" onClick={() => void exportCsv()}>
             Export stats (CSV)
           </button>
@@ -429,11 +438,23 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
           <button type="button" className="btn secondary wide" onClick={() => void saveGame(undoSegment(game))}>
             ↶ Undo end of game
           </button>
-          <a className="btn wide big" href={paths.team(team.id)}>
+          <a className={`btn wide ${fromCoach ? 'secondary' : 'big'}`} href={paths.team(team.id)}>
             Done
           </a>
         </div>
       </footer>
+      {sending && (
+        <SendGameSheet
+          game={game}
+          team={team}
+          roster={[...byId.values()]}
+          onSent={(text) => {
+            setMessage(text);
+            setSending(false);
+          }}
+          onClose={() => setSending(false)}
+        />
+      )}
     </main>
   );
 }
