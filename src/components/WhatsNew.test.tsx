@@ -37,7 +37,9 @@ describe('What’s new (REL3)', () => {
     localStorage.setItem(SEEN_KEY, '0.0.1');
     render(<WhatsNewSheet />);
     const sheet = await screen.findByRole('dialog', { name: `What’s new in ${__APP_VERSION__}` });
-    expect(sheet).toHaveTextContent(RELEASES[0]!.new?.[0] ?? '');
+    const latest = RELEASES[0]!;
+    const firstNote = [...(latest.new ?? []), ...(latest.improved ?? []), ...(latest.fixed ?? [])][0]!;
+    expect(sheet).toHaveTextContent(firstNote);
     await user.click(screen.getByRole('button', { name: 'Got it' }));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(seenVersion()).toBe(__APP_VERSION__);
