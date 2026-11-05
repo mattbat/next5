@@ -4,6 +4,12 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.2.1 (2026-11-05)
+
+### Fixed
+
+- The “new version is ready” message is no longer blurry: it now appears near the bottom of the screen.
+
 ## 0.2.0 (2026-11-05)
 
 ### New
