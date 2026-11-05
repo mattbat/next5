@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Empty, Info, Jersey, PositionChip, PositionChips, Section, Segmented, TopBar } from '../components/ui';
 import { changedSinceSent, getGame, saveGame, sharedAway, updateGame } from '../data/repo';
+import { shareText } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { benchFor } from '../domain/changes';
+import { planText } from '../domain/planText';
 import { describeError, describeWarning, planGame, segmentLabel, sortLineup, startGame } from '../domain/game';
 import {
   isLineupLocked,
@@ -76,6 +78,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pending, setPending] = useState<(PendingSwap & { apply: () => void }) | null>(null);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const [textMessage, setTextMessage] = useState<string | null>(null);
 
   const names = new Map(roster.map((p) => [p.id, p.name]));
   const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
@@ -503,6 +506,19 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           {notice && view === 'grid' && (
             <p className="hint" role="status">
               {notice.text}
+            </p>
+          )}
+          <button
+            type="button"
+            className="btn secondary wide"
+            onClick={() => void shareText(`next5 plan: ${title}`, planText(game, team, roster)).then(setTextMessage)}
+          >
+            Share plan as text
+          </button>
+          <p className="hint">For Messages, Notes or printing (the share sheet has Print). Skill levels are never included.</p>
+          {textMessage && (
+            <p className="notice" role="status">
+              {textMessage}
             </p>
           )}
         </Section>

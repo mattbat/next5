@@ -145,7 +145,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 
 - **Where we are:** for example "Q2 · Segment 2 of 2" and overall progress (segment 4 of 8).
 - **On court now:** the 5 current players, each with the position they are covering.
-- **Next change:** a list of substitution pairs, each showing ⬆ **IN** player → position ⬇ **OUT** player. For example: "IN Maya → Guard · OUT Ava". Players staying on the court are listed separately and visually de-emphasized. If a staying player is switching positions, that is shown too.
+- **Next change:** a list of substitution pairs, each showing ⬆ **IN** player → position ⬇ **OUT** player. For example: "IN #7 Maya [G] · OUT #12 Ava", where [G] is a position box (see the 2026-11-04 decision on position chips). Players staying on the court are listed separately and visually de-emphasized. If a staying player is switching positions, that is shown too.
 - **Next** button: large and reachable with a thumb.
 
 ### Requirements

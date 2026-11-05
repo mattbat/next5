@@ -4,7 +4,7 @@ import { encodeHandoff, handoffFileName, handoffLink, makeHandoff } from '../dat
 import { getGame, markSent } from '../data/repo';
 import { shareFile, shareLink } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
-import { segmentLabel } from '../domain/game';
+import { formatGameDate, segmentLabel } from '../domain/game';
 import { HelpLink } from '../help/parts';
 
 /**
@@ -33,7 +33,7 @@ export function ShareGameSheet({
     const handoff = await build();
     const url = handoffLink(await encodeHandoff(handoff));
     const title = `next5: ${game.opponent ? `vs ${game.opponent}` : 'game'}`;
-    const outcome = await shareLink(url, title, `${title} on ${game.date}. Tap to open it in next5.`);
+    const outcome = await shareLink(url, title, `${title} on ${formatGameDate(game.date)}. Tap to open it in next5.`);
     if (outcome === 'cancelled') return;
     if (outcome === 'failed') return setError('Couldn’t share or copy the link. Try sending a file instead.');
     await markSent(game.id, handoff.n);

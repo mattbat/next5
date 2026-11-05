@@ -17,6 +17,7 @@ import { db } from '../data/db';
 import { createGame, deleteTeam, setTeamArchived, sharedAway, updateTeam } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
+import { formatGameDate } from '../domain/game';
 import { seasonStats, seasonStatsCsv } from '../domain/stats';
 import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
@@ -181,7 +182,7 @@ function Games({ team, games, hasPlayers }: { team: Team; games: Game[]; hasPlay
             <a className="list-item" href={gamePath(g)}>
               <span className="list-title">
                 {g.opponent ? `vs ${g.opponent}` : 'Game'}
-                <span className="list-sub">{formatDate(g.date)}</span>
+                <span className="list-sub">{formatGameDate(g.date)}</span>
               </span>
               {sharedAway(g) ? (
                 <span className="status status-away">Shared</span>
@@ -271,12 +272,6 @@ function SeasonStats({ team, players, games }: { team: Team; players: Player[]; 
       )}
     </Section>
   );
-}
-
-function formatDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number);
-  if (!y || !m || !d) return iso;
-  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function TeamSettings({ team }: { team: Team }) {

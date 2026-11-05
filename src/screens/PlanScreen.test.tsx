@@ -4,7 +4,7 @@
  */
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { db } from '../data/db';
 import { createDemoTeam, createGame, saveGame, updatePlayer } from '../data/repo';
@@ -84,6 +84,19 @@ describe('stepping through segments', () => {
     await user.click(screen.getByRole('button', { name: 'Open Q3 · 1 of 2' }));
     expect(screen.getByRole('heading', { name: 'Q3 · 1 of 2' })).toBeInTheDocument();
     expect(screen.queryByRole('table')).not.toBeInTheDocument();
+  });
+
+  it('shares the plan as text from the grid (E2)', async () => {
+    const user = userEvent.setup();
+    const share = vi.fn(async (_: ShareData) => {});
+    Object.assign(navigator, { share });
+    await openPlan();
+    await user.click(screen.getByRole('radio', { name: 'Grid' }));
+    await user.click(screen.getByRole('button', { name: 'Share plan as text' }));
+    expect(share).toHaveBeenCalledWith({ title: 'next5 plan: Game plan', text: expect.stringMatching(/^Demo Hoopers: game/) });
+    expect(share.mock.calls[0]![0].text).toMatch(/\nQ4 · 2 of 2: .+\n\nSegments each: /);
+    expect(await screen.findByText('Plan shared.')).toBeInTheDocument();
+    Object.assign(navigator, { share: undefined });
   });
 
   it('is read-only once the game has started', async () => {

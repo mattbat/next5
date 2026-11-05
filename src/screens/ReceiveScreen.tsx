@@ -3,7 +3,7 @@ import { Section, TopBar } from '../components/ui';
 import { decideReceive, decodeHandoff, type GameHandoff, type ReceiveDecision } from '../data/handoff';
 import { getGame, receiveGame } from '../data/repo';
 import type { Game } from '../data/types';
-import { segmentLabel } from '../domain/game';
+import { formatGameDate, segmentLabel } from '../domain/game';
 import { gamePath, navigate, paths } from '../router';
 import { isStandalone } from '../viewport';
 import { HelpLink } from '../help/parts';
@@ -68,7 +68,7 @@ export function ReceiveScreen({ data }: { data: string }) {
       <TopBar title="Shared game" back={paths.teams()} />
       <Section title={game.opponent ? `vs ${game.opponent}` : 'Game'}>
         <p className="hint">
-          {team.name} · {game.date} · {handoff.players.length} players · {progress(game)}
+          {team.name} · {formatGameDate(game.date)} · {handoff.players.length} players · {progress(game)}
         </p>
       </Section>
 

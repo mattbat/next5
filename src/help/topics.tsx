@@ -462,13 +462,13 @@ export const TOPICS: Topic[] = [
             <b>At the top</b>: the segment you’re in (for example <b>Q1 · 2 of 2</b>) and a progress bar for the whole game.
           </li>
           <li>
-            <b>On court</b>: the five playing now, with their positions. Players coming off at the next sub are marked{' '}
-            <b>OUT next</b>.
+            <b>On court</b>: the five playing now, each with a position box (<b>G</b>, <b>F</b> or <b>C</b>). Players
+            coming off at the next sub are marked <b>OUT next</b>.
           </li>
           <li>
-            <b>Next</b>: the sub coming up. Each green <b>▲</b> player goes in at the position shown, for the red{' '}
-            <b>▼</b> player beside them. If someone already on the court changes position, it says so underneath, for
-            example “Emery moves to Forward”.
+            <b>Next</b>: the sub coming up. Each green <b>▲</b> player, with their jersey number, goes in at the position
+            shown, for the red <b>▼</b> player beside them. If someone already on the court changes position, it says so
+            underneath, for example “Emery moves to <b>F</b>”.
           </li>
         </ul>
         <Steps>
@@ -484,8 +484,9 @@ export const TOPICS: Topic[] = [
           </li>
         </Steps>
         <p>
-          The screen stays awake during a game. If the phone locks anyway, a call comes in, or you switch apps, next5
-          opens right where you left off.
+          The screen stays awake during a game. If the phone won’t allow that, the Edit menu says so: set Auto-Lock to
+          Never in the phone’s Settings → Display &amp; Brightness. If the phone locks anyway, a call comes in, or you
+          switch apps, next5 opens right where you left off.
         </p>
         <Tip>
           Overtime? On the last segment tap <b>+ OT</b> to add another lineup, planned with the same rules.
@@ -513,7 +514,8 @@ export const TOPICS: Topic[] = [
         </p>
         <h2>Send in someone else at the next sub</h2>
         <p>
-          Tap a green <b>▲</b> player and pick who goes in instead. Only the next lineup changes.
+          Tap a green <b>▲</b> player and pick who goes in instead. Only the next lineup changes, and a later re-plan
+          keeps your pick.
         </p>
         <h2>Injury, or a player leaves</h2>
         <p>
@@ -534,7 +536,8 @@ export const TOPICS: Topic[] = [
         <p>
           After an injury, rest or arrival, next5 offers to re-plan the segments still to come. A preview shows each
           lineup that changes, with new players highlighted, before you tap <b>Use new plan</b>. It moves as few players as
-          possible and never touches segments already played.
+          possible, keeps your earlier picks and never touches segments already played. If an earlier pick can’t work any
+          more (say the player you sent in is now hurt), the preview says that lineup was made again.
         </p>
         <Shot name="replan" />
         <p>
@@ -544,9 +547,16 @@ export const TOPICS: Topic[] = [
         <h2>The Edit menu</h2>
         <p>
           <b>Edit</b> lists everyone at the game with where they are (on the court, on the bench, resting, out), plus{' '}
-          <b>Re-plan rest of game</b>, <b>+ Add overtime segment</b>, <b>Share game</b> and <b>Game setup</b>.
+          <b>Re-plan rest of game</b>, <b>See full plan</b> (every lineup, starting at the one on the court now),{' '}
+          <b>+ Add overtime segment</b>, <b>Share game</b>, <b>Game setup</b> and <b>End game now</b>.
         </p>
         <Shot name="gameday-menu" />
+        <h2>The game ends early</h2>
+        <p>
+          If time runs out before the plan does, tap <b>Edit</b> → <b>End game now</b> and confirm. The segment on the
+          court counts as played and the rest of the plan isn’t counted. Ended by mistake? <b>↶ Undo end of game</b> on
+          the Final screen picks up where you were.
+        </p>
         <h2>Picking a replacement</h2>
         <p>
           When you choose who goes in, players who can play the open position are listed first, and everyone shows the
@@ -567,7 +577,7 @@ export const TOPICS: Topic[] = [
         <p>After you tap End game, next5 shows a row for each player:</p>
         <ul>
           <li>
-            <b>Plan</b>: segments they had in the plan when the game started.
+            <b>Plan</b>: segments they had in the plan when the game started (up to where it ended, if it ended early).
           </li>
           <li>
             <b>Played</b>: segments they actually played. A sub in the middle of a segment counts for both players. It’s
@@ -577,7 +587,7 @@ export const TOPICS: Topic[] = [
             <b>Sat</b>: segments they sat while available. Time out injured, resting or not yet there isn’t counted.
           </li>
           <li>
-            <b>Positions</b>: where they played, for example <b>G 3 · F 1</b>.
+            <b>Positions</b>: where they played, for example <b>G</b> 3 <b>F</b> 1.
           </li>
         </ul>
         <Shot name="final" />
@@ -711,7 +721,8 @@ export const TOPICS: Topic[] = [
             kept. Nothing is deleted.
           </li>
           <li>
-            <b>Replace everything</b> makes this phone match the backup exactly. You’re asked to confirm first.
+            <b>Replace everything</b> makes this phone match the backup exactly. You’re asked to confirm first, and told
+            which teams on this phone aren’t in the backup and would be deleted.
           </li>
         </ul>
         <Tip title="New phone?">
