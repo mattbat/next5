@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-05 (code review fixes and releases; pinch zoom turned off)
+Last updated: 2026-11-05 (dropped accessibility pass, install count, favorite lineups, cloud backup and sync)
 
 ## 3. Platform and technical
 
@@ -141,7 +141,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Pinch and double-tap zoom are turned off (2026-11-05): the viewport tag, `touch-action` on the page, and cancelling iOS gesture events (unit tested; needs checking on an iPhone). Dynamic Type and VoiceOver are only partly addressed. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
+| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Pinch and double-tap zoom are turned off (2026-11-05): the viewport tag, `touch-action` on the page, and cancelling iOS gesture events (unit tested; needs checking on an iPhone). A full accessibility pass (Dynamic Type, VoiceOver) was dropped (decision 2026-11-05); the existing labels stay. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
 | N1 | 📱 | Not measured on a device. |
 | N2 | ✅ | Tested: well under 1 second (the test allows 3 seconds for CI). |
 | N3 | ✅ | |
@@ -166,7 +166,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 ## 16. Stretch goals
 
-⬜ On hold (decision 2026-11-03): favorite lineups, automatic cloud backup, and real sync. Sharing a game between a coach and an assistant is done (SH1–SH6).
+➖ Dropped (decision 2026-11-05): favorite lineups, automatic cloud backup, and real sync. No server is wanted. Sharing a game between a coach and an assistant is done (SH1–SH6).
 
 ---
 
@@ -185,12 +185,7 @@ In priority order:
 
 Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
 
-- [ ] **Download count: how many people install the app?** Only installs, not taps or screens inside the app (decided 2026-11-04).
-  - **Conflicts with N4** ("No analytics, tracking, or network calls beyond fetching app updates"). Doing this means changing that requirement first, e.g. "one anonymous count per install, nothing else".
-  - A PWA has no app store, so there's no real "download" count. The closest is one anonymous ping the first time next5 opens from the Home Screen (`display-mode: standalone`) on a device.
-  - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
-  - Offline is fine: the app can save the ping and send it next time it's online.
-  - Must never send player names, team names or game data. Kids' data stays on the phone.
+- ➖ **Download count:** dropped (decision 2026-11-05). N4 stays as it is: no analytics or tracking.
 
 ## Small changes requested
 
