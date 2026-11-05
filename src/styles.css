@@ -243,11 +243,6 @@ input[type='date'] {
   margin-top: 40px;
 }
 
-.footnote-link {
-  color: inherit;
-  text-decoration: underline dotted;
-}
-
 .list-item.diag {
   flex-wrap: wrap;
   gap: 2px 12px;
