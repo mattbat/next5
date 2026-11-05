@@ -32,9 +32,7 @@ Success means the coach never has to work out a rotation in her head or on paper
 - Android or desktop-first layouts. These may work, but they are not designed for.
 
 ### Stretch goals (after v1)
-- Several coaches sharing a plan.
-- Syncing data across devices.
-- Saving favorite lineups: groups of 5 that play well together, which the coach can reuse (see §16).
+~~Several coaches sharing a plan, syncing data across devices, and favorite lineups~~: dropped on 2026-11-05 (see §16 and the decisions log). Sharing a single game with an assistant is done (SH1–SH6).
 
 ## 3. Platform and technical constraints
 
@@ -220,7 +218,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 - Feels native to iOS: system font (SF Pro), iOS-style navigation and bottom sheets, and no accidental zoom, text selection, or pull-to-refresh on game-day screens.
 - Tap targets of at least 44 pt. The main game-day actions sit within thumb reach.
 - Every game-day action takes at most 2 taps. The Next action takes exactly 1.
-- Supports Dynamic Type sizes and VoiceOver labels.
+- ~~Supports Dynamic Type sizes and VoiceOver labels.~~ Dropped 2026-11-05: the existing labels stay, but a full accessibility pass isn't planned.
 - Polished, purpose-built feel, including a professionally designed Home Screen icon and splash screen.
 - Destructive actions (delete team, replace data) ask for confirmation.
 
@@ -272,7 +270,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 
 ## 16. Stretch goals
 
-These are out of scope for v1, but v1 should be designed so they can be added later.
+**Dropped on 2026-11-05:** favorite lineups, automatic cloud backup, and sync between coaches or devices. next5 stays serverless: backups are files and games are shared by link or file. The notes below are kept for reference only.
 
 ### Favorite lineups
 - **Save a favorite:** mark any lineup of 5 as a favorite, from the plan grid, the Game Day screen, or a past game. It can optionally be named (for example "Closers" or "Press break") and its position assignments are saved with it.
@@ -320,6 +318,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-04 | The first-run guide (H-3) is a few skippable intro cards ending in "Try the demo team" or "Set up my own team", replayable from Help. A full in-app guide (H-8) is added, reached from the Teams screen, Settings and "?" links on screens. Screenshots are taken automatically from the demo team in both themes. |
 | 2026-11-04 | Code review follow-ups. Positions are shown as G / F / C boxes wherever a position stands on its own (Game Day, the plan, the roster, stats); sentences, warnings and VoiceOver use the full words. A game can be ended early from the Game Day Edit menu (D9). The plan can be seen read-only during a game (Edit → See full plan) and shared as text. Sending in someone else at the next sub is kept as locks, and a re-plan drops locks that can no longer work instead of failing. Received backups and games are checked for damage before anything is saved. |
+| 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
 | 2026-11-04 | Releases (REL1–REL4): semantic versions, chosen with the user; a changelog note in every pull request; deploys happen only on a release, not on every merge. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
