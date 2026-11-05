@@ -327,7 +327,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | # | Question | Default assumption until decided |
 |---|----------|----------------------------------|
 | Q1 | Roster sizes for the 8U and 12U teams? | Typically 8–12. Design and test for 6–15 |
-| Q2 | Should equal playing time balance across the season, so that players who got fewer segments last game get the extra segments next game? | TBD. Build it as an option inside R1 that is off by default |
+| Q2 | Should equal playing time balance across the season, so that players who got fewer segments last game get the extra segments next game? | Decided 2026-11-05: no. Each game is balanced on its own; the Stats tab shows who's been short so the coach can lock them in. |
 | Q3 | Should position coverage be on for 8U? | Configurable per team |
 | Q4 | Are some players restricted at the league level (for example a maximum number of segments)? | No |
 | Q5 | Are the skill level names (Rising / Steady / Go-To) right? | Yes |

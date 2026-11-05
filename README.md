@@ -173,17 +173,25 @@ src/
     analyze.ts      scores plans and produces warnings
     positions.ts    position coverage (bipartite matching) and assignment
     substitutions.ts  works out IN/OUT pairs between two lineups
-  domain/       Game logic shared by screens: labels, Next/Undo, stats (game.ts)
-                and game-day changes: swaps, statuses, re-plan, overtime (changes.ts)
+  domain/       Game logic shared by screens: labels, Next/Undo, ending early (game.ts),
+                plan editing: locks, swaps, redo (planning.ts), game-day changes: swaps,
+                statuses, re-plan, overtime (changes.ts), stats and CSV (stats.ts),
+                the plan as text (planText.ts)
   data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts),
                 backup files and restore (backup.ts), share sheet / download (share.ts),
-                handing a game to the assistant by link or file (handoff.ts)
+                handing a game to the assistant by link or file (handoff.ts), checks on
+                files and links from outside (validate.ts), What's new (whatsNew.ts)
   screens/      One component per screen
-  components/   Shared UI (top bar, toggles, sheets, update banner, install hint, first-run intro)
+  components/   Shared UI (top bar, toggles, sheets, G/F/C position chips, update banner,
+                What's new, install hint, first-run intro)
   help/         The in-app guide: topics (topics.tsx), screenshot list (shots.ts), intro state
-  hooks/        useGameData, useWakeLock
+  hooks/        useGameData, useWakeLock, useInLiveGame
+  changelog.json  Release notes the app shows (written by npm run release)
 e2e/            Playwright tests
 scripts/screens/  Takes the help screenshots (npm run screenshots)
+scripts/release.mjs  Releases and the changelog check (npm run release)
+changes/        Changelog notes waiting for the next release
+CHANGELOG.md    What changed in each release
 public/help/    Help screenshots, <name>-dark.webp and <name>-light.webp
 docs/STATUS.md  Which requirements are done
 REQUIREMENTS.md The spec
