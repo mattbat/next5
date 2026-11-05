@@ -18,6 +18,11 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${PORT}/next5/`,
     trace: 'retain-on-failure',
+    // Start past the first-run intro; e2e/help.spec.ts tests it from a fresh phone.
+    storageState: {
+      cookies: [],
+      origins: [{ origin: `http://localhost:${PORT}`, localStorage: [{ name: 'next5.introSeen', value: '1' }] }],
+    },
   },
   projects: [
     {

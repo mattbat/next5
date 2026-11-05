@@ -6,6 +6,7 @@ import type { Game } from '../data/types';
 import { segmentLabel } from '../domain/game';
 import { gamePath, navigate, paths } from '../router';
 import { isStandalone } from '../viewport';
+import { HelpLink } from '../help/parts';
 
 type State =
   | { kind: 'loading' }
@@ -118,6 +119,10 @@ export function ReceiveScreen({ data }: { data: string }) {
           </button>
         </div>
       )}
+
+      <p className="hint">
+        <HelpLink topic="share">How sharing works</HelpLink>
+      </p>
 
       {!inApp && decision.kind !== 'older' && (
         <Section title="Using the next5 app?">

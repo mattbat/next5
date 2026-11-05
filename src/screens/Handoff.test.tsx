@@ -8,6 +8,7 @@ import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { db } from '../data/db';
+import { markIntroSeen } from '../help/intro';
 import { dataFromText, encodeHandoff, makeHandoff, type GameHandoff } from '../data/handoff';
 import { createDemoTeam, createGame, saveGame } from '../data/repo';
 import type { Game } from '../data/types';
@@ -23,6 +24,8 @@ let clipboard = '';
 beforeEach(async () => {
   await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
   localStorage.clear();
+  // The first-run intro has its own tests (Help.test.tsx).
+  markIntroSeen();
   sharedLinks.length = 0;
   sharedFiles.length = 0;
   clipboard = '';

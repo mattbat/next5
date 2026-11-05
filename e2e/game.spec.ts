@@ -111,7 +111,7 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   await page.getByRole('link', { name: /vs Rockets/ }).click();
   await expect(page.getByRole('heading', { name: 'Final' })).toBeVisible();
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(10);
-  await page.getByRole('link', { name: 'Back' }).click();
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
 
   // Season stats (S4): every player, including Kai who missed the game.
   await page.getByRole('radio', { name: 'Stats' }).click();
@@ -214,6 +214,6 @@ test('archives a team and brings it back (M1)', async ({ page }) => {
   await expect(page.getByRole('complementary', { name: 'Archived team' })).toBeVisible();
   await expectNoHorizontalScroll(page);
   await page.getByRole('button', { name: 'Unarchive' }).click();
-  await page.getByRole('link', { name: 'Back' }).click();
+  await page.getByRole('link', { name: 'Back', exact: true }).click();
   await expect(page.getByRole('link', { name: /Demo Hoopers/ })).toBeVisible();
 });

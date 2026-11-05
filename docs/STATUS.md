@@ -4,9 +4,9 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Legend:** ✅ Done · 🟡 Partial · ⬜ Not started · ➖ Dropped · 📱 Needs checking on a real iPhone
 
-**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), and archiving teams (M1). **Next:** see "Proposed next milestones" at the bottom of this file.
+**Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-04 (game-day swaps kept as locks, See full plan)
+Last updated: 2026-11-04 (code review fixes; Update button fix, backup before updating)
 
 ## 3. Platform and technical
 
@@ -109,6 +109,7 @@ Last updated: 2026-11-04 (game-day swaps kept as locks, See full plan)
 | B2 | ✅ | Settings → **Restore from a backup file** shows what's in it, then **Merge** (adds what's missing; the more recently changed copy wins; deletes nothing) or **Replace everything** (after confirming). Bad files are explained and change nothing. Backups from older versions are upgraded on restore. |
 | B3 | ✅ | Teams screen reminder when there's a team and no backup, or the last one is over 30 days old. **Later** snoozes it for a week. |
 | B4 | ✅ | Settings shows the version, links to Diagnostics, and has **Check for updates** (the app also checks hourly). |
+| B5 | ✅ | **Update** asks "Back up, then update" or "Update without a backup", unless there are no teams or a backup was made in the last day. If the backup is cancelled, nothing is updated. |
 
 ### Sharing a game with an assistant
 
@@ -127,13 +128,14 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| H-1 | 🟡 | The coach section of the README is written. Screenshots wait until the app is more polished, so they don't need redoing (decision 2026-11-03). |
+| H-1 | ✅ | The coach section of the README, now with screenshots and a pointer to the in-app guide. The screenshots are the same images the app uses (`public/help/`), taken by `npm run screenshots`, so they're easy to retake when screens change. |
 | H-2 | ✅ | The developer section of the README, including how the engine works. |
-| H-3 | ⬜ | First-run walkthrough. For now, the empty states and "Load demo team" stand in for it. |
-| H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid. |
+| H-3 | ✅ | Six skippable intro cards on first open (only when there are no teams yet), with screenshots: what next5 does, the roster, generating a plan, swaps and locks, game day, and data on the phone. Swipe or Next/Back. The last card offers **Try the demo team**, **Set up my own team** and **Read the full guide**. Seen once per device; **Help → Replay the intro** shows it again; Skip or Done returns to the page it was replayed from, and help's Done then skips past the intro. 📱 Swiping needs checking on an iPhone. |
+| H-4 | ✅ | ⓘ explanations for rules, skill levels, the position requirement and the grid, plus **?** links to the matching help topic on the plan, game setup, roster, team rules, stats, the Game Day Edit menu, the share sheet, a received game, the Final screen and Settings → Back up. |
 | H-5 | ✅ | Plain-language errors and warnings. |
 | H-6 | ✅ | |
 | H-7 | ✅ | |
+| H-8 | ✅ 📱 | **Help** on the Teams screen (top left) and **Settings → Help and guide** open 16 topics in six groups: getting started (quick start, words next5 uses, installing, teams and players, team settings), before the game (planning, reading the plan, changing it, how the rotation is built), game day (running a game, when things change), after the game (summary and season stats), sharing and data (sharing with an assistant, backups, appearance and updates) and questions. Each topic has screenshots in the current theme (tap to enlarge) and Previous/Next links. **‹** goes back one page, like Safari’s back, and **Done** closes help, returning to the screen it was opened from however many topics were read. A team reopens on the tab you left it on (for this visit), so help opened from the Roster tab returns to the Roster tab. The 36 images (18 screens × 2 themes, WebP, about 1.2 MB) are precached, so help works offline. Needs reading through on an iPhone. |
 
 ## 13–14. Design, quality and tests
 
@@ -170,6 +172,21 @@ In priority order:
 5. ~~Light theme (D10)~~ Done. ~~Archive teams (M1)~~ Done. Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
 6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
 
+## Ideas to discuss
+
+Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
+
+- [ ] **Download count: how many people install the app?** Only installs, not taps or screens inside the app (decided 2026-11-04).
+  - **Conflicts with N4** ("No analytics, tracking, or network calls beyond fetching app updates"). Doing this means changing that requirement first, e.g. "one anonymous count per install, nothing else".
+  - A PWA has no app store, so there's no real "download" count. The closest is one anonymous ping the first time next5 opens from the Home Screen (`display-mode: standalone`) on a device.
+  - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
+  - Offline is fine: the app can save the ping and send it next time it's online.
+  - Must never send player names, team names or game data. Kids' data stays on the phone.
+- [ ] **Top edge of text looks a little blurry.** Screenshot checked 2026-11-04 (Teams screen, dark theme, Home Screen app). next5 adds no blur itself (no `backdrop-filter`, `filter` or `text-shadow` near the top). The screenshot shows a faint lighter haze behind the middle of the top row (Help · next5 · Settings), from just under the clock down to about the top row's text. Its shape points to iOS drawing its own soft edge under the status bar. The app draws content up there (`viewport-fit=cover` with the `black-translucent` status bar), so the top row sits inside that haze. Plan for later, cheapest first:
+  1. Push the top row a little lower (more padding than `--safe-top + 4px`) so it sits clear of the haze. Compare before and after screenshots on the iPhone.
+  2. If that's not enough, give the top bar a solid background that reaches up behind the status bar.
+  3. Last resort: switch the status bar style from `black-translucent` to `default`, so iOS stops drawing content under the status bar (the app's top bar moves down below it).
+
 ## Small changes requested
 
 - [x] **Edit or delete a started game:** **Game setup** (opponent, date, Delete game) is reachable at any stage: plan → **Setup**, Game Day → **Edit** → **Game setup**, or the Final screen. Once the game has started, attendance, format and rules are hidden there, since they can't change. Deleting a started or finished game asks first and warns that its stats go too. (Requested 2026-11-03.)
@@ -177,4 +194,6 @@ In priority order:
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Stats was added after Roster on 2026-11-03: Games, Roster, Stats, Settings. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
+- [x] **"Something went wrong. Script error." banner when tapping Share in Safari:** a script that isn't next5's (Safari's Share sheet, or an extension) threw an error, which browsers report only as "Script error." with no details. The error banner now ignores those, and still shows next5's own errors. (Reported 2026-11-04.) 📱 Check on the deployed site.
+- [x] **Update button did nothing until the app was force-closed:** after **Update**, the app waited for a signal from the phone that the new version had taken over, and in the iPhone Home Screen app that signal doesn't always come. It now reloads when the new version takes over, or after 3 seconds at most, and the button shows **Updating…**. Not caused by the help pages or intro. In Chrome the update worked both before and after the fix. The iPhone case can't be tested here (no Safari). (Reported 2026-11-04.) 📱 Check on the deployed site: the next update should apply with one tap.
 - [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)

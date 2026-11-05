@@ -21,8 +21,31 @@ import { seasonStats, seasonStatsCsv } from '../domain/stats';
 import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
 import { RULE_HELP } from './ruleHelp';
+import { HelpLink } from '../help/parts';
 
 type Tab = 'games' | 'roster' | 'stats' | 'settings';
+
+const TAB_KEY = 'next5.teamTab.';
+
+/** The tab last open on this team during this visit; Games the first time. */
+function lastTab(teamId: string): Tab {
+  try {
+    const tab = sessionStorage.getItem(TAB_KEY + teamId);
+    if (tab === 'roster' || tab === 'stats' || tab === 'settings') return tab;
+  } catch {
+    // Storage unavailable.
+  }
+  return 'games';
+}
+
+/** Opens the team on Games next time, e.g. after archiving or deleting it from Settings. */
+function forgetTab(teamId: string): void {
+  try {
+    sessionStorage.removeItem(TAB_KEY + teamId);
+  } catch {
+    // Storage unavailable.
+  }
+}
 
 export function TeamScreen({ teamId }: { teamId: string }) {
   // null = not found; undefined = still loading.
@@ -32,7 +55,16 @@ export function TeamScreen({ teamId }: { teamId: string }) {
     () => db.games.where('teamId').equals(teamId).reverse().sortBy('date'),
     [teamId],
   );
-  const [tab, setTab] = useState<Tab>('games');
+  // Coming back to the team (from a player, a game or help) opens the tab you left.
+  const [tab, setTabState] = useState<Tab>(() => lastTab(teamId));
+  const setTab = (next: Tab) => {
+    setTabState(next);
+    try {
+      sessionStorage.setItem(TAB_KEY + teamId, next);
+    } catch {
+      // Storage unavailable: the tab just isn't remembered.
+    }
+  };
 
   if (team === undefined || players === undefined) return <main className="screen" />;
   if (team === null) {
@@ -90,6 +122,9 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
       }
     >
       {players.length === 0 && <Empty>No players yet. Tap + Add to build your roster.</Empty>}
+      <p className="hint">
+        <HelpLink topic="roster">Positions and skill levels</HelpLink>
+      </p>
       <ul className="list">
         {players.map((p) => (
           <li key={p.id}>
@@ -188,7 +223,7 @@ function SeasonStats({ team, players, games }: { team: Team; players: Player[]; 
         <Empty>No finished games yet. Stats appear here after your first game ends.</Empty>
       ) : (
         <p className="hint">
-          From {finished} finished game{finished === 1 ? '' : 's'}.
+          From {finished} finished game{finished === 1 ? '' : 's'}. <HelpLink topic="final">Reading stats</HelpLink>
         </p>
       )}
       {finished > 0 && (
@@ -314,7 +349,7 @@ function TeamSettings({ team }: { team: Team }) {
         </div>
       </Section>
 
-      <Section title="Default rules">
+      <Section title="Default rules" aside={<HelpLink topic="rules">How rules work</HelpLink>}>
         {(Object.keys(RULE_HELP) as (keyof typeof RULE_HELP)[]).map((key) => (
           <Toggle
             key={key}
@@ -334,7 +369,10 @@ function TeamSettings({ team }: { team: Team }) {
           className="btn secondary wide"
           onClick={() => {
             void setTeamArchived(team.id, !team.archived);
-            if (!team.archived) navigate(paths.teams());
+            if (!team.archived) {
+              forgetTab(team.id);
+              navigate(paths.teams());
+            }
           }}
         >
           {team.archived ? 'Unarchive team' : 'Archive team'}
@@ -352,6 +390,7 @@ function TeamSettings({ team }: { team: Team }) {
           className="btn danger wide"
           onClick={() => {
             if (window.confirm(`Delete ${team.name} with all its players and games? This can't be undone.`)) {
+              forgetTab(team.id);
               void deleteTeam(team.id).then(() => navigate(paths.teams()));
             }
           }}

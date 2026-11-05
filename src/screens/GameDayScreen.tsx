@@ -23,6 +23,7 @@ import { gameStats, gameStatsCsv } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
+import { HelpLink } from '../help/parts';
 import { ShareGameSheet } from './ShareGameSheet';
 import { confirmTakeBack, sharedAt } from './shareText';
 import { paths } from '../router';
@@ -465,7 +466,8 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
           Segments played out of {game.played.length}. Plan is the plan when the game started; Sat counts only segments
           the player was available for.
           {endedEarly(game) &&
-            ` The game ended early, after ${segmentLabel(game.format, game.played.length - 1).text}, so Plan counts only up to there.`}
+            ` The game ended early, after ${segmentLabel(game.format, game.played.length - 1).text}, so Plan counts only up to there.`}{' '}
+          <HelpLink topic="final">Reading this table</HelpLink>
         </p>
         <div className="grid-scroll">
           <table className="stats-table">

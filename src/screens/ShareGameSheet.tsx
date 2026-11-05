@@ -5,6 +5,7 @@ import { getGame, markSent } from '../data/repo';
 import { shareFile, shareLink } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { segmentLabel } from '../domain/game';
+import { HelpLink } from '../help/parts';
 
 /**
  * Share a game with the other phone at any point (SH1, SH2): as a link for
@@ -59,7 +60,9 @@ export function ShareGameSheet({
         </button>
         <p className="hint">When you’re standing together. Works with no signal. Also saves to Files.</p>
       </div>
-      <p className="hint">{whatHappens(game)}</p>
+      <p className="hint">
+        {whatHappens(game)} <HelpLink topic="share">More about sharing</HelpLink>
+      </p>
       {error && (
         <p className="error" role="alert">
           {error}

@@ -4,6 +4,7 @@ import { Info, Section, Segmented, TopBar } from '../components/ui';
 import { db } from '../data/db';
 import {
   backUp,
+  formatBackupDate,
   lastBackupAt,
   parseBackup,
   restoreBackup,
@@ -13,11 +14,7 @@ import {
 } from '../data/backup';
 import { paths } from '../router';
 import { setThemePreference, themePreference, type ThemePreference } from '../theme';
-
-function formatWhen(time: number | null): string {
-  if (time === null) return 'Never';
-  return new Date(time).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-}
+import { HelpLink } from '../help/parts';
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -107,6 +104,15 @@ export function SettingsScreen() {
         </p>
       )}
 
+      <Section title="Help">
+        <a className="btn secondary wide" href={paths.help()}>
+          Help and guide
+        </a>
+        <p className="hint">
+          How every part of next5 works, with pictures. <a href={paths.welcome()}>Replay the intro</a>.
+        </p>
+      </Section>
+
       <Section
         title="Back up"
         aside={
@@ -117,11 +123,13 @@ export function SettingsScreen() {
           </Info>
         }
       >
-        <p className="hint">Last backup: {formatWhen(last)}</p>
+        <p className="hint">Last backup: {formatBackupDate(last)}</p>
         <button type="button" className="btn wide" onClick={() => void onBackUp()}>
           Back up all teams
         </button>
-        <p className="hint">To back up one team, use the Settings tab on that team.</p>
+        <p className="hint">
+          To back up one team, use the Settings tab on that team. <HelpLink topic="backup">About backups</HelpLink>
+        </p>
       </Section>
 
       <Section title="Restore">
