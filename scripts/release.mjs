@@ -103,9 +103,11 @@ function check(base) {
 
 /** Prints the version when this push raised it (a release to deploy), or nothing. */
 function released(before) {
+  // No earlier commit to compare with (a manual run): not a release.
+  if (!before || /^0+$/.test(before)) return;
   const version = readJson('package.json').version;
-  const previous = /^0+$/.test(before ?? '') ? null : versionAt(before);
-  if (previous === null || compareVersions(version, previous) > 0) console.log(version);
+  const previous = versionAt(before);
+  if (previous !== null && compareVersions(version, previous) > 0) console.log(version);
 }
 
 function releaseNotes(version) {

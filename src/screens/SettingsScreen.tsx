@@ -15,6 +15,9 @@ import {
 import { paths } from '../router';
 import { setThemePreference, themePreference, type ThemePreference } from '../theme';
 import { HelpLink } from '../help/parts';
+import { ReleaseNotes } from '../components/WhatsNew';
+import { RELEASES } from '../data/whatsNew';
+import { formatGameDate } from '../domain/game';
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -28,6 +31,7 @@ export function SettingsScreen() {
   const [pending, setPending] = useState<Backup | null>(null);
   const [last, setLast] = useState(lastBackupAt);
   const localTeams = useLiveQuery(() => db.teams.toArray());
+  const [showAllReleases, setShowAllReleases] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const show = (text: string) => {
@@ -205,6 +209,29 @@ export function SettingsScreen() {
           next5 version {__APP_VERSION__} · <a href={paths.diagnostics()}>Diagnostics</a>
         </p>
       </Section>
+
+      {RELEASES.length > 0 && (
+        <Section title="What’s new">
+          {RELEASES.slice(0, showAllReleases ? undefined : 1).map((release) => (
+            <div key={release.version} className="release">
+              <p className="release-head">
+                <b>{release.version}</b> · {formatGameDate(release.date)}
+              </p>
+              <ReleaseNotes release={release} />
+            </div>
+          ))}
+          {RELEASES.length > 1 && (
+            <button
+              type="button"
+              className="link"
+              aria-expanded={showAllReleases}
+              onClick={() => setShowAllReleases(!showAllReleases)}
+            >
+              {showAllReleases ? 'Show only the latest' : `Show earlier versions (${RELEASES.length - 1})`}
+            </button>
+          )}
+        </Section>
+      )}
     </main>
   );
 }

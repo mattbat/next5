@@ -25,6 +25,7 @@ function measure(css: string): number {
 
 function readings(): [string, string][] {
   return [
+    ['Version', `${__APP_VERSION__} (${__COMMIT__})`],
     ['Build', __BUILD_TIME__],
     ['Running as app (Home Screen)', isStandalone() ? 'yes' : 'no'],
     ['Secure page (https)', window.isSecureContext ? 'yes' : 'no'],
