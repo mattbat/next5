@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Section, TopBar } from '../components/ui';
+import { lastError } from '../errorLog';
 import { paths } from '../router';
 import { appHeight, isStandalone } from '../viewport';
 
@@ -23,9 +24,18 @@ function measure(css: string): number {
   return height;
 }
 
+/** The last unexpected error, and whether the error banner showed it. */
+function describeLastError(): string {
+  const e = lastError();
+  if (!e) return 'none';
+  const when = new Date(e.at).toLocaleString();
+  return `${e.message} (from ${e.source}, ${e.shown ? 'shown' : 'not shown'}, ${when})`;
+}
+
 function readings(): [string, string][] {
   return [
     ['Build', __BUILD_TIME__],
+    ['Last error', describeLastError()],
     ['Running as app (Home Screen)', isStandalone() ? 'yes' : 'no'],
     ['Secure page (https)', window.isSecureContext ? 'yes' : 'no'],
     ['Screen size', `${window.screen.width} × ${window.screen.height}`],

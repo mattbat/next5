@@ -6,6 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
+Last updated: 2026-11-04 (error banner ignores other scripts' errors)
 Last updated: 2026-11-05 (top row moved clear of the iOS status bar haze)
 
 ## 3. Platform and technical
