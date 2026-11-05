@@ -62,7 +62,7 @@ export function DiagnosticsScreen() {
 
   return (
     <main className="screen">
-      <TopBar title="Diagnostics" back={paths.teams()} />
+      <TopBar title="Diagnostics" back={paths.settings()} />
       <Section title="This device">
         <ul className="list">
           {rows.map(([label, value]) => (
