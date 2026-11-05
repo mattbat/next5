@@ -1,5 +1,28 @@
 [
   {
+    "version": "0.2.0",
+    "date": "2026-11-05",
+    "new": [
+      "End a game early when time runs out: Edit → End game now. Only the segments played count, and Undo end of game brings it back.",
+      "See the whole plan during a game: Edit → See full plan opens it at the lineup on the court now.",
+      "Share the plan as text from the Grid view, for Messages, Notes or printing.",
+      "See what changed in each update: a short note after updating, and Settings → What’s new."
+    ],
+    "improved": [
+      "Shared games show dates like “Sat, Nov 7”.",
+      "Jersey numbers in the IN and OUT pairs, and a warning when two players have the same name.",
+      "Positions show as G, F and C boxes on Game Day, the plan, the roster and the stats, and the bench shows what each player can play.",
+      "Replace everything names any teams on this phone that aren’t in the backup and would be deleted.",
+      "next5 says when the phone won’t keep the screen on, and how to set Auto-Lock to Never."
+    ],
+    "fixed": [
+      "Balance skill now judges players at the position they’re shown at, so it no longer warns about lineups it could have avoided.",
+      "A damaged backup file or shared game is turned away with a message instead of causing problems later.",
+      "Sending in someone else at the next sub now sticks when you re-plan later, and a re-plan never gets stuck on an earlier pick.",
+      "The update message no longer appears during a game after moving between screens."
+    ]
+  },
+  {
     "version": "0.1.0",
     "date": "2026-11-04",
     "new": [
