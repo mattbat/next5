@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
-import { appHeight, isStandalone, trackAppHeight } from './viewport';
+import { appHeight, blockZoom, isStandalone, trackAppHeight } from './viewport';
 
 function setWindow({ inner, screenHeight, standalone }: { inner: [number, number]; screenHeight: number; standalone: boolean }) {
   vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(inner[0]);
@@ -43,6 +43,34 @@ describe('appHeight', () => {
     window.dispatchEvent(new Event('resize'));
     expect(document.documentElement.style.getPropertyValue('--app-height')).toBe('700px');
     stop();
+  });
+});
+
+describe('blockZoom', () => {
+  function touchMove(fingers: number): Event {
+    const e = new Event('touchmove', { cancelable: true });
+    Object.defineProperty(e, 'touches', { value: { length: fingers } });
+    return e;
+  }
+
+  it('cancels pinch gestures and two-finger moves but not one-finger scrolling', () => {
+    const stop = blockZoom();
+    const pinch = new Event('gesturestart', { cancelable: true });
+    document.dispatchEvent(pinch);
+    expect(pinch.defaultPrevented).toBe(true);
+
+    const twoFingers = touchMove(2);
+    document.dispatchEvent(twoFingers);
+    expect(twoFingers.defaultPrevented).toBe(true);
+
+    const oneFinger = touchMove(1);
+    document.dispatchEvent(oneFinger);
+    expect(oneFinger.defaultPrevented).toBe(false);
+
+    stop();
+    const after = new Event('gesturechange', { cancelable: true });
+    document.dispatchEvent(after);
+    expect(after.defaultPrevented).toBe(false);
   });
 });
 

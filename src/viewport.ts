@@ -21,6 +21,25 @@ export function appHeight(): number {
   return inner;
 }
 
+/**
+ * Stops pinch-to-zoom. iOS ignores `user-scalable=no` in the viewport meta
+ * tag, so cancel WebKit's gesture events and any two-finger touch move.
+ * One-finger scrolling is untouched.
+ */
+export function blockZoom(): () => void {
+  const cancel = (e: Event) => e.preventDefault();
+  const cancelMultiTouch = (e: TouchEvent) => {
+    if (e.touches.length > 1) e.preventDefault();
+  };
+  const gestures = ['gesturestart', 'gesturechange', 'gestureend'];
+  gestures.forEach((g) => document.addEventListener(g, cancel, { passive: false }));
+  document.addEventListener('touchmove', cancelMultiTouch, { passive: false });
+  return () => {
+    gestures.forEach((g) => document.removeEventListener(g, cancel));
+    document.removeEventListener('touchmove', cancelMultiTouch);
+  };
+}
+
 export function trackAppHeight(): () => void {
   const update = () => document.documentElement.style.setProperty('--app-height', `${appHeight()}px`);
   update();
