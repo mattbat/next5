@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-05 (dropped accessibility pass, install count, favorite lineups, cloud backup and sync)
+Last updated: 2026-11-05 (dropped accessibility pass, splash screen, install count, favorite lineups, cloud backup and sync)
 
 ## 3. Platform and technical
 
@@ -141,7 +141,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Pinch and double-tap zoom are turned off (2026-11-05): the viewport tag, `touch-action` on the page, and cancelling iOS gesture events (unit tested; needs checking on an iPhone). A full accessibility pass (Dynamic Type, VoiceOver) was dropped (decision 2026-11-05); the existing labels stay. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
+| Design and UX | ✅ 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Pinch and double-tap zoom are turned off (2026-11-05): the viewport tag, `touch-action` on the page, and cancelling iOS gesture events (unit tested; needs checking on an iPhone). A full accessibility pass (Dynamic Type, VoiceOver) was dropped (decision 2026-11-05); the existing labels stay. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen dropped (decision 2026-11-05): the app opens fast enough without one. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
 | N1 | 📱 | Not measured on a device. |
 | N2 | ✅ | Tested: well under 1 second (the test allows 3 seconds for CI). |
 | N3 | ✅ | |

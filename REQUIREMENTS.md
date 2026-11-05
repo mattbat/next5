@@ -219,7 +219,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 - Tap targets of at least 44 pt. The main game-day actions sit within thumb reach.
 - Every game-day action takes at most 2 taps. The Next action takes exactly 1.
 - ~~Supports Dynamic Type sizes and VoiceOver labels.~~ Dropped 2026-11-05: the existing labels stay, but a full accessibility pass isn't planned.
-- Polished, purpose-built feel, including a professionally designed Home Screen icon and splash screen.
+- Polished, purpose-built feel, including a professionally designed Home Screen icon. (A splash screen was dropped on 2026-11-05: the app opens from the phone's cache fast enough not to need one.)
 - Destructive actions (delete team, replace data) ask for confirmation.
 
 ## 14. Non-functional requirements
@@ -318,7 +318,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-04 | The first-run guide (H-3) is a few skippable intro cards ending in "Try the demo team" or "Set up my own team", replayable from Help. A full in-app guide (H-8) is added, reached from the Teams screen, Settings and "?" links on screens. Screenshots are taken automatically from the demo team in both themes. |
 | 2026-11-04 | Code review follow-ups. Positions are shown as G / F / C boxes wherever a position stands on its own (Game Day, the plan, the roster, stats); sentences, warnings and VoiceOver use the full words. A game can be ended early from the Game Day Edit menu (D9). The plan can be seen read-only during a game (Edit → See full plan) and shared as text. Sending in someone else at the next sub is kept as locks, and a re-plan drops locks that can no longer work instead of failing. Received backups and games are checked for damage before anything is saved. |
-| 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
+| 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), a splash screen (the app opens fast enough without one), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
 | 2026-11-04 | Releases (REL1–REL4): semantic versions, chosen with the user; a changelog note in every pull request; deploys happen only on a release, not on every merge. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
