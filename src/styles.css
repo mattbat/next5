@@ -1624,11 +1624,13 @@ button.sub-in {
   margin-top: 16px;
 }
 
-/* Update banner */
+/* Update banner. It sits near the bottom, above the screen's own buttons:
+   pinned near the top, iOS's haze under the clock and battery made it look
+   blurry on an iPhone (2026-11-05). */
 
 .update-banner {
   position: fixed;
-  top: calc(var(--safe-top) + 8px);
+  bottom: calc(var(--safe-bottom) + 96px);
   left: 12px;
   right: 12px;
   z-index: 30;
