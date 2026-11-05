@@ -88,7 +88,7 @@ describe('stepping through segments', () => {
 
   it('shares the plan as text from the grid (E2)', async () => {
     const user = userEvent.setup();
-    const share = vi.fn(async (_: ShareData) => {});
+    const share = vi.fn(async (data: ShareData) => void data);
     Object.assign(navigator, { share });
     await openPlan();
     await user.click(screen.getByRole('radio', { name: 'Grid' }));
