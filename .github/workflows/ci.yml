@@ -1,7 +1,11 @@
-# CI for next5 (REQUIREMENTS.md Q-6).
+# CI for next5 (REQUIREMENTS.md Q-6, REL1–REL4).
 # Every push and pull request: lint → type-check → unit/property tests with
-# coverage → build → end-to-end tests. Pushes to main then deploy to GitHub
-# Pages, but only if every earlier job passed.
+# coverage → build → end-to-end tests. Pull requests also need a changelog
+# note (or the no-changelog label). Merging isn't releasing: a push to main
+# deploys to GitHub Pages only when it raises the version (a release made with
+# `npm run release`), and only if every earlier job passed. That push is also
+# tagged vX.Y.Z with a GitHub release. Running the workflow by hand on main
+# redeploys main as it is.
 name: CI
 
 on:
@@ -33,6 +37,40 @@ jobs:
           name: coverage
           path: coverage/
           retention-days: 14
+
+  changelog:
+    name: Changelog note
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # A note in changes/ for any change to the app, or a complete release.
+      - run: node scripts/release.mjs --check "origin/${{ github.base_ref }}"
+        env:
+          NO_CHANGELOG: ${{ contains(github.event.pull_request.labels.*.name, 'no-changelog') }}
+
+  release:
+    name: Is this a release?
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      # Prints the version only when this push raised it.
+      - id: version
+        if: github.event_name == 'push'
+        run: echo "version=$(node scripts/release.mjs --released '${{ github.event.before }}')" >> "$GITHUB_OUTPUT"
 
   e2e:
     name: End-to-end (WebKit, iPhone size)
@@ -69,11 +107,11 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    needs: [test, e2e]
+    if: needs.release.outputs.version != '' || github.event_name == 'workflow_dispatch'
+    needs: [test, e2e, release]
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       pages: write
       id-token: write
     environment:
@@ -93,3 +131,11 @@ jobs:
           path: dist
       - id: deployment
         uses: actions/deploy-pages@v4
+      # Tag the release and publish its changelog section as a GitHub release.
+      - if: needs.release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          node scripts/release.mjs --notes "$VERSION" > release-notes.md
+          gh release create "v$VERSION" --target "$GITHUB_SHA" --title "next5 $VERSION" --notes-file release-notes.md

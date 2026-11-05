@@ -52,6 +52,28 @@ export async function shareLink(url: string, title: string, text: string): Promi
   }
 }
 
+/**
+ * Hands plain text to the user (E2): the share sheet on iPhone (Messages,
+ * Notes, Mail, Print...), or the clipboard where sharing isn't supported.
+ * Says what happened, for a status message.
+ */
+export async function shareText(title: string, text: string): Promise<string> {
+  if (typeof navigator.share === 'function') {
+    try {
+      await navigator.share({ title, text });
+      return 'Plan shared.';
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return 'Sharing cancelled.';
+    }
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    return 'Plan copied. Paste it into a message or a note.';
+  } catch {
+    return 'Couldn’t share or copy the plan.';
+  }
+}
+
 /** Shares a CSV file (S5) and says what happened, for a status message. */
 export async function shareCsv(name: string, csv: string): Promise<string> {
   const outcome = await shareFile(name, csv, 'text/csv');

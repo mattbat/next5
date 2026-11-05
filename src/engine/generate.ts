@@ -1,4 +1,4 @@
-import { analyzePlan, benchLimit, isAvailable } from './analyze';
+import { analyzePlan, benchLimit, isAvailable, skillStackPenalty } from './analyze';
 import { assignPositions, canCover, canCoverWith, missingPositions, missingWithLocks, requiredSlots } from './positions';
 import { createRandom } from './random';
 import {
@@ -47,11 +47,6 @@ function* combinations<T>(items: T[], k: number, start = 0, picked: T[] = []): G
     yield* combinations(items, k, i + 1, picked);
     picked.pop();
   }
-}
-
-function maxSkill(player: EnginePlayer): number {
-  const levels = Object.values(player.skills).filter((v): v is 1 | 2 | 3 => v !== undefined);
-  return levels.length === 0 ? 2 : Math.max(...levels);
 }
 
 interface SegmentLocks {
@@ -109,6 +104,7 @@ function buildPlan(input: GenerateInput, slots: string[], random: () => number, 
   const { players, rules, unavailable, previous } = input;
   const fixed = input.fixed ?? [];
   const locks = locksBySegment(input.locks);
+  const byId = new Map(players.map((p) => [p.id, p]));
   const state: State = { played: {}, expected: {}, streak: {} };
   for (const p of players) {
     state.played[p.id] = 0;
@@ -163,15 +159,13 @@ function buildPlan(input: GenerateInput, slots: string[], random: () => number, 
           const combo = [...forced, ...fill];
           if (slots.length > 0 && !canCover(combo, slots)) continue;
           let total = 0;
-          let rising = 0;
-          let goTo = 0;
-          for (const p of combo) {
-            total += cost.get(p.id)!;
-            const skill = maxSkill(p);
-            if (skill === 1) rising++;
-            if (skill === 3) goTo++;
+          for (const p of combo) total += cost.get(p.id)!;
+          // R3 counts each player's skill at the position they'd be shown at,
+          // the same way analyzePlan scores and warns. The penalty only adds,
+          // so skip it for a combination that's already too expensive.
+          if (rules.balanceSkill && total < bestCost) {
+            total += COST_SKILL * skillStackPenalty(assignPositions(combo, slots)!, byId);
           }
-          if (rules.balanceSkill) total += COST_SKILL * (Math.max(0, rising - 1) + Math.max(0, goTo - 2));
           if (total < bestCost) {
             bestCost = total;
             best = combo;

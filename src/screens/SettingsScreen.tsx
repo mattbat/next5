@@ -1,5 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { Info, Section, Segmented, TopBar } from '../components/ui';
+import { db } from '../data/db';
 import {
   backUp,
   formatBackupDate,
@@ -13,6 +15,9 @@ import {
 import { paths } from '../router';
 import { setThemePreference, themePreference, type ThemePreference } from '../theme';
 import { HelpLink } from '../help/parts';
+import { ReleaseNotes } from '../components/WhatsNew';
+import { RELEASES } from '../data/whatsNew';
+import { formatGameDate } from '../domain/game';
 
 function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
@@ -25,6 +30,8 @@ export function SettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Backup | null>(null);
   const [last, setLast] = useState(lastBackupAt);
+  const localTeams = useLiveQuery(() => db.teams.toArray());
+  const [showAllReleases, setShowAllReleases] = useState(false);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const show = (text: string) => {
@@ -53,7 +60,8 @@ export function SettingsScreen() {
 
   const onRestore = async (mode: RestoreMode) => {
     if (!pending) return;
-    if (mode === 'replace' && !window.confirm('Replace all teams and games on this phone with the backup? This can’t be undone.')) {
+    const lost = lostTeams.length > 0 ? ` These teams aren’t in the backup and will be deleted: ${lostTeams.join(', ')}.` : '';
+    if (mode === 'replace' && !window.confirm(`Replace all teams and games on this phone with the backup?${lost} This can’t be undone.`)) {
       return;
     }
     const result = await restoreBackup(pending, mode);
@@ -81,6 +89,9 @@ export function SettingsScreen() {
   };
 
   const summary = pending ? summarize(pending) : null;
+  // Teams on this phone that "Replace everything" would delete (a one-team backup doesn't have the others).
+  const inBackup = new Set(pending?.teams.map((t) => t.id));
+  const lostTeams = (localTeams ?? []).filter((t) => !inBackup.has(t.id)).map((t) => t.name);
 
   return (
     <main className="screen">
@@ -154,7 +165,15 @@ export function SettingsScreen() {
             <button type="button" className="btn danger wide" onClick={() => void onRestore('replace')}>
               Replace everything
             </button>
-            <p className="hint">Deletes all teams and games on this phone first.</p>
+            <p className="hint">
+              Deletes all teams and games on this phone first.
+              {lostTeams.length > 0 && (
+                <b>
+                  {' '}
+                  Not in this backup, so they’d be lost: {lostTeams.join(', ')}.
+                </b>
+              )}
+            </p>
             <button type="button" className="link" onClick={() => setPending(null)}>
               Cancel
             </button>
@@ -190,6 +209,29 @@ export function SettingsScreen() {
           next5 version {__APP_VERSION__} · <a href={paths.diagnostics()}>Diagnostics</a>
         </p>
       </Section>
+
+      {RELEASES.length > 0 && (
+        <Section title="What’s new">
+          {RELEASES.slice(0, showAllReleases ? undefined : 1).map((release) => (
+            <div key={release.version} className="release">
+              <p className="release-head">
+                <b>{release.version}</b> · {formatGameDate(release.date)}
+              </p>
+              <ReleaseNotes release={release} />
+            </div>
+          ))}
+          {RELEASES.length > 1 && (
+            <button
+              type="button"
+              className="link"
+              aria-expanded={showAllReleases}
+              onClick={() => setShowAllReleases(!showAllReleases)}
+            >
+              {showAllReleases ? 'Show only the latest' : `Show earlier versions (${RELEASES.length - 1})`}
+            </button>
+          )}
+        </Section>
+      )}
     </main>
   );
 }

@@ -1,10 +1,14 @@
 import { COURT_SIZE, type EnginePlayer, type Lineup, type PositionId, type PositionRequirement, type SkillLevel } from './types';
 
-/** Expands { G: 2, C: 1 } into the list of required slots [G, G, C]. */
+/**
+ * Expands { G: 2, C: 1 } into the list of required slots [G, G, C]. Each
+ * count is capped just past the court size: that's still "too large" for the
+ * generator to report, and a huge value can't loop forever.
+ */
 export function requiredSlots(requirement: PositionRequirement): PositionId[] {
   const slots: PositionId[] = [];
   for (const [positionId, count] of Object.entries(requirement)) {
-    for (let i = 0; i < (count ?? 0); i++) slots.push(positionId);
+    for (let i = 0; i < Math.min(count ?? 0, COURT_SIZE + 1); i++) slots.push(positionId);
   }
   return slots;
 }

@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import type { Position } from '../data/types';
 import { canGoBack } from '../router';
 
 /** Small shared building blocks used across screens. */
@@ -177,4 +178,74 @@ export function Sheet({ title, onClose, children }: { title: string; onClose: ()
 
 export function Jersey({ number }: { number: string }) {
   return <span className="jersey">{number || '–'}</span>;
+}
+
+/**
+ * A position as a small letter box, e.g. "G", used wherever a position is
+ * shown on its own (D1). VoiceOver reads the full name. Sentences, such as
+ * warnings, spell positions out instead.
+ */
+export function PositionChip({
+  id,
+  positions,
+  tone,
+}: {
+  id: string | null;
+  positions: Position[];
+  /** "in" for an incoming player, "match" for the open spot's position. */
+  tone?: 'in' | 'match';
+}) {
+  if (id === null) return null;
+  const position = positions.find((p) => p.id === id);
+  return (
+    <span className="pos" data-position={id}>
+      <span className={tone ? `chip ${tone}` : 'chip'} aria-hidden>
+        {position?.short ?? id}
+      </span>
+      <span className="sr-only">{position?.name ?? id}</span>
+    </span>
+  );
+}
+
+/** Every position a player can play, as chips in the team's order (G, F, C). */
+export function PositionChips({
+  skills,
+  positions,
+  highlight = null,
+}: {
+  skills: Partial<Record<string, unknown>>;
+  positions: Position[];
+  /** Highlights this position, e.g. the open spot in a substitution. */
+  highlight?: string | null;
+}) {
+  return (
+    <span className="chips">
+      {positions
+        .filter((p) => skills[p.id] !== undefined)
+        .map((p) => (
+          <PositionChip key={p.id} id={p.id} positions={positions} tone={p.id === highlight ? 'match' : undefined} />
+        ))}
+    </span>
+  );
+}
+
+/** Segments played at each position, e.g. [G] 3 [F] 1, in the team's order (S3, S4). */
+export function PositionCounts({
+  byPosition,
+  positions,
+}: {
+  byPosition: Partial<Record<string, number>>;
+  positions: Position[];
+}) {
+  const played = positions.filter((p) => (byPosition[p.id] ?? 0) > 0);
+  if (played.length === 0) return <>–</>;
+  return (
+    <span className="pos-counts">
+      {played.map((p) => (
+        <span key={p.id} className="pos-count">
+          <PositionChip id={p.id} positions={positions} /> {byPosition[p.id]}
+        </span>
+      ))}
+    </span>
+  );
 }

@@ -10,7 +10,10 @@ import { SHOTS, type ShotName } from '../../src/help/shots';
  * changes, and commit the images.
  */
 
-const OUT = 'public/help';
+// SHOTS_OUT=<folder> saves PNGs there instead, to look at a change before
+// replacing the committed images.
+const PREVIEW = process.env.SHOTS_OUT;
+const OUT = PREVIEW ?? 'public/help';
 mkdirSync(OUT, { recursive: true });
 
 for (const theme of ['dark', 'light'] as const) {
@@ -21,7 +24,8 @@ for (const theme of ['dark', 'light'] as const) {
       // Let sheets finish sliding up.
       await on.waitForTimeout(350);
       const png = await on.screenshot({ animations: 'disabled' });
-      await sharp(png).webp({ quality: 70 }).toFile(`${OUT}/${name}-${theme}.webp`);
+      if (PREVIEW) await sharp(png).png().toFile(`${OUT}/${name}-${theme}.png`);
+      else await sharp(png).webp({ quality: 70 }).toFile(`${OUT}/${name}-${theme}.webp`);
       taken.add(name);
     };
 

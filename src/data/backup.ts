@@ -1,6 +1,7 @@
 import { db, upgradeGameV2, upgradeGameV3 } from './db';
 import { shareFile } from './share';
 import type { Game, Player, Team } from './types';
+import { isValidGame, isValidPlayer, isValidTeam } from './validate';
 
 /**
  * Backup and restore (REQUIREMENTS.md B1–B3). A backup is a JSON file with
@@ -79,6 +80,9 @@ export function parseBackup(text: string): ParseResult {
     upgradeGameV3(copy);
     return copy as Game;
   });
+  if (!(teams as unknown[]).every(isValidTeam) || !(players as unknown[]).every(isValidPlayer) || !gameList.every(isValidGame)) {
+    return { ok: false, message: 'This backup is damaged and can’t be restored.' };
+  }
   return {
     ok: true,
     backup: {

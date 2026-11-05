@@ -66,7 +66,8 @@ describe('per-game stats (S3)', () => {
       // 9 players × 8 segments: everyone plays 4 or 5 and sits the rest.
       expect(Number(played) + Number(sat)).toBe(8);
       expect(planned).toBe(played);
-      expect(positions).toMatch(/^[GFC] \d( · [GFC] \d)*$/);
+      // Position chips with counts, e.g. [G] 3 [F] 1, read as "Guard 3 Forward 1".
+      expect(positions).toMatch(/^([GFC](Guard|Forward|Center) \d)+$/);
     }
   });
 

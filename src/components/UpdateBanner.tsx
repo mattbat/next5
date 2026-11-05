@@ -2,16 +2,19 @@ import { useState } from 'react';
 import { useRegisterSW } from 'virtual:pwa-register/react';
 import { backedUpRecently, backUp, formatBackupDate, lastBackupAt } from '../data/backup';
 import { db } from '../data/db';
+import { useInLiveGame } from '../hooks/useInLiveGame';
 import { applyUpdate } from '../pwaUpdate';
 import { Sheet } from './ui';
 
 /**
  * Shows "Update available" when a new version has downloaded (T8). Updates
- * are never applied silently, and the banner stays hidden during a live game.
- * Before updating, it offers a backup (B5) unless there's no data or one was
- * made in the last day.
+ * are never applied silently, and the banner stays hidden on the screens of
+ * a game in progress (a hidden update still applies the next time the app is
+ * closed and reopened). Before updating, it offers a backup (B5) unless
+ * there's no data or one was made in the last day.
  */
 export function UpdateBanner({ update = applyUpdate }: { update?: () => Promise<void> }) {
+  const inGame = useInLiveGame();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
   } = useRegisterSW({
@@ -24,7 +27,6 @@ export function UpdateBanner({ update = applyUpdate }: { update?: () => Promise<
   const [updating, setUpdating] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
-  const inGame = window.location.hash.endsWith('/live');
   if (!needRefresh || inGame) return null;
 
   const startUpdate = async () => {

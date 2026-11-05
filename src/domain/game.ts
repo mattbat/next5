@@ -7,6 +7,13 @@ export function periodCount(format: GameFormat): number {
   return format.periodType === 'quarters' ? 4 : 2;
 }
 
+/** A game's yyyy-mm-dd date for people, e.g. "Sat, Nov 7". Anything else comes back as it was. */
+export function formatGameDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number);
+  if (!y || !m || !d) return iso;
+  return new Date(y, m - 1, d).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
 export function segmentCount(format: GameFormat): number {
   return periodCount(format) * format.segmentsPerPeriod;
 }
@@ -144,6 +151,26 @@ export function nextSegment(game: Game): Game {
   return { ...game, played, subbedOut: [], current: game.current + 1 };
 }
 
+/**
+ * End game now (D9), when time runs out before the plan does: the segment on
+ * the court counts as played and the rest of the plan isn't recorded. Undo
+ * end of game reopens it at the same segment.
+ */
+export function endGameEarly(game: Game): Game {
+  if (game.status !== 'live' || game.current + 1 >= game.plan.length) return nextSegment(game);
+  const ended = nextSegment({ ...game, plan: game.plan.slice(0, game.current + 1) });
+  return {
+    ...ended,
+    plan: game.plan,
+    events: [...game.events, { kind: 'ended-early', segment: game.current }],
+  };
+}
+
+/** True when the game ended before its last planned segment (D9). */
+export function endedEarly(game: Game): boolean {
+  return game.status === 'final' && game.events.at(-1)?.kind === 'ended-early';
+}
+
 /** Undo (D2): reverses the last Next, including reopening a game that just ended. */
 export function undoSegment(game: Game): Game {
   const last = game.played.at(-1);
@@ -153,7 +180,8 @@ export function undoSegment(game: Game): Game {
   // Anyone recorded beyond the segment's lineup had been subbed out mid-segment.
   const onCourt = new Set(game.plan[current]?.map((s) => s.playerId));
   const subbedOut = last.filter((s) => !onCourt.has(s.playerId));
-  return { ...game, played, subbedOut, current, status: 'live' };
+  const events = endedEarly(game) ? game.events.slice(0, -1) : game.events;
+  return { ...game, played, subbedOut, current, status: 'live', events };
 }
 
 export interface PlayerTime {

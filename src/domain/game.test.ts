@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_POSITIONS, DEFAULT_RULES } from '../data/defaults';
 import type { Game, Player, Team } from '../data/types';
+import { gameStats } from './stats';
 import {
   describeError,
   describeWarning,
+  endedEarly,
+  endGameEarly,
   nextSegment,
   planGame,
   playingTime,
@@ -173,6 +176,29 @@ describe('running a game', () => {
     expect(game.status).toBe('final');
     game = undoSegment(game);
     expect(game).toMatchObject({ status: 'live', current: 7 });
+  });
+
+  it('ends a game early, keeping the plan, and Undo reopens it at the same segment (D9)', () => {
+    let game = nextSegment(nextSegment(startGame(plannedGame())));
+    const before = game;
+    game = endGameEarly(game);
+    expect(game).toMatchObject({ status: 'final', current: 2 });
+    expect(game.played).toEqual([...before.played, before.plan[2]]);
+    expect(game.plan).toEqual(before.plan);
+    expect(game.events.at(-1)).toEqual({ kind: 'ended-early', segment: 2 });
+    expect(endedEarly(game)).toBe(true);
+    expect(gameStats(game).reduce((sum, s) => sum + s.planned, 0)).toBe(15);
+
+    game = undoSegment(game);
+    expect(game).toMatchObject({ status: 'live', current: 2, played: before.played, events: before.events });
+    expect(endedEarly(game)).toBe(false);
+  });
+
+  it('ending early on the last segment is a normal end of game', () => {
+    let game = startGame(plannedGame());
+    for (let i = 0; i < 7; i++) game = nextSegment(game);
+    expect(endGameEarly(game)).toEqual(nextSegment(game));
+    expect(endedEarly(nextSegment(game))).toBe(false);
   });
 
   it('Next does nothing before the game starts', () => {

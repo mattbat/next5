@@ -22,9 +22,13 @@ export interface PlayerGameStats {
 
 const includes = (lineup: Lineup, playerId: PlayerId) => lineup.some((s) => s.playerId === playerId);
 
-/** Per-game stats for every player who was at the game (S3). */
+/**
+ * Per-game stats for every player who was at the game (S3). Planned counts
+ * only the segments that were played, so a game ended early (D9) compares
+ * like with like.
+ */
 export function gameStats(game: Game): PlayerGameStats[] {
-  const planned = game.startPlan ?? game.plan;
+  const planned = (game.startPlan ?? game.plan).slice(0, game.played.length);
   return game.attending.map((playerId) => {
     const byPosition: Partial<Record<PositionId, number>> = {};
     let played = 0;
@@ -87,14 +91,6 @@ export function seasonStats(games: Game[], players: Player[]): PlayerSeasonStats
     .filter((s) => known.has(s.playerId))
     .map((s) => ({ ...s, percent: s.available === 0 ? null : Math.round((s.played / s.available) * 100) }))
     .sort((a, b) => name(a.playerId).localeCompare(name(b.playerId)));
-}
-
-/** "G 3 · F 1", in the team's position order. Empty when no positions were played. */
-export function positionSummary(byPosition: Partial<Record<PositionId, number>>, positions: Position[]): string {
-  return positions
-    .filter((p) => (byPosition[p.id] ?? 0) > 0)
-    .map((p) => `${p.short} ${byPosition[p.id]}`)
-    .join(' · ');
 }
 
 /** One CSV field, quoted when it needs to be (RFC 4180). */

@@ -206,6 +206,63 @@ describe('swapNext', () => {
     expect(describeSwapWarning(rule!, result.game, team.positions, names)).toMatch(/Playing time isn't equal/);
   });
 
+  it('keeps the swap as locks, so a later re-plan keeps it (D6)', () => {
+    let game = liveGame();
+    const out = game.plan[1]!.find((s) => s.positionId === 'F')!.playerId;
+    const into = benchFor(game, 1).find((id) => roster.find((p) => p.id === id)!.skills.F)!;
+    game = unwrap(swapNext(game, team, roster, out, into)).game;
+    expect(game.locks).toEqual([
+      { segment: 1, playerId: into, kind: 'in' },
+      { segment: 1, playerId: out, kind: 'out' },
+    ]);
+
+    // An injury to someone else, then a re-plan: the coach's pick stays.
+    const injured = benchFor(game, 1).find((id) => id !== out)!;
+    game = setStatus(game, injured, { kind: 'out' });
+    const after = unwrap(replan(game, team, roster));
+    expect(onCourt(after.game, 1)).toContain(into);
+    expect(onCourt(after.game, 1)).not.toContain(out);
+    expect(after.dropped).toEqual([]);
+  });
+
+  it('replaces earlier locks on the same players when the coach changes their mind', () => {
+    let game = liveGame();
+    const out = game.plan[1]!.find((s) => s.positionId === 'F')!.playerId;
+    const forwards = benchFor(game, 1).filter((id) => roster.find((p) => p.id === id)!.skills.F);
+    game = unwrap(swapNext(game, team, roster, out, forwards[0]!)).game;
+    game = unwrap(swapNext(game, team, roster, forwards[0]!, out)).game;
+    expect(game.locks).toEqual([
+      { segment: 1, playerId: out, kind: 'in' },
+      { segment: 1, playerId: forwards[0], kind: 'out' },
+    ]);
+  });
+
+  it('drops locks a re-plan can no longer keep, and says which segment', () => {
+    // Next lineup has p5 at Center; the coach sends in p6 (the other center) instead.
+    let game = liveGame();
+    game = {
+      ...game,
+      plan: game.plan.map((l, i) =>
+        i === 1
+          ? [
+              { playerId: 'p1', positionId: 'G' },
+              { playerId: 'p2', positionId: 'G' },
+              { playerId: 'p5', positionId: 'C' },
+              { playerId: 'p7', positionId: 'F' },
+              { playerId: 'p8', positionId: 'F' },
+            ]
+          : l,
+      ),
+    };
+    game = unwrap(swapNext(game, team, roster, 'p5', 'p6')).game;
+    // Then p6 is hurt: p5 is locked out and nobody else plays Center.
+    game = setStatus(game, 'p6', { kind: 'out' });
+    const after = unwrap(replan(game, team, roster));
+    expect(after.dropped).toEqual([1]);
+    expect(onCourt(after.game, 1)).toContain('p5');
+    expect(after.game.locks.filter((l) => l.segment === 1)).toEqual([]);
+  });
+
   it('rejects swaps that make no sense', () => {
     const game = liveGame();
     const benchNext = benchFor(game, 1);

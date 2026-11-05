@@ -34,6 +34,7 @@ function describeLastError(): string {
 
 function readings(): [string, string][] {
   return [
+    ['Version', `${__APP_VERSION__} (${__COMMIT__})`],
     ['Build', __BUILD_TIME__],
     ['Last error', describeLastError()],
     ['Running as app (Home Screen)', isStandalone() ? 'yes' : 'no'],

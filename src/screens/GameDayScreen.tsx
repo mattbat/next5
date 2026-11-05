@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Empty, Jersey, Section, TopBar } from '../components/ui';
+import { Empty, Jersey, PositionChip, PositionCounts, Section, TopBar } from '../components/ui';
 import { slug } from '../data/backup';
 import { saveGame, sharedAway } from '../data/repo';
 import { shareCsv } from '../data/share';
@@ -18,8 +18,8 @@ import {
   type ReplanResult,
   type SwapResult,
 } from '../domain/changes';
-import { nextSegment, segmentLabel, sortLineup, undoSegment } from '../domain/game';
-import { gameStats, gameStatsCsv, positionSummary } from '../domain/stats';
+import { endedEarly, endGameEarly, nextSegment, segmentLabel, sortLineup, undoSegment } from '../domain/game';
+import { gameStats, gameStatsCsv } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
 import { useWakeLock } from '../hooks/useWakeLock';
@@ -39,7 +39,7 @@ import {
 /** Game day: who's on, who comes in and out next, and one big Next button (§9). */
 export function GameDayScreen({ gameId }: { gameId: string }) {
   const data = useGameData(gameId);
-  useWakeLock(data.state === 'ready' && data.game.status === 'live');
+  const wakeLock = useWakeLock(data.state === 'ready' && data.game.status === 'live');
   if (data.state === 'loading') return <main className="screen" />;
   if (data.state === 'missing') {
     return (
@@ -62,7 +62,7 @@ export function GameDayScreen({ gameId }: { gameId: string }) {
     );
   }
   if (sharedAway(game)) return <SharedLive game={game} team={team} byId={byId} />;
-  return <Live game={game} team={team} roster={roster} byId={byId} />;
+  return <Live game={game} team={team} roster={roster} byId={byId} screenMayLock={wakeLock.failed} />;
 }
 
 /**
@@ -73,7 +73,6 @@ export function GameDayScreen({ gameId }: { gameId: string }) {
 function SharedLive({ game, team, byId }: { game: Game; team: Team; byId: Map<string, Player> }) {
   const label = segmentLabel(game.format, game.current);
   const current = sortLineup(game.plan[game.current]!, team.positions, byId);
-  const position = (id: string | null) => (id === null ? '' : (team.positions.find((p) => p.id === id)?.name ?? id));
   return (
     <main className="screen">
       <TopBar title={<span className="period-title">{label.text}</span>} back={paths.team(team.id)} />
@@ -89,7 +88,7 @@ function SharedLive({ game, team, byId }: { game: Game; team: Team; byId: Map<st
             <li key={slot.playerId} className="list-item static">
               <Jersey number={byId.get(slot.playerId)?.number ?? ''} />
               <span className="list-title">{byId.get(slot.playerId)?.name ?? 'Unknown'}</span>
-              <span className="list-meta">{position(slot.positionId)}</span>
+              <PositionChip id={slot.positionId} positions={team.positions} />
             </li>
           ))}
         </ul>
@@ -115,7 +114,20 @@ type Sheet =
   | { kind: 'choose-next'; outId: string }
   | { kind: 'replan'; preview: ReplanResult };
 
-function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Player[]; byId: Map<string, Player> }) {
+function Live({
+  game,
+  team,
+  roster,
+  byId,
+  screenMayLock,
+}: {
+  game: Game;
+  team: Team;
+  roster: Player[];
+  byId: Map<string, Player>;
+  /** The phone wouldn't keep the screen on (D7). */
+  screenMayLock: boolean;
+}) {
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [error, setError] = useState<string | null>(null);
   // A swap that breaks a rule, shown as a warning until the coach confirms it.
@@ -132,9 +144,11 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
   const goingOut = new Set(change?.subs.map((s) => s.out) ?? []);
   const conflicts = planConflicts(game);
 
+  // Full position names for VoiceOver labels; the screen shows G / F / C chips.
   const position = (id: string | null) => (id === null ? '' : (team.positions.find((p) => p.id === id)?.name ?? id));
   const player = (id: string) => byId.get(id);
   const name = (id: string) => player(id)?.name ?? 'Unknown';
+  const jersey = (id: string) => (player(id)?.number ? ` #${player(id)!.number}` : '');
 
   const close = () => {
     setSheet(null);
@@ -203,6 +217,17 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     close();
   };
 
+  /** End game now (D9): for when time runs out before the plan does. */
+  const endNow = () => {
+    const from = segmentLabel(game.format, game.current + 1).text;
+    const to = segmentLabel(game.format, game.plan.length - 1).text;
+    const rest = from === to ? from : `${from} to ${to}`;
+    const question = `End the game now, during ${label.text}? The rest of the plan (${rest}) won’t be counted. You can undo this on the Final screen.`;
+    if (!window.confirm(question)) return;
+    void saveGame(endGameEarly(game));
+    close();
+  };
+
   return (
     <main className="screen game-day">
       <TopBar
@@ -247,7 +272,7 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
               >
                 <Jersey number={player(slot.playerId)?.number ?? ''} />
                 <span className="court-name">{name(slot.playerId)}</span>
-                <span className="court-pos">{position(slot.positionId)}</span>
+                <PositionChip id={slot.positionId} positions={team.positions} />
                 {goingOut.has(slot.playerId) && <span className="badge out">OUT next</span>}
               </button>
             </li>
@@ -265,20 +290,24 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
               <button
                 type="button"
                 className="sub-in"
-                aria-label={`In: ${name(sub.in)}, ${position(sub.positionId)}. Tap to send in someone else`}
+                aria-label={`In: ${name(sub.in)}${jersey(sub.in)}, ${position(sub.positionId)}. Tap to send in someone else`}
                 onClick={() => setSheet({ kind: 'choose-next', outId: sub.in })}
               >
                 <span className="arrow in" aria-hidden>
                   ▲
                 </span>
+                {player(sub.in)?.number && <span className="sub-num">{player(sub.in)!.number}</span>}
                 <span className="sub-name">{name(sub.in)}</span>
-                <span className="sub-pos">{position(sub.positionId)}</span>
+                <span className="sub-pos">
+                  <PositionChip id={sub.positionId} positions={team.positions} tone="in" />
+                </span>
               </button>
               <span className="sub-out">
                 <span className="arrow out" aria-hidden>
                   ▼
                 </span>
                 <span className="sr-only">Out:</span>
+                {player(sub.out)?.number && <span className="sub-num">{player(sub.out)!.number}</span>}
                 <span className="sub-name">{name(sub.out)}</span>
               </span>
             </li>
@@ -288,8 +317,12 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           <p className="switches">
             {change.stays
               .filter((s) => s.from !== s.to)
-              .map((s) => `${name(s.playerId)} moves to ${position(s.to)}`)
-              .join(' · ')}
+              .map((s, i) => (
+                <span key={s.playerId}>
+                  {i > 0 && ' · '}
+                  {name(s.playerId)} moves to <PositionChip id={s.to} positions={team.positions} />
+                </span>
+              ))}
           </p>
         )}
       </section>
@@ -317,9 +350,11 @@ function Live({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
         <GameMenuSheet
           game={game}
           roster={roster}
+          screenMayLock={screenMayLock}
           onPlayer={(playerId) => setSheet({ kind: 'player', playerId })}
           onReplan={() => setSheet({ kind: 'replan', preview: replan(game, team, roster) })}
           onOvertime={overtime}
+          onEndGame={endNow}
           onShare={() => setSheet({ kind: 'share' })}
           onClose={close}
         />
@@ -406,6 +441,8 @@ function describeEvent(event: GameEvent, game: Game, byId: Map<string, Player>):
       return `${when}: re-planned (${event.changes} lineup${event.changes === 1 ? '' : 's'} changed)`;
     case 'overtime':
       return `${when}: added ${event.added} overtime segment${event.added === 1 ? '' : 's'}`;
+    case 'ended-early':
+      return `${when}: game ended early`;
   }
 }
 
@@ -427,7 +464,10 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
       <Section title={`Playing time${game.opponent ? ` vs ${game.opponent}` : ''}`}>
         <p className="hint">
           Segments played out of {game.played.length}. Plan is the plan when the game started; Sat counts only segments
-          the player was available for. <HelpLink topic="final">Reading this table</HelpLink>
+          the player was available for.
+          {endedEarly(game) &&
+            ` The game ended early, after ${segmentLabel(game.format, game.played.length - 1).text}, so Plan counts only up to there.`}{' '}
+          <HelpLink topic="final">Reading this table</HelpLink>
         </p>
         <div className="grid-scroll">
           <table className="stats-table">
@@ -449,7 +489,9 @@ function Summary({ game, team, byId }: { game: Game; team: Team; byId: Map<strin
                   <td>{s.planned}</td>
                   <td className={s.played < s.planned ? 'short' : ''}>{s.played}</td>
                   <td>{s.sat}</td>
-                  <td className="pos-col">{positionSummary(s.byPosition, team.positions) || '–'}</td>
+                  <td className="pos-col">
+                    <PositionCounts byPosition={s.byPosition} positions={team.positions} />
+                  </td>
                 </tr>
               ))}
             </tbody>

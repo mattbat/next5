@@ -64,12 +64,15 @@ The screen stays awake during a game. If the phone locks anyway, or you switch a
 ### When the game doesn't go to plan
 
 - **Sub someone out right now:** tap the player in the **On court** list, then **Sub out now**, and pick who goes in. Both players get credit for that segment.
-- **Send in someone else at the next sub:** tap a green **▲ IN** player and pick a replacement. Only the next lineup changes.
+- **Send in someone else at the next sub:** tap a green **▲ IN** player and pick a replacement. Only the next lineup changes, and a later re-plan keeps your pick.
 - **Injury, or a player leaves:** tap the player, then **Injured or leaving**. If they're on the court, pick who replaces them now. They're out for the rest of the game.
 - **Give someone a rest:** tap the player, then **Rest for 1, 2 or 3 segments**.
 - **Late arrival:** tap **Edit** (top right) → **Show players not here** → tap the player → **Arrived**. They can play from the next segment.
 - **Re-plan:** after any of these, next5 offers to re-plan the rest of the game. A preview shows exactly which lineups change (new players in green) before you tap **Use new plan**. Segments already played never change, and it moves as few players as possible. If you keep the old plan, a yellow banner reminds you while someone who can't play is still in an upcoming lineup.
 - **Overtime:** on the last segment, tap **+ OT** (or **Edit → Add overtime segment**) to add another lineup, planned with the same rules.
+- **See the rest of the plan:** **Edit → See full plan** shows every lineup (or the grid), starting at the one on the court now. It's read-only; back takes you to the game.
+- **Time runs out early:** **Edit → End game now**, then confirm. The lineup on the court counts as played and the rest of the plan doesn't. **↶ Undo end of game** on the Final screen picks up where you were.
+- **A paper copy:** on the plan's **Grid** view, **Share plan as text** sends every lineup to Messages or Notes, or to Print from the share sheet.
 
 Every change is listed under **Changes from the plan** in the game summary.
 
@@ -120,7 +123,7 @@ Only one phone runs a game at a time. After you share a game that's in progress,
 
 ### Updates
 
-When a new version is ready, a banner says **A new version of next5 is ready**. Tap **Update** when convenient; your teams and games are kept. The banner never appears during a live game.
+When a new version is ready, a banner says **A new version of next5 is ready**. Tap **Update** when convenient; your teams and games are kept. The banner never appears on the screens of a game in progress. After updating, a short note says what's new; **Settings → What's new** lists every version.
 
 ---
 
@@ -206,9 +209,12 @@ Segments in `fixed` (already played) are never changed. `locks` pin single playe
 ### Tests
 
 - `src/engine/*.test.ts`: example tests for every rule, error and edge case.
+- `src/domain/gameday.property.test.ts`: random rosters run random sequences of everything a coach can do during a game (Next, Undo, swaps, injuries, rests, late arrivals, re-plans, overtime, ending early) and check that played segments never change, every upcoming lineup is five players at the game, locks survive re-plans, Undo exactly reverses Next, and stats add up.
 - `src/engine/generate.property.test.ts`: fast-check generates hundreds of random rosters, requirements, absences and fixed segments, and checks that positions are always covered, time stays within 1, bench stretches stay within the limit, played segments never change, unavailable players never play, and locks are always kept (or the error names a segment whose locks really can't work).
 - `src/App.test.tsx`: walks the main workflows through the real screens against an in-memory IndexedDB.
 - `src/screens/Help.test.tsx`: the intro, and every help topic renders with links and screenshots that exist.
+- `scripts/release-lib.test.mjs`: the release and changelog helpers.
+- Engine, game-logic and script tests run in plain Node; screen tests run in jsdom (`test.projects` in `vite.config.ts`).
 - `e2e/`: Playwright, in WebKit at 402×874 (iPhone 17) for the full game flow, and in Chromium for offline launch.
 
 The e2e tests start past the first-run intro (`storageState` in `playwright.config.ts`); `e2e/help.spec.ts` starts from a fresh phone to test it.
@@ -225,7 +231,16 @@ Coverage thresholds are enforced in `vite.config.ts`: 95% of lines for `src/engi
 
 1. **Lint, types, unit tests** (with coverage)
 2. **End-to-end** (build, then Playwright)
-3. **Deploy to GitHub Pages**: only on pushes to `main`, and only if both jobs above pass
+3. **Changelog note** (pull requests only): the PR adds a note in `changes/`, or is a complete release, or has the `no-changelog` label
+4. **Deploy to GitHub Pages**: only when a push to `main` raises the version (a release), and only if the test jobs pass. It also tags `vX.Y.Z` and publishes a GitHub release with that version's changelog. Running the workflow by hand on `main` redeploys it as it is.
+
+### Releases
+
+Merging isn't releasing: coaches only get changes when a release is made (REQUIREMENTS.md REL1–REL4).
+
+1. **Every PR that changes the app adds a changelog note** in `changes/` (see [`changes/README.md`](changes/README.md)): `type: new`, `improved` or `fixed`, and a line a coach would understand.
+2. **To release**, run `npm run release` to see what's waiting and the suggested version. Versions are x.y.z: patch for fixes and polish, minor for something new a coach would notice, major for anything a coach must act on (say, a backup format older apps can't read). Stay on 0.x until v1 is declared done.
+3. Run `npm run release -- minor` (or `patch`, `major`). It bumps `package.json`, moves the notes into `CHANGELOG.md` and `src/changelog.json` (what the app shows under What's new) and deletes them from `changes/`. Commit that as **Release x.y.z** in its own PR; merging it deploys.
 
 Repository setting: **Settings → Pages → Source: GitHub Actions**.
 

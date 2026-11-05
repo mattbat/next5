@@ -1,6 +1,7 @@
 import { slug } from './backup';
 import { upgradeGameV2, upgradeGameV3 } from './db';
 import type { Game, Handoff, Player, Team } from './types';
+import { isValidGame, isValidPlayer, isValidTeam } from './validate';
 
 /**
  * Handing a game between the coach's and the assistant's phones (SH1–SH6).
@@ -85,6 +86,9 @@ export function parseHandoff(text: string): ParseHandoffResult {
   upgradeGameV2(copy);
   upgradeGameV3(copy);
   delete copy.handoff;
+  if (!isValidTeam(team) || !(players as unknown[]).every(isValidPlayer) || !isValidGame(copy)) {
+    return { ok: false, message: 'This game is damaged and can’t be opened. Ask for it to be sent again.' };
+  }
   return {
     ok: true,
     handoff: {

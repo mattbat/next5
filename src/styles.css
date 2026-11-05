@@ -419,6 +419,34 @@ input[type='date'] {
   font-weight: 500;
 }
 
+/* A position chip (G / F / C) with its full name for VoiceOver (D1). */
+.pos {
+  display: inline-flex;
+  flex: none;
+  vertical-align: middle;
+}
+
+/* The position an incoming player takes, in the IN color. */
+.chip.in {
+  background: transparent;
+  color: var(--in);
+  box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--in) 70%, transparent);
+}
+
+/* Segments by position in the stats tables: [G] 3 [F] 1. */
+.pos-counts {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.pos-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
+
 .jersey {
   display: inline-flex;
   align-items: center;
@@ -1260,12 +1288,6 @@ button.sub-in:active {
   font-weight: 700;
 }
 
-.court-pos {
-  color: var(--text-2);
-  font-weight: 600;
-  font-size: 15px;
-}
-
 .badge {
   font-size: 12px;
   font-weight: 800;
@@ -1472,6 +1494,15 @@ button.sub-in {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* Jersey numbers in the IN/OUT pairs, so two players with the same name can't be confused (B5). */
+.sub-num {
+  flex: none;
+  font-size: 14px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
 }
 
 .sub-pos {
@@ -2029,4 +2060,23 @@ button.sub-in {
 
 .intro-footer .link {
   align-self: center;
+}
+
+/* What's new (REL3): release notes after an update and in Settings. */
+.release + .release {
+  margin-top: 16px;
+}
+
+.release-head {
+  margin: 4px 0 0;
+}
+
+.release-list {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+  color: var(--text-2);
+}
+
+.release-list li + li {
+  margin-top: 4px;
 }

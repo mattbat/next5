@@ -6,11 +6,24 @@ import type { Player, Team } from '../data/types';
 import type { SkillLevel } from '../engine';
 
 /** Add or edit a player: name, number, positions, and skill at each (P2, P3). */
-export function PlayerSheet({ team, player, onClose }: { team: Team; player: Player | null; onClose: () => void }) {
+export function PlayerSheet({
+  team,
+  player,
+  roster = [],
+  onClose,
+}: {
+  team: Team;
+  player: Player | null;
+  /** The team's players, to spot a name that's already taken. */
+  roster?: Player[];
+  onClose: () => void;
+}) {
   const [name, setName] = useState(player?.name ?? '');
   const [number, setNumber] = useState(player?.number ?? '');
   const [skills, setSkills] = useState<Player['skills']>(player?.skills ?? {});
   const [active, setActive] = useState(player?.active ?? true);
+  const sameName = (p: Player) => p.id !== player?.id && p.name.trim().toLowerCase() === name.trim().toLowerCase();
+  const duplicate = name.trim() !== '' && roster.some(sameName);
 
   const save = async () => {
     if (!name.trim()) return onClose();
@@ -38,6 +51,12 @@ export function PlayerSheet({ team, player, onClose }: { team: Team; player: Pla
           <input inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value.slice(0, 3))} />
         </label>
       </div>
+      {duplicate && (
+        <p className="hint" role="status">
+          Another player is already called {name.trim()}. Add a last initial (e.g. “{name.trim()} B.”) so they’re easy to
+          tell apart on game day.
+        </p>
+      )}
 
       <h3 className="sheet-sub">
         Positions

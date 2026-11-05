@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Empty, Info, Jersey, Section, Segmented, TopBar } from '../components/ui';
+import { Empty, Info, Jersey, PositionChip, PositionChips, Section, Segmented, TopBar } from '../components/ui';
 import { changedSinceSent, getGame, saveGame, sharedAway, updateGame } from '../data/repo';
+import { shareText } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { benchFor } from '../domain/changes';
+import { planText } from '../domain/planText';
 import { describeError, describeWarning, planGame, segmentLabel, sortLineup, startGame } from '../domain/game';
 import {
   isLineupLocked,
@@ -17,7 +19,8 @@ import {
 } from '../domain/planning';
 import { useGameData } from '../hooks/useGameData';
 import { navigate, paths } from '../router';
-import { ChoosePlayerSheet, type PendingSwap } from './GameChanges';
+import { wakeLockSupported } from '../hooks/useWakeLock';
+import { ChoosePlayerSheet, SCREEN_MAY_LOCK, type PendingSwap } from './GameChanges';
 import { PlanPlayerSheet, type PlanAction } from './PlanPlayerSheet';
 import { ShareGameSheet } from './ShareGameSheet';
 import { confirmTakeBack, sharedAt } from './shareText';
@@ -67,13 +70,15 @@ type Sheet =
 
 function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Player[]; byId: Map<string, Player> }) {
   const [view, setView] = useState<'segments' | 'grid'>('segments');
-  const [segment, setSegment] = useState(0);
+  // During a game (opened from Game Day's Edit menu) start at the segment on the court.
+  const [segment, setSegment] = useState(() => (game.status === 'live' ? game.current : 0));
   const [sheet, setSheet] = useState<Sheet | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sheetError, setSheetError] = useState<string | null>(null);
   const [notice, setNotice] = useState<Notice | null>(null);
   const [pending, setPending] = useState<(PendingSwap & { apply: () => void }) | null>(null);
   const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const [textMessage, setTextMessage] = useState<string | null>(null);
 
   const names = new Map(roster.map((p) => [p.id, p.name]));
   const name = (id: string) => byId.get(id)?.name ?? 'Unknown';
@@ -83,6 +88,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     positionId === null ? null : (team.positions.find((p) => p.id === positionId)?.name ?? positionId);
 
   const isPlanned = game.status === 'planned';
+  const isLive = game.status === 'live';
   // Shared with the other phone, which runs the game until it comes back (SH5).
   const shared = sharedAway(game);
   const count = game.plan.length;
@@ -244,7 +250,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
     <main className="screen with-footer">
       <TopBar
         title={title}
-        back={paths.team(team.id)}
+        back={isLive ? paths.gameLive(game.id) : paths.team(team.id)}
         action={
           <a className="link" href={paths.gameSetup(game.id)}>
             Setup
@@ -271,7 +277,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
           {sentMessage}
         </p>
       )}
-      {count > 0 && !shared && (
+      {count > 0 && !shared && isPlanned && (
         <p className="hint send-hint">
           Running the subs on another phone?{' '}
           <button type="button" className="link" onClick={() => setSheet({ kind: 'share' })}>
@@ -376,7 +382,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
             </div>
           )}
 
-          <h3 className="sheet-sub">On court</h3>
+          <h3 className="sheet-sub">{isLive && at === game.current ? 'On court now' : 'On court'}</h3>
           <ul className="lineup" aria-label="On court">
             {lineup.map((slot) => (
               <li key={slot.playerId}>
@@ -390,7 +396,7 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
                   <Jersey number={byId.get(slot.playerId)?.number ?? ''} />
                   <span className="court-name">{name(slot.playerId)}</span>
                   {lockBadge(slot.playerId)}
-                  <span className="court-pos">{positionName(slot.positionId)}</span>
+                  <PositionChip id={slot.positionId} positions={team.positions} />
                 </button>
               </li>
             ))}
@@ -410,6 +416,8 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
                   <Jersey number={p.number} />
                   <span className="court-name">{p.name}</span>
                   {lockBadge(p.id)}
+                  {/* What they could come in at, to help pick a swap. */}
+                  <PositionChips skills={p.skills} positions={team.positions} />
                 </button>
               </li>
             ))}
@@ -430,6 +438,9 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
               Tap a player to swap or lock them. Every change keeps your locks and changes as little else as possible.{' '}
               <HelpLink topic="edit-plan">Changing the plan</HelpLink>
             </p>
+          )}
+          {isLive && (
+            <p className="hint">The plan for the whole game. To change a lineup, go back to the game and tap Edit.</p>
           )}
         </section>
       )}
@@ -497,8 +508,23 @@ function Plan({ game, team, roster, byId }: { game: Game; team: Team; roster: Pl
               {notice.text}
             </p>
           )}
+          <button
+            type="button"
+            className="btn secondary wide"
+            onClick={() => void shareText(`next5 plan: ${title}`, planText(game, team, roster)).then(setTextMessage)}
+          >
+            Share plan as text
+          </button>
+          <p className="hint">For Messages, Notes or printing (the share sheet has Print). Skill levels are never included.</p>
+          {textMessage && (
+            <p className="notice" role="status">
+              {textMessage}
+            </p>
+          )}
         </Section>
       )}
+
+      {isPlanned && count > 0 && !wakeLockSupported() && <p className="hint">{SCREEN_MAY_LOCK}</p>}
 
       <footer className="footer">
         {error && (

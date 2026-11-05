@@ -6,6 +6,8 @@ iPhone PWA for planning and running youth basketball substitutions. The spec is 
 
 - Run `npm run check` (lint, type-check, unit tests with coverage, build, e2e) and make sure it passes before committing. Never commit failing work (Q-7).
 - Update `docs/STATUS.md` in the same change that implements or alters a requirement.
+- Every change to the app adds a changelog note in `changes/` (see `changes/README.md`), written for coaches.
+- Releases: versions are x.y.z. Propose the bump from `npm run release`, but always ask the user before a minor or major one. A release (`npm run release -- <bump>`) is its own pull request; merging it is what deploys.
 - Add tests with every feature. The rotation engine (`src/engine`) needs example tests and, where a rule is involved, a property test.
 - Keep the engine pure: no React, Dexie or DOM imports in `src/engine`.
 - Screens write data only through `src/data/repo.ts`. For quick edits use `updateGame` (partial update), not `saveGame`, so fast taps can't overwrite each other.
