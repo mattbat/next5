@@ -191,13 +191,6 @@ export function TeamsScreen() {
           </p>
         )}
       </Section>
-      <p className="footnote">
-        Everything is saved on this phone.{' '}
-        <a className="footnote-link" href={paths.diagnostics()}>
-          Version {__APP_VERSION__}
-        </a>
-        .
-      </p>
       {/* Adding a team sits at the bottom of the screen, apart from the list. */}
       <footer className="footer add-team">
         <form

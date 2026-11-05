@@ -7,10 +7,11 @@ import { WhatsNewSheet } from './components/WhatsNew';
 import { requestPersistentStorage } from './data/db';
 import './styles.css';
 import { applyTheme, followSystemTheme } from './theme';
-import { trackAppHeight } from './viewport';
+import { blockZoom, trackAppHeight } from './viewport';
 
 void requestPersistentStorage();
 trackAppHeight();
+blockZoom();
 applyTheme();
 followSystemTheme();
 

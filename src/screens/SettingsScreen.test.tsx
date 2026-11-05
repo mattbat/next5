@@ -171,6 +171,24 @@ describe('Settings: updates', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent(/Couldn’t check for updates/);
     delete (navigator as { serviceWorker?: unknown }).serviceWorker;
   });
+
+  it('shows the version and Diagnostics in Settings, not on the Teams screen', async () => {
+    const user = userEvent.setup();
+    await createDemoTeam();
+    markBackedUp();
+    await goTo('#/');
+    render(<App />);
+    await screen.findByRole('heading', { name: 'Teams' });
+    expect(screen.queryByText(/version/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Everything is saved on this phone/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Diagnostics' })).not.toBeInTheDocument();
+
+    await goTo('#/settings');
+    expect(await screen.findByText(new RegExp(`next5 version ${__APP_VERSION__}`))).toBeInTheDocument();
+    await user.click(screen.getByRole('link', { name: 'Diagnostics' }));
+    expect(await screen.findByRole('heading', { name: 'Diagnostics' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Back/ })).toHaveAttribute('href', '#/settings');
+  });
 });
 
 describe('Teams screen backup reminder', () => {

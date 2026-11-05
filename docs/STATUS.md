@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-04 (code review fixes; Update button fix, backup before updating)
+Last updated: 2026-11-05 (code review fixes and releases; pinch zoom turned off)
 
 ## 3. Platform and technical
 
@@ -141,7 +141,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Dynamic Type and VoiceOver are only partly addressed. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
+| Design and UX | 🟡 📱 | Dark sports theme with a light option, safe areas, 44pt+ tap targets, no horizontal scrolling (tested). Pinch and double-tap zoom are turned off (2026-11-05): the viewport tag, `touch-action` on the page, and cancelling iOS gesture events (unit tested; needs checking on an iPhone). Dynamic Type and VoiceOver are only partly addressed. Home Screen icon redesigned (2026-11-04): option V2z, an orange 5 and a glass "next" chevron on a royal blue court. The other options are kept in `docs/icon/icon-options.html`. Needs checking on an iPhone after reinstalling from the Home Screen. Splash screen not done. Positions show as G / F / C chips wherever a position stands alone (Game Day, plan, bench, roster, stats, re-plan preview); VoiceOver reads the full name (2026-11-04). |
 | N1 | 📱 | Not measured on a device. |
 | N2 | ✅ | Tested: well under 1 second (the test allows 3 seconds for CI). |
 | N3 | ✅ | |
@@ -191,10 +191,6 @@ Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
   - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
   - Offline is fine: the app can save the ping and send it next time it's online.
   - Must never send player names, team names or game data. Kids' data stays on the phone.
-- [ ] **Top edge of text looks a little blurry.** Screenshot checked 2026-11-04 (Teams screen, dark theme, Home Screen app). next5 adds no blur itself (no `backdrop-filter`, `filter` or `text-shadow` near the top). The screenshot shows a faint lighter haze behind the middle of the top row (Help · next5 · Settings), from just under the clock down to about the top row's text. Its shape points to iOS drawing its own soft edge under the status bar. The app draws content up there (`viewport-fit=cover` with the `black-translucent` status bar), so the top row sits inside that haze. Plan for later, cheapest first:
-  1. Push the top row a little lower (more padding than `--safe-top + 4px`) so it sits clear of the haze. Compare before and after screenshots on the iPhone.
-  2. If that's not enough, give the top bar a solid background that reaches up behind the status bar.
-  3. Last resort: switch the status bar style from `black-translucent` to `default`, so iOS stops drawing content under the status bar (the app's top bar moves down below it).
 
 ## Small changes requested
 
@@ -204,5 +200,7 @@ Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
 - [x] **"Something went wrong. Script error." banner when tapping Share in Safari:** a script that isn't next5's (Safari's Share sheet, or an extension) threw an error, which browsers report only as "Script error." with no details. The error banner now ignores those, and still shows next5's own errors. (Reported 2026-11-04.) 📱 Check on the deployed site.
+- [x] **Top row looked a little blurry:** iOS draws a soft haze just below the clock and battery, and the top row (Help · next5 · Settings, Back, screen titles) sat inside it. next5 adds no blur itself. Every screen now starts 10px below the status bar instead of 4px. 16px was checked on an iPhone (sharp, but more space than needed), so it was trimmed to 10px. Game Day still fits one screen on every phone size tested. If it still looks soft, next steps: a solid top bar reaching up behind the status bar, then switching the status bar style to `default`. (Reported 2026-11-04.) 📱 Check on the deployed site that 10px is still sharp.
 - [x] **Update button did nothing until the app was force-closed:** after **Update**, the app waited for a signal from the phone that the new version had taken over, and in the iPhone Home Screen app that signal doesn't always come. It now reloads when the new version takes over, or after 3 seconds at most, and the button shows **Updating…**. Not caused by the help pages or intro. In Chrome the update worked both before and after the fix. The iPhone case can't be tested here (no Safari). (Reported 2026-11-04.) 📱 Check on the deployed site: the next update should apply with one tap.
+- [x] **Cleaner Teams screen:** removed the "Everything is saved on this phone. Version …" line from the bottom of the Teams screen. The version and the Diagnostics link are in Settings → App, and Diagnostics' Back button now returns to Settings. (Requested 2026-11-04.)
 - [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)

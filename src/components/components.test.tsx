@@ -22,6 +22,7 @@ vi.mock('virtual:pwa-register/react', async () => {
 
 const { UpdateBanner } = await import('./UpdateBanner');
 const { ErrorBanner } = await import('./ErrorBanner');
+const { lastError } = await import('../errorLog');
 
 describe('ErrorBanner', () => {
   it('shows unhandled errors and can be dismissed', async () => {
@@ -37,17 +38,33 @@ describe('ErrorBanner', () => {
     await user.click(screen.getByRole('button', { name: 'Dismiss' }));
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     act(() => {
-      window.dispatchEvent(new ErrorEvent('error', { message: 'Oops' }));
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Oops', error: new Error('Oops') }));
     });
     expect(screen.getByRole('alert')).toHaveTextContent('Oops');
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+    // An error in one of next5's own files, even without the error object.
+    act(() => {
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Bad thing', filename: `${location.origin}/next5/assets/index.js` }));
+    });
+    expect(screen.getByRole('alert')).toHaveTextContent('Bad thing');
   });
 
-  it('ignores detail-less errors from other sites’ scripts, e.g. when Safari’s Share sheet opens', () => {
+  it('ignores errors from other sites’ scripts, e.g. when Safari’s Share sheet opens, but notes them', () => {
+    localStorage.clear();
     render(<ErrorBanner />);
     act(() => {
       window.dispatchEvent(new ErrorEvent('error', { message: 'Script error.' }));
+      window.dispatchEvent(new ErrorEvent('error', { message: 'Script error' }));
+      window.dispatchEvent(
+        new ErrorEvent('error', { message: 'TypeError: undefined is not an object', filename: 'safari-web-extension://abc/content.js' }),
+      );
     });
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(lastError()).toMatchObject({
+      message: 'TypeError: undefined is not an object',
+      source: 'safari-web-extension://abc/content.js',
+      shown: false,
+    });
   });
 });
 
