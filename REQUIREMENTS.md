@@ -42,7 +42,7 @@ Success means the coach never has to work out a rotation in her head or on paper
 |----|-------------|
 | T1 | Delivered as a Progressive Web App (PWA) that is installed to the iPhone Home Screen and runs in standalone mode. |
 | T2 | No Apple Developer Program membership, no App Store distribution, and no periodic reinstall. |
-| T3 | Hosted on **GitHub Pages** as a static site. The CI pipeline deploys it on every push to `main`, but only after every test passes (see §14). On the free GitHub plan the repo must be public. That is acceptable because no user data lives in the repo or on the server. |
+| T3 | Hosted on **GitHub Pages** as a static site. The CI pipeline deploys it when a release is made (see REL1–REL4), and only after every test passes (see §14). (Changed 2026-11-04: it used to deploy on every push to `main`.) On the free GitHub plan the repo must be public. That is acceptable because no user data lives in the repo or on the server. |
 | T4 | Because GitHub Pages serves the app from a project subpath (`/next5/`), the manifest `start_url` and `scope`, the service worker scope, asset paths, and routing are all configured for that subpath. Routing uses hash-based URLs, because GitHub Pages can't fall back to `index.html` for other paths. |
 | T5 | Works completely offline after the first load. All app files are cached by a service worker. |
 | T6 | All data is stored on the device in IndexedDB. The app requests persistent storage (`navigator.storage.persist()`). |
@@ -53,7 +53,7 @@ Success means the coach never has to work out a rotation in her head or on paper
 
 ## 4. Core concepts
 
-- **Team:** a named team for one season (for example "8U Thunder — Winter 2026"). It holds the roster, the position setup, the default game format, and the default rules. A new season's team can be created by copying an existing team.
+- **Team:** a named team for one season (for example "8U Thunder — Winter 2026"). It holds the roster, the position setup, the default game format, and the default rules. (Copying a team into a new season was dropped on 2026-11-03; see M4.)
 - **Player:** belongs to a team. Has a name, an optional jersey number, eligible positions, and a skill level at each of those positions (see §6).
 - **Game:** a single game for a team. It records the date, opponent (optional), attending players, game format, enabled rules, the plan, and what actually happened.
 - **Game format:** either **quarters (4)** or **halves (2)**, plus the number of **segments** per period. Defaults: quarters × 2 segments (a sub at the midpoint of each quarter and at each quarter break), or halves × 4 segments.
@@ -159,7 +159,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | D6 | **Re-plan from here:** regenerate the remaining segments, taking into account the segments already played and the current player statuses, so the rules hold for the game as a whole as far as possible. The re-plan keeps manual edits and changes as few lineups as possible (§5). The coach sees a preview that highlights what changed before accepting it. A status change (D5) offers a re-plan automatically. |
 | D7 | The screen stays awake while a game is in progress (Screen Wake Lock API). |
 | D8 | Leaving the app or locking the phone never loses game progress. On reopening, the app returns to the exact segment. |
-| D9 | **End game:** finalize the game and its record. A game can be resumed if it was ended by mistake. |
+| D9 | **End game:** finalize the game and its record, either after the last segment or early, when time runs out (only the segments played count). A game can be resumed if it was ended by mistake. |
 | D10 | Readable in a bright gym from arm's length. Supports both light and dark appearance. OUT and IN are labeled with words and icons, not just color. |
 | D11 | **Extra segments / overtime:** an "Add segments" action (for example "Overtime +1") adds new segments at the end of the game at any point. They are generated from the current state using the same rules, so fairness carries over from the rest of the game. When the coach taps Next on the last planned segment, the app offers either to add a segment or to end the game. |
 
@@ -249,6 +249,15 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | Q-6 | **CI pipeline (GitHub Actions)** on every push and pull request: lint → type-check → unit and property tests → end-to-end tests → build. Deploying to Pages runs only on `main` after every earlier stage passes. All stages run with a single command locally as well (`npm test`, `npm run test:e2e`). |
 | Q-7 | Claude runs the full test suite after every change and does not commit work that fails. |
 
+### Releases and changelog (added 2026-11-04)
+
+| ID | Requirement |
+|----|-------------|
+| REL1 | **Versions** are semantic, x.y.z. Patch (z): fixes, polish and internal changes. Minor (y): a new feature or requirement a coach would notice. Major (x): something a coach must act on or that breaks compatibility, such as a backup or shared-game format an older app can't read, or a removed feature. The version stays 0.x until v1 is declared done, then 1.0.0. Claude proposes a bump but always asks before minor or major. |
+| REL2 | **Merging isn't releasing.** Work merges to `main` without reaching coaches. A release is its own pull request made with `npm run release -- minor` (or patch, or major); merging it deploys to GitHub Pages, tags `vX.Y.Z` and publishes a GitHub release. Running the CI workflow by hand redeploys `main` as it is. |
+| REL3 | **Changelog:** every pull request that changes the app adds a short note for coaches in `changes/` (new, improved or fixed); CI fails one without a note unless it has the `no-changelog` label. A release collects the notes into `CHANGELOG.md` and `src/changelog.json`. The app shows them once after an update (never during a game or the first-run intro) and under Settings → What's new. |
+| REL4 | Diagnostics shows the version and the commit it was built from. |
+
 ## 15. Screens (initial list)
 
 1. **Teams:** list of teams (active and archived).
@@ -310,6 +319,8 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | 2026-11-03 | A game can be shared at any point (planned, in progress, or finished), not only at fixed coach and assistant steps. After sharing a game in progress, the sharing phone is locked until Take back control, so two phones never run the same game. |
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-04 | The first-run guide (H-3) is a few skippable intro cards ending in "Try the demo team" or "Set up my own team", replayable from Help. A full in-app guide (H-8) is added, reached from the Teams screen, Settings and "?" links on screens. Screenshots are taken automatically from the demo team in both themes. |
+| 2026-11-04 | Code review follow-ups. Positions are shown as G / F / C boxes wherever a position stands on its own (Game Day, the plan, the roster, stats); sentences, warnings and VoiceOver use the full words. A game can be ended early from the Game Day Edit menu (D9). The plan can be seen read-only during a game (Edit → See full plan) and shared as text. Sending in someone else at the next sub is kept as locks, and a re-plan drops locks that can no longer work instead of failing. Received backups and games are checked for damage before anything is saved. |
+| 2026-11-04 | Releases (REL1–REL4): semantic versions, chosen with the user; a changelog note in every pull request; deploys happen only on a release, not on every merge. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions
@@ -322,7 +333,7 @@ These are out of scope for v1, but v1 should be designed so they can be added la
 | Q4 | Are some players restricted at the league level (for example a maximum number of segments)? | No |
 | Q5 | Are the skill level names (Rising / Steady / Go-To) right? | Yes |
 | Q6 | Should the optional "Balance skill" rule (R3) be included in v1? | Yes, off by default |
-| Q7 | Does the remainder of the earlier handoff document (cut off at "NEXT LINEUP") contain more requirements? | Pending |
+| Q7 | Does the remainder of the earlier handoff document (cut off at "NEXT LINEUP") contain more requirements? | Closed 2026-11-04: nothing more turned up; this document is the spec. |
 
 ## 19. Risks
 
