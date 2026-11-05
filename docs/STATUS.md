@@ -7,6 +7,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), archiving teams (M1), and in-app help with a first-run intro and screenshots (H-1, H-3, H-8). **Next:** see "Proposed next milestones" at the bottom of this file.
 
 Last updated: 2026-11-04 (error banner ignores other scripts' errors)
+Last updated: 2026-11-05 (top row moved clear of the iOS status bar haze)
 
 ## 3. Platform and technical
 
@@ -182,10 +183,6 @@ Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
   - GitHub Pages has no visitor logs or traffic stats, so we'd need a small outside counter. Cookie-free, privacy-friendly options with free tiers: GoatCounter, Cloudflare Web Analytics, Plausible (paid).
   - Offline is fine: the app can save the ping and send it next time it's online.
   - Must never send player names, team names or game data. Kids' data stays on the phone.
-- [ ] **Top edge of text looks a little blurry.** Screenshot checked 2026-11-04 (Teams screen, dark theme, Home Screen app). next5 adds no blur itself (no `backdrop-filter`, `filter` or `text-shadow` near the top). The screenshot shows a faint lighter haze behind the middle of the top row (Help · next5 · Settings), from just under the clock down to about the top row's text. Its shape points to iOS drawing its own soft edge under the status bar. The app draws content up there (`viewport-fit=cover` with the `black-translucent` status bar), so the top row sits inside that haze. Plan for later, cheapest first:
-  1. Push the top row a little lower (more padding than `--safe-top + 4px`) so it sits clear of the haze. Compare before and after screenshots on the iPhone.
-  2. If that's not enough, give the top bar a solid background that reaches up behind the status bar.
-  3. Last resort: switch the status bar style from `black-translucent` to `default`, so iOS stops drawing content under the status bar (the app's top bar moves down below it).
 
 ## Small changes requested
 
@@ -194,6 +191,7 @@ Ideas only. Nothing here is decided or built yet. (Added 2026-11-04.)
 - [x] **Team screen tab order:** Games, Roster, Settings, opening on Games. Stats was added after Roster on 2026-11-03: Games, Roster, Stats, Settings. Games is what she uses most; the roster rarely changes once it's set. (Requested 2026-11-03.)
 - [x] **Consistent on-court order:** on Game Day (and wherever a lineup is listed), show players grouped Guards, then Forwards, then Centers, alphabetical by name within each group, so the order doesn't shuffle between segments when nobody is subbed. Seen in a 5-player test where the same five reordered every segment. (Requested 2026-11-03.)
 - [x] **Teams screen layout:** put space between the list of teams and the "New team name" field; keep the team list at the top and pin the add-a-team field to the bottom of the screen. (Requested 2026-11-03.)
-- [x] **"Something went wrong. Script error." banner when tapping Share in Safari:** a script that isn't next5's (Safari's Share sheet, or an extension) throws an error, which browsers report with no details. The first fix (ignoring the exact text "Script error.") wasn't enough on the iPhone (2026-11-04), so the banner now shows only errors from next5's own code: ones with an error object or from a next5 file. Others are skipped. **Diagnostics → Last error** shows the most recent error, where it came from and whether it was shown, so anything that still gets through can be identified. (Reported 2026-11-04.) 📱 Check on the deployed site.
+- [x] **"Something went wrong. Script error." banner when tapping Share in Safari:** a script that isn't next5's (Safari's Share sheet, or an extension) threw an error, which browsers report only as "Script error." with no details. The error banner now ignores those, and still shows next5's own errors. (Reported 2026-11-04.) 📱 Check on the deployed site.
+- [x] **Top row looked a little blurry:** iOS draws a soft haze just below the clock and battery, and the top row (Help · next5 · Settings, Back, screen titles) sat inside it. next5 adds no blur itself. Every screen now starts 16px below the status bar instead of 4px, which should move the top row clear of the haze (not yet confirmed on an iPhone). Game Day still fits one screen on every phone size tested. If it still looks soft, next steps: a solid top bar reaching up behind the status bar, then switching the status bar style to `default`. (Reported 2026-11-04.) 📱 Check on the deployed site.
 - [x] **Update button did nothing until the app was force-closed:** after **Update**, the app waited for a signal from the phone that the new version had taken over, and in the iPhone Home Screen app that signal doesn't always come. It now reloads when the new version takes over, or after 3 seconds at most, and the button shows **Updating…**. Not caused by the help pages or intro. In Chrome the update worked both before and after the fix. The iPhone case can't be tested here (no Safari). (Reported 2026-11-04.) 📱 Check on the deployed site: the next update should apply with one tap.
 - [x] **Teams screen add field (minor, later):** change the button text from "Add team" back to "Add", and make sure the placeholder "New team name, e.g. 8U Thunder" fits in the text box without being cut off. (Requested 2026-11-03.)
