@@ -132,6 +132,24 @@ describe('generatePlan — R3 balance skill', () => {
     expect(result.ok && result.warnings).toEqual([]);
   });
 
+  it('counts skill at the position a player is shown at, the same way the warning does', () => {
+    // p1 is Go-To at Guard but the only Center, so always shown at Center, where
+    // they're Rising. p2 is Rising too: putting them on with p1 stacks two Rising.
+    const players = [
+      { id: 'p1', skills: { G: 3, C: 1 } as const },
+      { id: 'p2', skills: { F: 1 } as const },
+      ...makePlayers(5, () => ({ F: 2 })).map((p, i) => ({ ...p, id: `s${i}` })),
+    ];
+    const rules = { ...NO_RULES, positionCoverage: true, balanceSkill: true };
+    const result = generatePlan(baseInput({ players, requirement: { C: 1 }, rules }));
+    if (!result.ok) throw new Error('expected a plan');
+    expect(result.warnings).toEqual([]);
+    for (const lineup of result.plan) {
+      expect(lineup.find((s) => s.playerId === 'p1')?.positionId).toBe('C');
+      expect(lineup.some((s) => s.playerId === 'p2')).toBe(false);
+    }
+  });
+
   it('avoids bunching Go-To players', () => {
     const players = makePlayers(10, (i) => (i < 5 ? { G: 3 } : { G: 2 }));
     const rules = { ...NO_RULES, equalTime: true, balanceSkill: true };

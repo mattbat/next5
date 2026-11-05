@@ -4,7 +4,9 @@ import {
   canCover,
   generatePlan,
   requiredSlots,
+  type GenerateError,
   type Lineup,
+  type Lock,
   type PlayerId,
   type PositionId,
   type Warning,
@@ -183,7 +185,11 @@ export function swapNow(game: Game, team: Team, roster: Player[], outId: PlayerI
   return { ok: true, game: next, warnings: swapWarnings(game, next, roster, swapped.uncovered) };
 }
 
-/** Changes who comes in at the next substitution (D4), with any rules it breaks. */
+/**
+ * Changes who comes in at the next substitution (D4), with any rules it
+ * breaks. Like a swap in the plan (G9), it is kept as locks, so a later
+ * re-plan keeps the coach's pick (D6).
+ */
 export function swapNext(game: Game, team: Team, roster: Player[], outId: PlayerId, inId: PlayerId): SwapResult {
   const segment = game.current + 1;
   const lineup = game.plan[segment];
@@ -196,7 +202,12 @@ export function swapNext(game: Game, team: Team, roster: Player[], outId: Player
   }
   const swapped = swapInLineup(lineup, outId, inId, game, team, roster);
   const plan = game.plan.map((l, i) => (i === segment ? swapped.lineup : l));
-  const next = withEvent({ ...game, plan }, { kind: 'swap-next', segment, out: outId, in: inId });
+  const locks: Lock[] = [
+    ...game.locks.filter((l) => !(l.segment === segment && (l.playerId === outId || l.playerId === inId))),
+    { segment, playerId: inId, kind: 'in' },
+    { segment, playerId: outId, kind: 'out' },
+  ];
+  const next = withEvent({ ...game, plan, locks }, { kind: 'swap-next', segment, out: outId, in: inId });
   return { ok: true, game: next, warnings: swapWarnings(game, next, roster, swapped.uncovered) };
 }
 
@@ -241,8 +252,20 @@ export function changedSegments(before: Lineup[], after: Lineup[], from: number)
 }
 
 export type ReplanResult =
-  | { ok: true; game: Game; changed: number[]; warnings: Warning[] }
+  | {
+      ok: true;
+      game: Game;
+      changed: number[];
+      warnings: Warning[];
+      /** Segments whose locks couldn't be kept, so they were dropped. */
+      dropped: number[];
+    }
   | { ok: false; message: string };
+
+type LockError = Extract<GenerateError, { kind: 'too-many-locked-out' | 'too-many-locked-in' | 'locks-uncoverable' }>;
+
+const isLockError = (error: GenerateError): error is LockError =>
+  error.kind === 'too-many-locked-out' || error.kind === 'too-many-locked-in' || error.kind === 'locks-uncoverable';
 
 /** The engine input shared by re-planning and overtime. */
 function engineInput(game: Game, team: Team, roster: Player[], segmentCount: number) {
@@ -266,26 +289,37 @@ function currentAsPlayed(game: Game): Lineup {
  * Re-plan from here (D6): rebuilds every segment after the current one around
  * the current statuses, keeping played segments and the current lineup, and
  * changing as little as possible. Returns a preview; nothing is saved.
+ *
+ * Locks can't be changed on game day, so a segment whose locks no longer work
+ * (say the player swapped in is now injured) has its locks dropped rather
+ * than blocking the re-plan. The preview says which segments.
  */
 export function replan(game: Game, team: Team, roster: Player[], seed?: number): ReplanResult {
   if (game.status !== 'live') return { ok: false, message: 'The game is not in progress.' };
-  const result = generatePlan({
+  const input = {
     ...engineInput(game, team, roster, game.plan.length),
     fixed: [...game.played, currentAsPlayed(game)],
     previous: game.plan,
     seed,
-  });
+  };
+  const dropped: number[] = [];
+  let result = generatePlan(input);
+  while (!result.ok && isLockError(result.error) && !dropped.includes(result.error.segment)) {
+    dropped.push(result.error.segment);
+    result = generatePlan({ ...input, locks: input.locks.filter((l) => !dropped.includes(l.segment)) });
+  }
   if (!result.ok) return { ok: false, message: describeError(result.error, game, team.positions) };
 
   // Keep the stored lineups for played and current segments exactly as they were.
   const plan = [...game.plan.slice(0, game.current + 1), ...result.plan.slice(game.current + 1)];
   const changed = changedSegments(game.plan, plan, game.current + 1);
-  const next = withEvent({ ...game, plan, warnings: result.warnings }, {
+  const locks = game.locks.filter((l) => !dropped.includes(l.segment));
+  const next = withEvent({ ...game, plan, locks, warnings: result.warnings }, {
     kind: 'replan',
     segment: game.current,
     changes: changed.length,
   });
-  return { ok: true, game: next, changed, warnings: result.warnings };
+  return { ok: true, game: next, changed, warnings: result.warnings, dropped };
 }
 
 /** Overtime / extra segments (D11): adds segments at the end, planned with the same rules. */

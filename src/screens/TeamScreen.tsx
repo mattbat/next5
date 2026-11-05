@@ -1,13 +1,23 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useState } from 'react';
-import { Empty, Info, Jersey, Section, Segmented, Stepper, Toggle, TopBar } from '../components/ui';
+import {
+  Empty,
+  Info,
+  Jersey,
+  PositionChips,
+  PositionCounts,
+  Section,
+  Segmented,
+  Stepper,
+  Toggle,
+  TopBar,
+} from '../components/ui';
 import { backUp, slug } from '../data/backup';
 import { db } from '../data/db';
-import { SKILL_LEVELS } from '../data/defaults';
 import { createGame, deleteTeam, setTeamArchived, sharedAway, updateTeam } from '../data/repo';
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
-import { positionSummary, seasonStats, seasonStatsCsv } from '../domain/stats';
+import { seasonStats, seasonStatsCsv } from '../domain/stats';
 import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
 import { RULE_HELP } from './ruleHelp';
@@ -69,8 +79,6 @@ export function TeamScreen({ teamId }: { teamId: string }) {
 
 function Roster({ team, players }: { team: Team; players: Player[] }) {
   const [editing, setEditing] = useState<Player | 'new' | null>(null);
-  const positionName = (id: string) => team.positions.find((p) => p.id === id)?.short ?? id;
-  const skillName = (level: number) => SKILL_LEVELS[level - 1]?.name ?? '';
 
   return (
     <Section
@@ -88,21 +96,20 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
             <button type="button" className={`list-item ${p.active ? '' : 'inactive'}`} onClick={() => setEditing(p)}>
               <Jersey number={p.number} />
               <span className="list-title">{p.name}</span>
-              <span className="chips">
-                {Object.entries(p.skills).map(([pos, level]) => (
-                  <span key={pos} className="chip" title={skillName(level ?? 0)}>
-                    {positionName(pos)}
-                  </span>
-                ))}
-                {!p.active && <span className="chip muted">Inactive</span>}
-              </span>
+              <PositionChips skills={p.skills} positions={team.positions} />
+              {!p.active && <span className="chip muted">Inactive</span>}
               <span className="chevron">›</span>
             </button>
           </li>
         ))}
       </ul>
       {editing && (
-        <PlayerSheet team={team} player={editing === 'new' ? null : editing} onClose={() => setEditing(null)} />
+        <PlayerSheet
+          team={team}
+          player={editing === 'new' ? null : editing}
+          roster={players}
+          onClose={() => setEditing(null)}
+        />
       )}
     </Section>
   );
@@ -205,7 +212,9 @@ function SeasonStats({ team, players, games }: { team: Team; players: Player[]; 
                   <td>{s.games}</td>
                   <td>{s.played}</td>
                   <td>{s.percent === null ? '–' : `${s.percent}%`}</td>
-                  <td className="pos-col">{positionSummary(s.byPosition, team.positions) || '–'}</td>
+                  <td className="pos-col">
+                    <PositionCounts byPosition={s.byPosition} positions={team.positions} />
+                  </td>
                 </tr>
               ))}
             </tbody>

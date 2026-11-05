@@ -85,7 +85,7 @@ describe('Settings: back up', () => {
 describe('Settings: restore', () => {
   it('replaces everything after confirming', async () => {
     const user = userEvent.setup();
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
     await createDemoTeam();
     const text = JSON.stringify(await createBackup());
     await db.teams.clear();
@@ -95,7 +95,10 @@ describe('Settings: restore', () => {
     await user.upload(await screen.findByLabelText('Backup file'), backupFile(text));
     expect(await screen.findByText(/Demo Hoopers/)).toBeInTheDocument();
     expect(screen.getByText(/10 players/)).toBeInTheDocument();
+    // The team made since isn't in the backup: say it will be lost (C3).
+    expect(await screen.findByText(/Not in this backup, so they’d be lost: Made later/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Replace everything' }));
+    expect(confirm).toHaveBeenCalledWith(expect.stringMatching(/will be deleted: Made later\./));
     expect(await screen.findByRole('status')).toHaveTextContent(/Everything on this phone now matches the backup/);
     expect((await db.teams.toArray()).map((t) => t.name)).toEqual(['Demo Hoopers']);
   });

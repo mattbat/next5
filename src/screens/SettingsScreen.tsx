@@ -1,5 +1,7 @@
+import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { Info, Section, Segmented, TopBar } from '../components/ui';
+import { db } from '../data/db';
 import {
   backUp,
   lastBackupAt,
@@ -28,6 +30,7 @@ export function SettingsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState<Backup | null>(null);
   const [last, setLast] = useState(lastBackupAt);
+  const localTeams = useLiveQuery(() => db.teams.toArray());
   const fileInput = useRef<HTMLInputElement>(null);
 
   const show = (text: string) => {
@@ -56,7 +59,8 @@ export function SettingsScreen() {
 
   const onRestore = async (mode: RestoreMode) => {
     if (!pending) return;
-    if (mode === 'replace' && !window.confirm('Replace all teams and games on this phone with the backup? This can’t be undone.')) {
+    const lost = lostTeams.length > 0 ? ` These teams aren’t in the backup and will be deleted: ${lostTeams.join(', ')}.` : '';
+    if (mode === 'replace' && !window.confirm(`Replace all teams and games on this phone with the backup?${lost} This can’t be undone.`)) {
       return;
     }
     const result = await restoreBackup(pending, mode);
@@ -84,6 +88,9 @@ export function SettingsScreen() {
   };
 
   const summary = pending ? summarize(pending) : null;
+  // Teams on this phone that "Replace everything" would delete (a one-team backup doesn't have the others).
+  const inBackup = new Set(pending?.teams.map((t) => t.id));
+  const lostTeams = (localTeams ?? []).filter((t) => !inBackup.has(t.id)).map((t) => t.name);
 
   return (
     <main className="screen">
@@ -146,7 +153,15 @@ export function SettingsScreen() {
             <button type="button" className="btn danger wide" onClick={() => void onRestore('replace')}>
               Replace everything
             </button>
-            <p className="hint">Deletes all teams and games on this phone first.</p>
+            <p className="hint">
+              Deletes all teams and games on this phone first.
+              {lostTeams.length > 0 && (
+                <b>
+                  {' '}
+                  Not in this backup, so they’d be lost: {lostTeams.join(', ')}.
+                </b>
+              )}
+            </p>
             <button type="button" className="link" onClick={() => setPending(null)}>
               Cancel
             </button>

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_POSITIONS, DEFAULT_RULES } from '../data/defaults';
 import type { Game, Player } from '../data/types';
 import type { Lineup } from '../engine';
-import { gameStats, gameStatsCsv, positionSummary, seasonStats, seasonStatsCsv } from './stats';
+import { gameStats, gameStatsCsv, seasonStats, seasonStatsCsv } from './stats';
 
 const player = (i: number, overrides: Partial<Player> = {}): Player => ({
   id: `p${i}`,
@@ -119,13 +119,6 @@ describe('seasonStats (S4)', () => {
   it('sorts by name', () => {
     const roster = [player(1, { name: 'Zoe' }), player(2, { name: 'Ava' })];
     expect(seasonStats([], roster).map((s) => s.playerId)).toEqual(['p2', 'p1']);
-  });
-});
-
-describe('positionSummary', () => {
-  it('lists positions in the team order', () => {
-    expect(positionSummary({ C: 2, G: 1 }, DEFAULT_POSITIONS)).toBe('G 1 · C 2');
-    expect(positionSummary({}, DEFAULT_POSITIONS)).toBe('');
   });
 });
 

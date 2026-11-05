@@ -108,6 +108,20 @@ describe('roster', () => {
     expect(maya).toMatchObject({ number: '7', skills: { G: 3 } });
   });
 
+  it('warns when a new player has the same name as someone on the roster (B5)', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await goTo(`#/team/${team.id}`);
+    render(<App />);
+    await user.click(await screen.findByRole('radio', { name: /^Roster/ }));
+    await user.click(await screen.findByRole('button', { name: '+ Add' }));
+    const sheet = screen.getByRole('dialog', { name: 'New player' });
+    await user.type(within(sheet).getByPlaceholderText('First name'), 'avery ');
+    expect(within(sheet).getByText(/Another player is already called avery/)).toBeInTheDocument();
+    await user.type(within(sheet).getByPlaceholderText('First name'), 'B.');
+    expect(within(sheet).queryByText(/Another player is already called/)).not.toBeInTheDocument();
+  });
+
   it('edits a player, removes a position, and marks them inactive', async () => {
     const user = userEvent.setup();
     const team = await createDemoTeam();

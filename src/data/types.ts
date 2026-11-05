@@ -62,6 +62,8 @@ export type GameEvent = { segment: number } & (
   | { kind: 'status'; playerId: PlayerId; status: PlayerStatus | null }
   | { kind: 'replan'; changes: number }
   | { kind: 'overtime'; added: number }
+  /** The game was ended before the last segment (D9); later segments weren't played. */
+  | { kind: 'ended-early' }
 );
 
 export interface Game extends Record {

@@ -4,7 +4,7 @@
  */
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { App } from '../App';
 import { db } from '../data/db';
 import { createDemoTeam, createGame, saveGame, updatePlayer } from '../data/repo';
@@ -191,14 +191,92 @@ describe('game day changes', () => {
     expect((await savedGame(game.id)).events.at(-1)?.kind).toBe('swap-next');
   });
 
+  it('opens the full plan from the menu at the current segment, read-only, and comes back', async () => {
+    const user = userEvent.setup();
+    await startLiveGame({ advance: 2 });
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('link', { name: 'See full plan' }));
+    expect(await screen.findByRole('heading', { name: 'Q2 · 1 of 2' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'On court now' })).toBeInTheDocument();
+    for (const button of within(screen.getByRole('list', { name: 'On court' })).getAllByRole('button')) {
+      expect(button).toBeDisabled();
+    }
+    expect(screen.queryByText(/Running the subs on another phone/)).not.toBeInTheDocument();
+    // Other segments aren't marked as now.
+    await user.click(screen.getByRole('button', { name: 'Next segment' }));
+    expect(screen.getByRole('heading', { name: 'On court' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Back' })).toHaveAttribute('href', expect.stringMatching(/\/live$/));
+    await user.click(screen.getByRole('link', { name: 'Back to game' }));
+    expect(await screen.findByRole('button', { name: 'Next' })).toBeInTheDocument();
+  });
+
+  it('ends the game early from the menu after confirming, and can undo it (D9)', async () => {
+    const user = userEvent.setup();
+    const game = await startLiveGame({ advance: 4 });
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValueOnce(false).mockReturnValueOnce(true);
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'End game now' }));
+    expect(confirm).toHaveBeenLastCalledWith(expect.stringMatching(/during Q3 · 1 of 2\? The rest of the plan \(Q3 · 2 of 2 to Q4 · 2 of 2\)/));
+    expect((await savedGame(game.id)).status).toBe('live');
+
+    await user.click(screen.getByRole('button', { name: 'End game now' }));
+    expect(await screen.findByText(/The game ended early, after Q3 · 1 of 2/)).toBeInTheDocument();
+    expect(screen.getByText(/Q3 · 1 of 2: game ended early/)).toBeInTheDocument();
+    expect((await savedGame(game.id)).played).toHaveLength(5);
+
+    await user.click(screen.getByRole('button', { name: '↶ Undo end of game' }));
+    expect(await screen.findByRole('heading', { name: 'Q3 · 1 of 2' })).toBeInTheDocument();
+    confirm.mockRestore();
+  });
+
+  it('hides End game now on the last segment, where End game is the main button', async () => {
+    const user = userEvent.setup();
+    await startLiveGame({ advance: 7 });
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    expect(screen.queryByRole('button', { name: 'End game now' })).not.toBeInTheDocument();
+  });
+
+  it('shows jersey numbers in the IN/OUT pairs (B5)', async () => {
+    const game = await startLiveGame();
+    render(<App />);
+    const roster = await db.players.toArray();
+    const pairs = await screen.findAllByRole('listitem');
+    const pair = pairs.find((li) => li.classList.contains('sub'))!;
+    const [inNum, outNum] = [...pair.querySelectorAll('.sub-num')].map((n) => n.textContent);
+    const [inName, outName] = [...pair.querySelectorAll('.sub-name')].map((n) => n.textContent);
+    expect(inNum).toBe(roster.find((p) => p.name === inName)!.number);
+    expect(outNum).toBe(roster.find((p) => p.name === outName)!.number);
+    expect(game.status).toBe('live');
+  });
+
   it('re-plans from the menu and shows when nothing changes', async () => {
     const user = userEvent.setup();
     await startLiveGame();
     render(<App />);
     await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    // jsdom can't keep the screen on, so the menu says the phone may lock (D7).
+    expect(screen.getByText(/may lock during the game/)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Re-plan rest of game' }));
     expect(await screen.findByText('No lineups need to change.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Keep plan' }));
+  });
+
+  it('says when a re-plan has to drop locks that no longer work', async () => {
+    const user = userEvent.setup();
+    const game = await startLiveGame({ onlyCenter: 'Casey' });
+    const casey = (await db.players.toArray()).find((p) => p.name === 'Casey')!;
+    // Casey, the only center, is locked out of the next lineup.
+    await saveGame({ ...game, locks: [{ segment: 1, playerId: casey.id, kind: 'out' }] });
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Edit' }));
+    await user.click(screen.getByRole('button', { name: 'Re-plan rest of game' }));
+    const preview = await screen.findByRole('dialog', { name: 'Re-plan the rest of the game' });
+    expect(within(preview).getByText(/Your earlier picks for Q1 · 2 of 2 can’t all be kept now/)).toBeInTheDocument();
+    await user.click(within(preview).getByRole('button', { name: 'Use new plan' }));
+    await waitFor(async () => expect((await savedGame(game.id)).locks).toEqual([]));
   });
 
   it('explains when a re-plan is impossible', async () => {

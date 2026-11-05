@@ -6,7 +6,7 @@ Tracks every requirement in [REQUIREMENTS.md](../REQUIREMENTS.md). Update this f
 
 **Done:** MVP 1 (plan and run a game), game-day changes, backup and restore, plan editing (G5a–G9), stats with CSV export (S3–S5), handing a game to an assistant (SH1–SH6), a light theme (D10), and archiving teams (M1). **Next:** see "Proposed next milestones" at the bottom of this file.
 
-Last updated: 2026-11-03 (archive teams)
+Last updated: 2026-11-04 (game-day swaps kept as locks, See full plan)
 
 ## 3. Platform and technical
 
@@ -77,13 +77,13 @@ Last updated: 2026-11-03 (archive teams)
 
 | ID | Status | Notes |
 |----|--------|-------|
-| Main screen | ✅ | Period label, progress bar, on-court list with positions, IN/OUT pairs with position, and a large Next button. The screen is one viewport tall: rows keep their normal size when they fit and shrink a little when they don't (e.g. 5 in / 5 out), so it never scrolls. Tested from iPhone SE in Safari (375×548) up to Pro Max (440×956). |
+| Main screen | ✅ | Period label, progress bar, on-court list with positions, IN/OUT pairs with position, and a large Next button. The screen is one viewport tall: rows keep their normal size when they fit and shrink a little when they don't (e.g. 5 in / 5 out), so it never scrolls. Tested from iPhone SE in Safari (375×548) up to Pro Max (440×956). **Edit → See full plan** opens the whole plan read-only, at the segment on the court ("On court now"); back returns to the game. |
 | D1 | ✅ | |
 | D2 | ✅ | |
 | D3 | ✅ | Played segments are passed to the engine as `fixed`. |
-| D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. The replacement list shows players who can play the open position first, with every player's positions (G, F, C). A swap that breaks any rule warns first ("Swap anyway"); it is never blocked. |
+| D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. The replacement list shows players who can play the open position first, with every player's positions (G, F, C). A swap that breaks any rule warns first ("Swap anyway"); it is never blocked. Sending in someone else for the next lineup is kept as locks (in for the new player, out for the other), like a plan swap, so a later re-plan keeps it. |
 | D5 | ✅ | Injured / out for the game, rest for 1–3 segments, available again, and late arrival (adds a non-attending player). Takes effect from the next segment. |
-| D6 | ✅ | Offered after every status change, from the Edit menu, and from a banner when the plan still includes someone who can't play. Preview shows which lineups change before accepting. |
+| D6 | ✅ | Offered after every status change, from the Edit menu, and from a banner when the plan still includes someone who can't play. Preview shows which lineups change before accepting. Locks can't be changed on game day, so when a segment's locks no longer work (e.g. the player swapped in is now injured) the re-plan drops that segment's locks instead of failing, and the preview says which segments. |
 | D7 | ✅ 📱 | Screen Wake Lock, re-acquired when the app returns to the foreground. Needs checking on the deployed (https) site; the Wi-Fi test link couldn't use it. |
 | D8 | ✅ | Tested by reloading mid-game. |
 | D9 | ✅ | End game, and "Undo end of game" to resume. |

@@ -50,12 +50,13 @@ The screen stays awake during a game. If the phone locks anyway, or you switch a
 ### When the game doesn't go to plan
 
 - **Sub someone out right now:** tap the player in the **On court** list, then **Sub out now**, and pick who goes in. Both players get credit for that segment.
-- **Send in someone else at the next sub:** tap a green **▲ IN** player and pick a replacement. Only the next lineup changes.
+- **Send in someone else at the next sub:** tap a green **▲ IN** player and pick a replacement. Only the next lineup changes, and a later re-plan keeps your pick.
 - **Injury, or a player leaves:** tap the player, then **Injured or leaving**. If they're on the court, pick who replaces them now. They're out for the rest of the game.
 - **Give someone a rest:** tap the player, then **Rest for 1, 2 or 3 segments**.
 - **Late arrival:** tap **Edit** (top right) → **Show players not here** → tap the player → **Arrived**. They can play from the next segment.
 - **Re-plan:** after any of these, next5 offers to re-plan the rest of the game. A preview shows exactly which lineups change (new players in green) before you tap **Use new plan**. Segments already played never change, and it moves as few players as possible. If you keep the old plan, a yellow banner reminds you while someone who can't play is still in an upcoming lineup.
 - **Overtime:** on the last segment, tap **+ OT** (or **Edit → Add overtime segment**) to add another lineup, planned with the same rules.
+- **See the rest of the plan:** **Edit → See full plan** shows every lineup (or the grid), starting at the one on the court now. It's read-only; back takes you to the game.
 
 Every change is listed under **Changes from the plan** in the game summary.
 

@@ -1,10 +1,14 @@
 import { useRegisterSW } from 'virtual:pwa-register/react';
+import { useInLiveGame } from '../hooks/useInLiveGame';
 
 /**
  * Shows "Update available" when a new version has downloaded (T8). Updates
- * are never applied silently, and the banner stays hidden during a live game.
+ * are never applied silently, and the banner stays hidden on the screens of
+ * a game in progress. A hidden update still applies the next time the app
+ * is closed and reopened.
  */
 export function UpdateBanner() {
+  const inGame = useInLiveGame();
   const {
     needRefresh: [needRefresh, setNeedRefresh],
     updateServiceWorker,
@@ -15,7 +19,6 @@ export function UpdateBanner() {
     },
   });
 
-  const inGame = window.location.hash.endsWith('/live');
   if (!needRefresh || inGame) return null;
   return (
     <div className="update-banner" role="status">

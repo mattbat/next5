@@ -71,8 +71,12 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   await expect(next).toBeInViewport();
   await expect(page.getByRole('region', { name: 'On court now' }).getByRole('listitem')).toHaveCount(5);
   // Players are listed Guards, Forwards, Centers, so the order never shuffles.
-  const positionsShown = await page.getByRole('region', { name: 'On court now' }).locator('.court-pos').allTextContents();
-  const order = ['Guard', 'Forward', 'Center'];
+  const positionsShown = await page
+    .getByRole('region', { name: 'On court now' })
+    .locator('[data-position]')
+    .evaluateAll((chips) => chips.map((c) => c.getAttribute('data-position')!));
+  expect(positionsShown).toHaveLength(5);
+  const order = ['G', 'F', 'C'];
   expect(positionsShown.map((p) => order.indexOf(p))).toEqual([...positionsShown.map((p) => order.indexOf(p))].sort());
   await expect(page.getByRole('region', { name: 'Next change' })).toBeInViewport();
   await expectNoHorizontalScroll(page);

@@ -1,11 +1,15 @@
 import { useState } from 'react';
-import { Jersey, Sheet } from '../components/ui';
+import { Jersey, PositionChip, PositionChips, Sheet } from '../components/ui';
 import type { Game, Player, Position } from '../data/types';
 import { benchFor, statusLabel, type ReplanResult } from '../domain/changes';
 import { describeWarning, segmentLabel, sortLineup } from '../domain/game';
 import { paths } from '../router';
 
 /** Sheets for game-day changes (REQUIREMENTS.md D4–D6, D11). */
+
+/** Shown when the phone won't keep the screen on during a game (D7). */
+export const SCREEN_MAY_LOCK =
+  'This phone won’t let next5 keep the screen on, so it may lock during the game. To stop that, set Settings → Display & Brightness → Auto-Lock to Never.';
 
 function PlayerRow({ player, meta, onClick }: { player: Player | undefined; meta?: string | null; onClick: () => void }) {
   return (
@@ -73,15 +77,7 @@ export function ChoosePlayerSheet({
         <button type="button" className="list-item" onClick={() => onPick(id)}>
           <Jersey number={player?.number ?? ''} />
           <span className="list-title">{player?.name ?? 'Unknown'}</span>
-          <span className="chips" aria-label="Plays">
-            {positions
-              .filter((pos) => player?.skills[pos.id] !== undefined)
-              .map((pos) => (
-                <span key={pos.id} className={`chip ${pos.id === spotPosition ? 'match' : ''}`} title={pos.name}>
-                  {pos.short}
-                </span>
-              ))}
-          </span>
+          <PositionChips skills={player?.skills ?? {}} positions={positions} highlight={spotPosition} />
         </button>
       </li>
     );
@@ -244,6 +240,12 @@ export function ReplanSheet({
           ? 'No lineups need to change.'
           : `${preview.changed.length} upcoming lineup${preview.changed.length === 1 ? '' : 's'} will change. New players are highlighted.`}
       </p>
+      {preview.dropped.length > 0 && (
+        <p className="hint">
+          Your earlier picks for {preview.dropped.map((s) => segmentLabel(game.format, s).text).join(', ')} can’t all be
+          kept now, so {preview.dropped.length === 1 ? 'that lineup was' : 'those lineups were'} made again.
+        </p>
+      )}
       <ul className="replan">
         {preview.changed.map((segment) => {
           const before = new Set(game.plan[segment]?.map((s) => s.playerId));
@@ -253,7 +255,7 @@ export function ReplanSheet({
               <span className="replan-names">
                 {sortLineup(preview.game.plan[segment]!, positions, byId).map((s) => (
                   <span key={s.playerId} className={before.has(s.playerId) ? '' : 'new'}>
-                    {name(s.playerId)}
+                    {name(s.playerId)} <PositionChip id={s.positionId} positions={positions} />
                   </span>
                 ))}
               </span>
@@ -284,17 +286,23 @@ export function ReplanSheet({
 export function GameMenuSheet({
   game,
   roster,
+  screenMayLock = false,
   onPlayer,
   onReplan,
   onOvertime,
+  onEndGame,
   onShare,
   onClose,
 }: {
   game: Game;
   roster: Player[];
+  /** The phone wouldn't keep the screen on (D7). */
+  screenMayLock?: boolean;
   onPlayer: (playerId: string) => void;
   onReplan: () => void;
   onOvertime: () => void;
+  /** End the game before the last segment (D9); asks first. */
+  onEndGame: () => void;
   /** Hand the game to the other phone mid-game (SH1). */
   onShare: () => void;
   onClose: () => void;
@@ -310,10 +318,14 @@ export function GameMenuSheet({
 
   return (
     <Sheet title="Game changes" onClose={onClose}>
+      {screenMayLock && <p className="hint">{SCREEN_MAY_LOCK}</p>}
       <div className="actions">
         <button type="button" className="btn wide" onClick={onReplan} disabled={game.current + 1 >= game.plan.length}>
           Re-plan rest of game
         </button>
+        <a className="btn secondary wide" href={paths.gamePlan(game.id)}>
+          See full plan
+        </a>
         <button type="button" className="btn secondary wide" onClick={onOvertime}>
           + Add overtime segment
         </button>
@@ -323,6 +335,11 @@ export function GameMenuSheet({
         <a className="btn secondary wide" href={paths.gameSetup(game.id)}>
           Game setup
         </a>
+        {game.current + 1 < game.plan.length && (
+          <button type="button" className="btn secondary wide" onClick={onEndGame}>
+            End game now
+          </button>
+        )}
       </div>
       <h3 className="sheet-sub">Players · tap to change</h3>
       <ul className="list">
