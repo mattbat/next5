@@ -143,9 +143,10 @@ input[type='date'] {
   /* Full screen height, so pinned footers sit at the true bottom in a Home
      Screen app (see src/viewport.ts and the .game-day note below). */
   min-height: var(--app-height, 100dvh);
-  /* 16px under the status bar, not less: iOS draws a soft haze just below the
-     clock and battery, which made the top row's text look blurry. */
-  padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 24px);
+  /* 10px under the status bar: iOS draws a soft haze just below the clock and
+     battery, which made the top row's text look blurry at 4px. 16px was sharp
+     but left more space than needed. */
+  padding: calc(var(--safe-top) + 10px) 16px calc(var(--safe-bottom) + 24px);
 }
 
 .screen.with-footer {
@@ -243,11 +244,6 @@ input[type='date'] {
   font-size: 13px;
   text-align: center;
   margin-top: 40px;
-}
-
-.footnote-link {
-  color: inherit;
-  text-decoration: underline dotted;
 }
 
 .list-item.diag {
