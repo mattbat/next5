@@ -20,7 +20,7 @@ import {
   swapNext,
   swapNow,
 } from './changes';
-import { endGameEarly, nextSegment, planGame, startGame, undoSegment } from './game';
+import { endGameEarly, nextSegment, planGame, startGame, undoLast, undoSegment, withUndo } from './game';
 import { gameStats } from './stats';
 
 const positionIds = ['G', 'F', 'C'] as const;
@@ -53,6 +53,7 @@ const actionArb = fc.record({
     'next',
     'next',
     'undo',
+    'undoLast',
     'swapNow',
     'swapNext',
     'injure',
@@ -76,7 +77,16 @@ const pick = <T,>(items: T[], i: number): T | undefined => (items.length === 0 ?
 /** Applies one coach action, the way the screens do. Actions that don't apply leave the game as it is. */
 function apply(game: Game, action: Action, team: Team, roster: Player[]): Game {
   if (action.kind === 'undo') return undoSegment(game);
+  if (action.kind === 'undoLast') return undoLast(game);
   if (game.status !== 'live') return game;
+  // Every game-day change is undoable, as on the Game Day screen (C2).
+  const changed = change(game, action, team, roster);
+  return changed === game || action.kind === 'next' || action.kind === 'endEarly'
+    ? changed
+    : withUndo(game, changed, action.kind);
+}
+
+function change(game: Game, action: Action, team: Team, roster: Player[]): Game {
   const onCourt = ids(game.plan[game.current]);
   const attending = game.attending;
   switch (action.kind) {
@@ -118,13 +128,15 @@ function apply(game: Game, action: Action, team: Team, roster: Player[]): Game {
     }
     case 'endEarly':
       return endGameEarly(game);
+    default:
+      return game;
   }
 }
 
 /** What must hold after every step. */
 function checkGame(before: Game, after: Game, action: Action): void {
   // Played segments never change, except Undo taking back the last one (D3, D2).
-  if (action.kind === 'undo') {
+  if (action.kind === 'undo' || action.kind === 'undoLast') {
     expect(after.played).toEqual(before.played.slice(0, after.played.length));
     expect(after.played.length).toBeGreaterThanOrEqual(before.played.length - 1);
   } else {
@@ -141,6 +153,14 @@ function checkGame(before: Game, after: Game, action: Action): void {
   if (after.status === 'live') {
     const court = new Set(ids(after.plan[after.current]));
     for (const slot of after.subbedOut) expect(court.has(slot.playerId)).toBe(false);
+  }
+
+  // Undo of a change puts back exactly what it changed (C2).
+  if (action.kind === 'undoLast' && before.lastChange && before.status === 'live') {
+    for (const key of Object.keys(before.lastChange.before) as (keyof typeof before.lastChange.before)[]) {
+      expect(after[key]).toEqual(before.lastChange.before[key]);
+    }
+    expect(after.played).toEqual(before.played);
   }
 
   // Next then Undo puts everything back exactly.

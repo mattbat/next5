@@ -477,7 +477,8 @@ export const TOPICS: Topic[] = [
             Tap the big <b>Next</b> button. The screen moves on to the new segment.
           </li>
           <li>
-            Tapped Next by mistake? <b>↶ Undo</b> steps back one segment.
+            Tapped Next, or made a sub, by mistake? <b>↶ Undo</b> takes back the last thing you did: a sub, an injury or
+            rest, a re-plan, overtime, or Next.
           </li>
           <li>
             On the last segment the button says <b>End game</b>. Tap it when the game is over.

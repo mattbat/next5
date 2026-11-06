@@ -36,7 +36,9 @@ export const roleOf = (game: Game): Role => game.handoff?.role ?? 'coach';
 
 /** The game as it would be sent now: the next handoff number, from this phone's role. */
 export function makeHandoff(game: Game, team: Team, roster: Player[], now = new Date()): GameHandoff {
-  const { handoff, ...rest } = game;
+  // Undo stays on the phone that made the change.
+  const { handoff, lastChange, ...rest } = game;
+  void lastChange;
   const attending = new Set(game.attending);
   return {
     format: HANDOFF_FORMAT,

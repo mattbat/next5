@@ -18,7 +18,17 @@ import {
   type ReplanResult,
   type SwapResult,
 } from '../domain/changes';
-import { endedEarly, endGameEarly, nextSegment, segmentLabel, sortLineup, undoSegment } from '../domain/game';
+import {
+  endedEarly,
+  endGameEarly,
+  nextSegment,
+  segmentLabel,
+  sortLineup,
+  undoLabel,
+  undoLast,
+  undoSegment,
+  withUndo,
+} from '../domain/game';
 import { gameStats, gameStatsCsv } from '../domain/stats';
 import { substitutions, type Lineup } from '../engine';
 import { useGameData } from '../hooks/useGameData';
@@ -186,34 +196,36 @@ function Live({
         if (current.some((s) => s.playerId === playerId)) {
           return setSheet({ kind: 'choose-now', outId: playerId, thenOut: true });
         }
-        return void saveAndOfferReplan(setStatus(game, playerId, { kind: 'out' }));
+        return void saveAndOfferReplan(withUndo(game, setStatus(game, playerId, { kind: 'out' }), 'Injured'));
       case 'rest':
-        return void saveAndOfferReplan(setStatus(game, playerId, { kind: 'resting', segments: action.segments }));
+        return void saveAndOfferReplan(
+          withUndo(game, setStatus(game, playerId, { kind: 'resting', segments: action.segments }), 'Rest'),
+        );
       case 'available':
-        return void saveAndOfferReplan(setStatus(game, playerId, null));
+        return void saveAndOfferReplan(withUndo(game, setStatus(game, playerId, null), 'Available again'));
       case 'arrived':
-        return void saveAndOfferReplan(markArrived(game, playerId));
+        return void saveAndOfferReplan(withUndo(game, markArrived(game, playerId), 'Arrived'));
     }
   };
 
   const pickNow = (outId: string, inId: string, thenOut: boolean) =>
     confirmOrApply(inId, swapNow(game, team, roster, outId, inId), (changed) => {
       setPending(null);
-      if (thenOut) return void saveAndOfferReplan(setStatus(changed, outId, { kind: 'out' }));
-      void saveGame(changed);
+      if (thenOut) return void saveAndOfferReplan(withUndo(game, setStatus(changed, outId, { kind: 'out' }), 'Injured'));
+      void saveGame(withUndo(game, changed, 'Sub out now'));
       close();
     });
 
   const pickNext = (outId: string, inId: string) =>
     confirmOrApply(inId, swapNext(game, team, roster, outId, inId), (changed) => {
-      void saveGame(changed);
+      void saveGame(withUndo(game, changed, 'Change to the next sub'));
       close();
     });
 
   const overtime = () => {
     const result = addSegments(game, team, roster);
     if (!result.ok) return setError(result.message);
-    void saveGame(result.game);
+    void saveGame(withUndo(game, result.game, 'Overtime'));
     close();
   };
 
@@ -331,8 +343,9 @@ function Live({
         <button
           type="button"
           className="btn secondary undo"
-          disabled={game.played.length === 0}
-          onClick={() => void saveGame(undoSegment(game))}
+          disabled={undoLabel(game) === null}
+          title={undoLabel(game) ? `Undo: ${undoLabel(game)}` : undefined}
+          onClick={() => void saveGame(undoLast(game))}
         >
           ↶ Undo
         </button>
@@ -412,7 +425,7 @@ function Live({
           preview={sheet.preview}
           byId={byId}
           positions={team.positions}
-          onAccept={(planned) => void saveGame(planned).then(close)}
+          onAccept={(planned) => void saveGame(withUndo(game, planned, 'Re-plan')).then(close)}
           onClose={close}
         />
       )}

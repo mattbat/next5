@@ -1,9 +1,5 @@
 import { useState } from 'react';
-
-function isStandalone(): boolean {
-  const nav = navigator as Navigator & { standalone?: boolean };
-  return nav.standalone === true || window.matchMedia?.('(display-mode: standalone)').matches === true;
-}
+import { isStandalone } from '../viewport';
 
 /** When opened in Safari rather than from the Home Screen, explains how to install (H-7). */
 export function InstallHint() {

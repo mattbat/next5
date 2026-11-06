@@ -79,7 +79,7 @@ Last updated: 2026-11-05 (iPhone checks done, docs refreshed)
 |----|--------|-------|
 | Main screen | ✅ | Period label, progress bar, on-court list with positions, IN/OUT pairs with position, and a large Next button. The screen is one viewport tall: rows keep their normal size when they fit and shrink a little when they don't (e.g. 5 in / 5 out), so it never scrolls. Tested from iPhone SE in Safari (375×548) up to Pro Max (440×956). **Edit → See full plan** opens the whole plan read-only, at the segment on the court ("On court now"); back returns to the game. |
 | D1 | ✅ | |
-| D2 | ✅ | |
+| D2 | ✅ | **↶ Undo** takes back the last game-day change (sub out now, a change to the next sub, injured, rest, available again, arrived, re-plan, overtime), including both players’ credit for a mid-segment sub; with no change since Next, it takes back Next. One level; the change is saved with the game (`lastChange`, unindexed, so the schema didn’t change) so Undo works after a reload. Holding the button shows what it will undo. |
 | D3 | ✅ | Played segments are passed to the engine as `fixed`. |
 | D4 | ✅ | Tap a player on the court → Sub out now; both players are credited for the segment. Tap an incoming player to send in someone else instead. The replacement list shows players who can play the open position first, with every player's positions (G, F, C). A swap that breaks any rule warns first ("Swap anyway"); it is never blocked. Sending in someone else for the next lineup is kept as locks (in for the new player, out for the other), like a plan swap, so a later re-plan keeps it. |
 | D5 | ✅ | Injured / out for the game, rest for 1–3 segments, available again, and late arrival (adds a non-attending player). Takes effect from the next segment. |
@@ -179,10 +179,10 @@ In priority order:
 3. ~~Backup and restore (B1–B3).~~ Done.
 4. ~~Stats: full per-game stats (S3), season stats (S4), CSV export (S5).~~ Done. Approximate minutes (S6) left for later (decision 2026-11-03).
 5. ~~Light theme (D10)~~ Done. ~~Archive teams (M1)~~ Done. Editable positions (P1) and copying teams (M4) dropped (decision 2026-11-03).
-6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Later: pre-filled text to a saved number, QR code, an automatic return trip (see `docs/plans/game-handoff.md`).
+6. ~~Hand a game to an assistant and back (SH1–SH6).~~ Done. Pre-filled text to a saved number, a QR code and an automatic return trip were dropped (decision 2026-11-05).
 7. ~~Code review fixes (see `docs/plans/review-2026-11-04.md`) and releases with a changelog (REL1–REL4).~~ Done: 0.2.0 and 0.2.1 released.
 
-Nothing else is planned. Parked: the handoff extras above, and two review items (A1: a later player status overwriting an earlier one; C2: Undo for swaps on Game Day).
+Nothing else is planned. Dropped from the review (decision 2026-11-05): A1, a later player status overwriting an earlier one.
 
 ## Ideas to discuss
 

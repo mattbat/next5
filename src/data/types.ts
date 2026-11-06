@@ -105,6 +105,21 @@ export interface Game extends Record {
   startPlan?: Lineup[];
   /** Handing the game between the coach's and assistant's phones (SH1–SH6). Missing: never handed off. */
   handoff?: Handoff;
+  /**
+   * The game as it was before the last game-day change (a swap, status,
+   * re-plan or overtime), so Undo can put it back (D2). Cleared by Next.
+   * Missing: the last thing done was Next, or nothing yet.
+   */
+  lastChange?: LastChange;
+}
+
+/** The parts of a game a game-day change touches, kept for Undo (D2). */
+export type ChangeSnapshot = Pick<Game, 'plan' | 'subbedOut' | 'statuses' | 'attending' | 'locks' | 'events' | 'warnings'>;
+
+export interface LastChange {
+  /** What it was, for the Undo button's label, e.g. "Sub out now". */
+  label: string;
+  before: ChangeSnapshot;
 }
 
 /** This phone's side of a game handoff (SH3). */

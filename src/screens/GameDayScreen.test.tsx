@@ -81,6 +81,29 @@ describe('game day changes', () => {
     expect(saved.events.at(-1)?.kind).toBe('swap-now');
   });
 
+  it('Undo takes back a sub out now, then Undo is done (C2)', async () => {
+    const user = userEvent.setup();
+    const game = await startLiveGame();
+    render(<App />);
+    const undo = await screen.findByRole('button', { name: '↶ Undo' });
+    expect(undo).toBeDisabled();
+    const before = courtNames();
+    const first = (await screen.findAllByRole('button', { name: /: change$/ }))[0]!;
+    await user.click(first);
+    await user.click(screen.getByRole('button', { name: 'Sub out now' }));
+    await user.click(within(screen.getByRole('dialog')).getAllByRole('button').filter((b) => b.classList.contains('list-item'))[0]!);
+    await confirmIfWarned(user);
+    await waitFor(() => expect(courtNames()).not.toEqual(before));
+    await waitFor(() => expect(screen.getByRole('button', { name: '↶ Undo' })).toHaveAttribute('title', 'Undo: Sub out now'));
+
+    await user.click(screen.getByRole('button', { name: '↶ Undo' }));
+    await waitFor(() => expect(courtNames()).toEqual(before));
+    const saved = await savedGame(game.id);
+    expect(saved.subbedOut).toEqual([]);
+    expect(saved.events).toEqual([]);
+    expect(screen.getByRole('button', { name: '↶ Undo' })).toBeDisabled();
+  });
+
   it('marks an injured player out, subs them off, and re-plans the rest of the game', async () => {
     const user = userEvent.setup();
     const game = await startLiveGame();

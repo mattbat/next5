@@ -1,5 +1,5 @@
 import { generatePlan, type EnginePlayer, type GenerateError, type Lineup, type Lock, type Warning } from '../engine';
-import type { Game, GameFormat, Player, Position, Team } from '../data/types';
+import type { ChangeSnapshot, Game, GameFormat, Player, Position, Team } from '../data/types';
 
 /** Pure game logic shared by the screens. No storage or UI here. */
 
@@ -89,13 +89,22 @@ export function planGame(game: Game, team: Team, roster: Player[], seed?: number
   });
 }
 
+/** The likeliest reason playing time couldn't be equal, for the warning (H-5). */
+function equalTimeReason(game: Game): string {
+  if (activeLocks(game, game.plan.length).length > 0) {
+    return 'Your locks may be the reason: unlocking someone usually evens it out.';
+  }
+  if (game.rules.positionCoverage) return 'Usually this is because only a few players can cover a required position.';
+  return 'Usually this is because players were out, resting or arrived late.';
+}
+
 /** Human-readable explanation of a plan warning (H-5). */
 export function describeWarning(warning: Warning, game: Game, names: Map<string, string>): string {
   const name = (id: string) => names.get(id) ?? 'Unknown player';
   const list = (ids: string[]) => ids.map(name).join(', ');
   switch (warning.kind) {
     case 'equal-time':
-      return `Playing time isn't equal: ${list(warning.most)} play${warning.most.length === 1 ? 's' : ''} ${warning.spread} more segment${warning.spread === 1 ? '' : 's'} than ${list(warning.fewest)}. Usually this is because only a few players can cover a required position.`;
+      return `Playing time isn't equal: ${list(warning.most)} play${warning.most.length === 1 ? 's' : ''} ${warning.spread} more segment${warning.spread === 1 ? '' : 's'} than ${list(warning.fewest)}. ${equalTimeReason(game)}`;
     case 'bench-streak': {
       const from = segmentLabel(game.format, warning.startSegment).text;
       return `${name(warning.playerId)} sits ${warning.length} segments in a row starting ${from} (the limit is ${warning.limit}).`;
@@ -145,10 +154,53 @@ export function nextSegment(game: Game): Game {
   const onCourt = game.plan[game.current];
   if (!onCourt) return game;
   const played = [...game.played, [...onCourt, ...game.subbedOut]];
+  // After Next, Undo means "take back Next", not the change before it.
+  const rest = withoutLastChange(game);
   if (game.current + 1 >= game.plan.length) {
-    return { ...game, played, subbedOut: [], current: game.plan.length - 1, status: 'final' };
+    return { ...rest, played, subbedOut: [], current: game.plan.length - 1, status: 'final' };
   }
-  return { ...game, played, subbedOut: [], current: game.current + 1 };
+  return { ...rest, played, subbedOut: [], current: game.current + 1 };
+}
+
+function withoutLastChange(game: Game): Game {
+  const copy = { ...game };
+  delete copy.lastChange;
+  return copy;
+}
+
+const snapshotOf = (game: Game): ChangeSnapshot => ({
+  plan: game.plan,
+  subbedOut: game.subbedOut,
+  statuses: game.statuses,
+  attending: game.attending,
+  locks: game.locks,
+  events: game.events,
+  warnings: game.warnings,
+});
+
+/**
+ * Remembers how the game was before a game-day change (a swap, status,
+ * re-plan or overtime), so Undo can take that change back (D2). Only the
+ * last change is kept.
+ */
+export function withUndo(before: Game, after: Game, label: string): Game {
+  return { ...after, lastChange: { label, before: snapshotOf(before) } };
+}
+
+/**
+ * Undo (D2): takes back the last thing done on game day. That's the last
+ * change if there was one since Next (a swap's credit goes too), otherwise
+ * the last Next.
+ */
+export function undoLast(game: Game): Game {
+  if (game.status === 'live' && game.lastChange) return { ...withoutLastChange(game), ...game.lastChange.before };
+  return undoSegment(game);
+}
+
+/** What Undo would take back, for its label; null when there's nothing to undo. */
+export function undoLabel(game: Game): string | null {
+  if (game.status === 'live' && game.lastChange) return game.lastChange.label;
+  return game.played.length > 0 ? 'Next' : null;
 }
 
 /**
@@ -184,17 +236,4 @@ export function undoSegment(game: Game): Game {
   return { ...game, played, subbedOut, current, status: 'live', events };
 }
 
-export interface PlayerTime {
-  playerId: string;
-  planned: number;
-  played: number;
-}
 
-/** Planned vs. played segments per attending player (S3). */
-export function playingTime(game: Game): PlayerTime[] {
-  return game.attending.map((playerId) => ({
-    playerId,
-    planned: game.plan.filter((l) => l.some((s) => s.playerId === playerId)).length,
-    played: game.played.filter((l) => l.some((s) => s.playerId === playerId)).length,
-  }));
-}

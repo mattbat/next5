@@ -63,6 +63,18 @@ const isStatus: Check = (value) =>
   exact({ kind: oneOf('arrived'), at: isCount() })(value);
 const isEvent = exact({ kind: isString, segment: isCount() });
 const isHandoff = exact({ n: isNumber, role: oneOf('coach', 'assistant'), away: isBoolean });
+const isLastChange = exact({
+  label: isString,
+  before: exact({
+    plan: isPlan,
+    subbedOut: listOf(isSlot, MAX_LINEUP),
+    statuses: recordOf(isStatus),
+    attending: listOf(isString),
+    locks: listOf(isLock),
+    events: listOf(isEvent),
+    warnings: listOf(isObject),
+  }),
+});
 
 export const isValidTeam = shape({
   name: isString,
@@ -100,6 +112,7 @@ const gameFields = shape({
   events: listOf(isEvent),
   locks: listOf(isLock),
   handoff: isHandoff,
+  lastChange: isLastChange,
 });
 
 /** A game's fields are well formed, and a live game's current segment is in its plan. */
