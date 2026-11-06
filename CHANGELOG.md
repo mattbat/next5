@@ -4,6 +4,16 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.3.0 (2026-11-06)
+
+### New
+
+- Undo now takes back the last thing you did on game day, not just Next: a sub, an injury or rest, a late arrival, a re-plan or overtime.
+
+### Improved
+
+- When playing time can’t be equal, the warning says whether your locks, the position requirement or players being out is the likely reason.
+
 ## 0.2.1 (2026-11-05)
 
 ### Fixed

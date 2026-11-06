@@ -1,5 +1,15 @@
 [
   {
+    "version": "0.3.0",
+    "date": "2026-11-06",
+    "new": [
+      "Undo now takes back the last thing you did on game day, not just Next: a sub, an injury or rest, a late arrival, a re-plan or overtime."
+    ],
+    "improved": [
+      "When playing time can’t be equal, the warning says whether your locks, the position requirement or players being out is the likely reason."
+    ]
+  },
+  {
     "version": "0.2.1",
     "date": "2026-11-05",
     "fixed": [
