@@ -9,7 +9,6 @@ import {
   endGameEarly,
   nextSegment,
   planGame,
-  playingTime,
   segmentCount,
   segmentLabel,
   sortLineup,
@@ -146,6 +145,16 @@ describe('describeError and describeWarning', () => {
       /Unknown player/,
     );
   });
+
+  it('names the likeliest cause of unequal playing time (C7)', () => {
+    const warning = { kind: 'equal-time' as const, most: ['p1'], fewest: ['p2'], spread: 2 };
+    const planned = { ...game, plan: [[{ playerId: 'p1', positionId: null }]] };
+    expect(describeWarning(warning, planned, names)).toMatch(/only a few players can cover a required position/);
+    const locked = { ...planned, attending: ['p1', 'p2'], locks: [{ segment: 0, playerId: 'p1', kind: 'in' as const }] };
+    expect(describeWarning(warning, locked, names)).toMatch(/Your locks may be the reason/);
+    const noPositions = { ...planned, rules: { ...planned.rules, positionCoverage: false } };
+    expect(describeWarning(warning, noPositions, names)).toMatch(/out, resting or arrived late/);
+  });
 });
 
 describe('running a game', () => {
@@ -207,13 +216,6 @@ describe('running a game', () => {
     expect(nextSegment({ ...startGame(game), plan: [] })).toMatchObject({ played: [] });
   });
 
-  it('reports planned and played segments per player', () => {
-    let game = startGame(plannedGame());
-    game = nextSegment(game);
-    const time = playingTime(game);
-    expect(time.reduce((sum, t) => sum + t.planned, 0)).toBe(40);
-    expect(time.reduce((sum, t) => sum + t.played, 0)).toBe(5);
-  });
 });
 
 describe('sortLineup', () => {

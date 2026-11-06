@@ -150,7 +150,7 @@ Everything below is visible without scrolling on an iPhone in portrait:
 | ID | Requirement |
 |----|-------------|
 | D1 | Tapping **Next** moves to the next segment and records it as played. |
-| D2 | **Undo** reverses the last Next tap. |
+| D2 | **Undo** reverses the last thing done on game day: a swap, a status change, a re-plan, overtime, or the last Next tap. (Widened from Next only on 2026-11-05.) |
 | D3 | **Played segments are locked.** No adjustment, swap, or regeneration ever changes a segment that has already been played. |
 | D4 | **Swap now:** change the current lineup or any upcoming lineup. This records the change from the plan. When a swap happens partway through the current segment (for example, because of an injury), both the player who left and the player who came in are credited with that segment. The list of replacements shows players who can play the open spot's position first, then everyone else, with each player's positions (G, F, C). A swap that breaks any rule, including position coverage, shows a warning with **Swap anyway**; it is never blocked. |
 | D5 | **Player status:** mark a player as *unavailable* (injured or left), *resting for the next N segments*, or *arrived* (for late arrivals). |
@@ -219,7 +219,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 - Tap targets of at least 44 pt. The main game-day actions sit within thumb reach.
 - Every game-day action takes at most 2 taps. The Next action takes exactly 1.
 - ~~Supports Dynamic Type sizes and VoiceOver labels.~~ Dropped 2026-11-05: the existing labels stay, but a full accessibility pass isn't planned.
-- Polished, purpose-built feel, including a professionally designed Home Screen icon and splash screen.
+- Polished, purpose-built feel, including a professionally designed Home Screen icon. (A splash screen was dropped on 2026-11-05: the app opens from the phone's cache fast enough not to need one.)
 - Destructive actions (delete team, replace data) ask for confirmation.
 
 ## 14. Non-functional requirements
@@ -318,7 +318,8 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | 2026-11-03 | Positions stay Guard / Forward / Center; editing the list (P1) is dropped. The three defaults are enough. |
 | 2026-11-04 | The first-run guide (H-3) is a few skippable intro cards ending in "Try the demo team" or "Set up my own team", replayable from Help. A full in-app guide (H-8) is added, reached from the Teams screen, Settings and "?" links on screens. Screenshots are taken automatically from the demo team in both themes. |
 | 2026-11-04 | Code review follow-ups. Positions are shown as G / F / C boxes wherever a position stands on its own (Game Day, the plan, the roster, stats); sentences, warnings and VoiceOver use the full words. A game can be ended early from the Game Day Edit menu (D9). The plan can be seen read-only during a game (Edit → See full plan) and shared as text. Sending in someone else at the next sub is kept as locks, and a re-plan drops locks that can no longer work instead of failing. Received backups and games are checked for damage before anything is saved. |
-| 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
+| 2026-11-05 | Dropped: pre-filled texts to a saved number and QR codes for sharing a game, and keeping a player's earlier statuses when a new one is set (review item A1). |
+| 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), a splash screen (the app opens fast enough without one), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
 | 2026-11-04 | Releases (REL1–REL4): semantic versions, chosen with the user; a changelog note in every pull request; deploys happen only on a release, not on every merge. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
@@ -327,7 +328,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | # | Question | Default assumption until decided |
 |---|----------|----------------------------------|
 | Q1 | Roster sizes for the 8U and 12U teams? | Typically 8–12. Design and test for 6–15 |
-| Q2 | Should equal playing time balance across the season, so that players who got fewer segments last game get the extra segments next game? | TBD. Build it as an option inside R1 that is off by default |
+| Q2 | Should equal playing time balance across the season, so that players who got fewer segments last game get the extra segments next game? | Decided 2026-11-05: no. Each game is balanced on its own; the Stats tab shows who's been short so the coach can lock them in. |
 | Q3 | Should position coverage be on for 8U? | Configurable per team |
 | Q4 | Are some players restricted at the league level (for example a maximum number of segments)? | No |
 | Q5 | Are the skill level names (Rising / Steady / Go-To) right? | Yes |

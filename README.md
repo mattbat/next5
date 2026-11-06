@@ -53,7 +53,7 @@ The first time next5 opens, a short intro shows what it does (tap **Skip** to go
    <img src="public/help/plan-player-dark.webp" width="200" alt="Options for one player in the plan: swap, lock in or lock out">
 
    Every change is kept as a 🔒 lock, and the rest of the plan adjusts straight away to keep playing time fair, changing as little as possible. **↶ Undo** reverses the last change. **🔒 Lock lineup** keeps a whole five, such as your closing lineup. **↻ Redo from here** makes new lineups from that segment on, keeping earlier segments and every lock. **Grid** shows the whole game: players (rows) by lineups (columns), a letter for the position, a ring for a lock-in, ✕ for a lock-out, and each player's total. **↻ Shuffle** makes a whole new plan that is just as fair, still keeping your locks.
-6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next by mistake? Tap **↶ Undo**.
+6. **Start the game.** Tap **Start game**. At each substitution, read the green **▲ IN** and red **▼ OUT** pairs, send the players in, and tap **Next**. Tapped Next, or made a sub, by mistake? Tap **↶ Undo**: it takes back the last thing you did, whether a sub, a status change, a re-plan, overtime or Next.
    <img src="public/help/gameday-player-dark.webp" width="200" alt="Tapping a player on game day: Sub out now, Injured, or Rest">
 
 7. After the last lineup tap **End game** to see everyone's playing time: segments planned, played and sat, and the positions they played. **Export stats (CSV)** sends the table to Files, Mail or Numbers. The game is saved in the team's history.
@@ -173,17 +173,25 @@ src/
     analyze.ts      scores plans and produces warnings
     positions.ts    position coverage (bipartite matching) and assignment
     substitutions.ts  works out IN/OUT pairs between two lineups
-  domain/       Game logic shared by screens: labels, Next/Undo, stats (game.ts)
-                and game-day changes: swaps, statuses, re-plan, overtime (changes.ts)
+  domain/       Game logic shared by screens: labels, Next/Undo, ending early (game.ts),
+                plan editing: locks, swaps, redo (planning.ts), game-day changes: swaps,
+                statuses, re-plan, overtime (changes.ts), stats and CSV (stats.ts),
+                the plan as text (planText.ts)
   data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts),
                 backup files and restore (backup.ts), share sheet / download (share.ts),
-                handing a game to the assistant by link or file (handoff.ts)
+                handing a game to the assistant by link or file (handoff.ts), checks on
+                files and links from outside (validate.ts), What's new (whatsNew.ts)
   screens/      One component per screen
-  components/   Shared UI (top bar, toggles, sheets, update banner, install hint, first-run intro)
+  components/   Shared UI (top bar, toggles, sheets, G/F/C position chips, update banner,
+                What's new, install hint, first-run intro)
   help/         The in-app guide: topics (topics.tsx), screenshot list (shots.ts), intro state
-  hooks/        useGameData, useWakeLock
+  hooks/        useGameData, useWakeLock, useInLiveGame
+  changelog.json  Release notes the app shows (written by npm run release)
 e2e/            Playwright tests
 scripts/screens/  Takes the help screenshots (npm run screenshots)
+scripts/release.mjs  Releases and the changelog check (npm run release)
+changes/        Changelog notes waiting for the next release
+CHANGELOG.md    What changed in each release
 public/help/    Help screenshots, <name>-dark.webp and <name>-light.webp
 docs/STATUS.md  Which requirements are done
 REQUIREMENTS.md The spec

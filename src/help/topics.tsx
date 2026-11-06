@@ -477,7 +477,8 @@ export const TOPICS: Topic[] = [
             Tap the big <b>Next</b> button. The screen moves on to the new segment.
           </li>
           <li>
-            Tapped Next by mistake? <b>↶ Undo</b> steps back one segment.
+            Tapped Next, or made a sub, by mistake? <b>↶ Undo</b> takes back the last thing you did: a sub, an injury or
+            rest, a re-plan, overtime, or Next.
           </li>
           <li>
             On the last segment the button says <b>End game</b>. Tap it when the game is over.
@@ -749,7 +750,7 @@ export const TOPICS: Topic[] = [
         <p>
           next5 checks for a new version every hour while it’s open. When one has downloaded, a banner says{' '}
           <b>A new version of next5 is ready</b>. Tap <b>Update</b> when it suits you. Your teams and games are kept, and
-          next5 offers to make a backup first, just in case. The banner never appears during a game. To check straight away, tap <b>Check for updates</b> in Settings.
+          next5 offers to make a backup first, just in case. The banner never appears during a game. To check straight away, tap <b>Check for updates</b> in Settings. After an update, a short note says what’s new; <b>Settings → What’s new</b> lists every version.
         </p>
         <h2>Version and diagnostics</h2>
         <p>

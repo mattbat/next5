@@ -17,7 +17,8 @@ import {
   swapNow,
   unavailableSegments,
 } from './changes';
-import { nextSegment, planGame, playingTime, startGame, toEnginePlayers, undoSegment } from './game';
+import { gameStats } from './stats';
+import { nextSegment, planGame, startGame, toEnginePlayers, undoLabel, undoLast, undoSegment, withUndo } from './game';
 
 const team: Team = {
   id: 't',
@@ -114,7 +115,7 @@ describe('swapNow', () => {
     expect(ids(after.played[0])).toContain(out);
     expect(ids(after.played[0])).toContain(into);
     expect(after.subbedOut).toEqual([]);
-    const time = new Map(playingTime(after).map((t) => [t.playerId, t.played]));
+    const time = new Map(gameStats(after).map((t) => [t.playerId, t.played]));
     expect(time.get(out)).toBe(1);
     expect(time.get(into)).toBe(1);
   });
@@ -337,6 +338,48 @@ describe('status and re-planning', () => {
     const b = [[{ playerId: 'x', positionId: null }], [{ playerId: 'z', positionId: null }]];
     expect(changedSegments(a, b, 0)).toEqual([1]);
     expect(changedSegments(a, a, 0)).toEqual([]);
+  });
+});
+
+describe('Undo for game-day changes (C2)', () => {
+  it('takes back a sub out now, including both players’ credit', () => {
+    const game = nextSegment(liveGame());
+    const out = game.plan[1]!.find((s) => s.positionId === 'F')!.playerId;
+    const into = benchFor(game, 1).find((id) => roster.find((p) => p.id === id)!.skills.F)!;
+    const swapped = withUndo(game, unwrap(swapNow(game, team, roster, out, into)).game, 'Sub out now');
+    expect(undoLabel(swapped)).toBe('Sub out now');
+    const undone = undoLast(swapped);
+    for (const key of ['plan', 'subbedOut', 'statuses', 'attending', 'locks', 'events', 'warnings'] as const) {
+      expect(undone[key]).toEqual(game[key]);
+    }
+    expect(undone.lastChange).toBeUndefined();
+    expect(undone.played).toEqual(game.played);
+    // Nothing more to take back except the Next before it.
+    expect(undoLabel(undone)).toBe('Next');
+    expect(undoLast(undone)).toEqual(undoSegment(undone));
+  });
+
+  it('takes back a status change and its re-plan one at a time', () => {
+    const game = liveGame();
+    const resting = withUndo(game, setStatus(game, 'p7', { kind: 'resting', segments: 2 }), 'Rest');
+    const replanned = withUndo(resting, unwrap(replan(resting, team, roster)).game, 'Re-plan');
+    expect(undoLast(replanned).plan).toEqual(resting.plan);
+    expect(undoLast(replanned).statuses).toEqual(resting.statuses);
+    expect(undoLast(resting).statuses).toEqual({});
+  });
+
+  it('after Next, Undo takes back Next rather than the change before it', () => {
+    const game = liveGame();
+    const changed = withUndo(game, setStatus(game, 'p7', { kind: 'out' }), 'Injured');
+    const next = nextSegment(changed);
+    expect(next.lastChange).toBeUndefined();
+    expect(undoLabel(next)).toBe('Next');
+    expect(undoLast(next).current).toBe(0);
+    expect(undoLast(next).statuses).toEqual(changed.statuses);
+  });
+
+  it('has nothing to undo at the start of a game', () => {
+    expect(undoLabel(liveGame())).toBeNull();
   });
 });
 

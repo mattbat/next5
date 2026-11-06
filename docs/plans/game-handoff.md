@@ -160,6 +160,8 @@ A 30-minute spike before step 4:
 
 ## Later, not in this plan
 
+Dropped on 2026-11-05: none of these will be built.
+
 - **Pre-filled text:** save the assistant's number once in Settings and open
   `sms:<number>&body=<link>`, so the coach taps Send without picking a contact.
 - **QR code** for in-person handoff with no signal. Needs a scanner library and
