@@ -124,6 +124,26 @@ Last updated: 2026-11-05 (iPhone checks done, docs refreshed)
 
 The handoff state is an optional, unindexed `handoff` field on games, so the Dexie schema didn't change. A two-browser end-to-end test (`e2e/handoff.spec.ts`) covers coach → assistant by link, a refused late update, and the assistant handing the game in progress back by file for the coach to finish.
 
+## 11a. Practice planning
+
+Built on branch `claude/practice-planning` (2026-11-07), waiting to be tried on the beta preview (REL5) before it merges. 📱 means not yet checked on an iPhone.
+
+| ID | Status | Notes |
+|----|--------|-------|
+| PR1 | ✅ 📱 | Team → **Practice** tab (`src/screens/PracticeTab.tsx`), between Games and Roster. The Roster tab lost its player count to make room; the count moved to its **Players (n)** heading. `createPractice` in `repo.ts`. |
+| PR2 | ✅ 📱 | `#/drills` (`DrillsScreen`, `DrillSheet`): search, tag filter, suggested and custom tags, equipment, coaching points, retire and bring back. A drill a practice uses can't be deleted (`deleteDrill` returns false) and the sheet suggests retiring it. |
+| PR3 | ✅ | 20 drills in `src/data/starterDrills.ts`, each with a stable `key`; `addStarterDrills` only adds missing ones. Written for review; any can be cut. |
+| PR4 | ✅ 📱 | `PracticeScreen`: blocks with a minutes stepper, ↑/↓, Skip, Remove and **+ Station**; coach label and group (All/A/B) per station; total vs target; full-court note; start time, target length, focus and parent note. While running, only blocks still to come can change. Every edit goes through `editPractice` (read-modify-write in a transaction). |
+| PR5 | ✅ | `splitTeams` in `src/domain/practice.ts`: balanced (best skill level, grouped by main position so two strong players at one position split up) or random; tap a player to move them. Property test: everyone on exactly one team, sizes within one, skill totals within 3. Skill levels are never shown. |
+| PR6 | ✅ | `equipmentList`: always-bring list (team Settings → **Practice: always bring**; defaults in `DEFAULT_ALWAYS_BRING`) plus drill equipment, matched ignoring case, with the drills that need each item. |
+| PR7 | ✅ 📱 | `#/practice/:id/run` (`PracticeRunScreen`): countdown, Pause/Resume, +1 min, Skip, Next/Finish, End; stations with coach, group players, coaching points; Up next. The clock is stored on the practice (`clock.startedAt` + `elapsed`), so it survives closing the app (e2e reloads mid-block). Beeps via Web Audio after the first tap (`src/practiceSound.ts`), with an on/off switch; wake lock as on Game Day. |
+| PR8 | ✅ 📱 | 👍/👎 and a note per station, on the run screen and the review; **What went well** and **Work on next time**. Past notes show in the drill's editor (`drillNotes`). |
+| PR9 | ✅ | Practice tab → **Season focus**: minutes and % by tag (with bars), and uses, minutes, last date and 👍/👎 by drill (`practiceStats`). Uses actual run time when known. |
+| PR10 | ✅ 📱 | Share as text: full plan, a station card per named coach, and a parent one-pager (`practicePlanText`, `stationCardText`, `parentText`). |
+| PR11 | ✅ | Optional `drills` and `practices` in backups (`BACKUP_VERSION` stays 1; older apps ignore them). Replace keeps the drill library when restoring a backup from before practices. Validated like games. Schema v4 adds the two tables; migration test from v3. |
+
+Tests: `src/domain/practice.test.ts` (with a property test), `src/data/practice.test.ts`, `src/screens/Practice.test.tsx`, and `e2e/practice.spec.ts` (WebKit at 375×667 with a wide font). Help topic **Planning practices**.
+
 ## 12. Documentation and help
 
 | ID | Status | Notes |

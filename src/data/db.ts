@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { Game, Player, Team } from './types';
+import type { Drill, Game, Player, Practice, Team } from './types';
 
 /**
  * IndexedDB schema (REQUIREMENTS.md T6, T7). To change it, add a new
@@ -9,6 +9,8 @@ export class Next5Db extends Dexie {
   teams!: EntityTable<Team, 'id'>;
   players!: EntityTable<Player, 'id'>;
   games!: EntityTable<Game, 'id'>;
+  drills!: EntityTable<Drill, 'id'>;
+  practices!: EntityTable<Practice, 'id'>;
 
   constructor(name = 'next5') {
     super(name);
@@ -35,6 +37,11 @@ export class Next5Db extends Dexie {
           .toCollection()
           .modify((game: Partial<Game>) => upgradeGameV3(game)),
       );
+    // v4: practice planning (PR1–PR11). New tables only; existing data is unchanged.
+    this.version(4).stores({
+      drills: 'id, name',
+      practices: 'id, teamId, date, status',
+    });
   }
 }
 

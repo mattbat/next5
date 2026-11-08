@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { Game } from './data/types';
+import type { Game, Practice } from './data/types';
 
 /**
  * Tiny hash router. GitHub Pages can't fall back to index.html for deep
@@ -14,6 +14,9 @@ export type Route =
   | { name: 'game-setup'; gameId: string }
   | { name: 'game-plan'; gameId: string }
   | { name: 'game-live'; gameId: string }
+  | { name: 'practice'; practiceId: string }
+  | { name: 'practice-run'; practiceId: string }
+  | { name: 'drills' }
   | { name: 'receive'; data: string }
   | { name: 'help'; topic: string | null }
   | { name: 'welcome' };
@@ -25,6 +28,10 @@ export function parseRoute(hash: string): Route {
   if (parts[0] === 'receive' && parts[1]) return { name: 'receive', data: parts[1] };
   if (parts[0] === 'help') return { name: 'help', topic: parts[1] ?? null };
   if (parts[0] === 'welcome') return { name: 'welcome' };
+  if (parts[0] === 'drills') return { name: 'drills' };
+  if (parts[0] === 'practice' && parts[1]) {
+    return parts[2] === 'run' ? { name: 'practice-run', practiceId: parts[1] } : { name: 'practice', practiceId: parts[1] };
+  }
   if (parts[0] === 'team' && parts[1]) return { name: 'team', teamId: parts[1] };
   if (parts[0] === 'game' && parts[1]) {
     if (parts[2] === 'plan') return { name: 'game-plan', gameId: parts[1] };
@@ -42,6 +49,9 @@ export const paths = {
   gameSetup: (gameId: string) => `#/game/${gameId}`,
   gamePlan: (gameId: string) => `#/game/${gameId}/plan`,
   gameLive: (gameId: string) => `#/game/${gameId}/live`,
+  practice: (practiceId: string) => `#/practice/${practiceId}`,
+  practiceRun: (practiceId: string) => `#/practice/${practiceId}/run`,
+  drills: () => '#/drills',
   receive: (data: string) => `#/receive/${data}`,
   help: (topic?: string) => (topic ? `#/help/${topic}` : '#/help'),
   welcome: () => '#/welcome',
@@ -52,6 +62,11 @@ export function gamePath(game: Game): string {
   if (game.status !== 'planned') return paths.gameLive(game.id);
   if (game.plan.length > 0) return paths.gamePlan(game.id);
   return paths.gameSetup(game.id);
+}
+
+/** Where a practice opens: the timer while it's running, otherwise its plan (PR1, PR7). */
+export function practicePath(practice: Pick<Practice, 'id' | 'status'>): string {
+  return practice.status === 'live' ? paths.practiceRun(practice.id) : paths.practice(practice.id);
 }
 
 export function navigate(hash: string): void {

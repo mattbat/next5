@@ -83,6 +83,7 @@ export const isValidTeam = shape({
   defaultFormat: isFormat,
   defaultRules: isRules,
   archived: isBoolean,
+  alwaysBring: listOf(isString, 100),
 });
 
 export const isValidPlayer = shape({
@@ -114,6 +115,57 @@ const gameFields = shape({
   handoff: isHandoff,
   lastChange: isLastChange,
 });
+
+// Practice planning (PR11). Generous limits again: a practice has a few
+// dozen blocks at most.
+const MAX_BLOCKS = 200;
+const isStation: Check = (value) => {
+  if (!exact({ drillId: isString, coach: isString, group: oneOf('all', 'A', 'B') })(value)) return false;
+  const { rating, note } = value as { rating?: unknown; note?: unknown };
+  return (rating === undefined || oneOf('up', 'down')(rating)) && (note === undefined || isString(note));
+};
+const isBlock = shape({
+  minutes: isCount(600),
+  stations: listOf(isStation, 20),
+  skipped: isBoolean,
+  actualSeconds: isCount(),
+});
+
+export const isValidDrill = shape({
+  name: isString,
+  minutes: isCount(600),
+  court: oneOf('half', 'full'),
+  tags: listOf(isString, 50),
+  equipment: listOf(isString, 50),
+  notes: isString,
+  retired: isBoolean,
+  starter: isString,
+});
+
+const practiceFields = shape({
+  teamId: isString,
+  date: isString,
+  time: isString,
+  length: isCount(600),
+  focus: isString,
+  parentNote: isString,
+  attending: listOf(isString),
+  blocks: listOf(isBlock, MAX_BLOCKS),
+  teams: exact({ A: listOf(isString), B: listOf(isString) }),
+  status: oneOf('planned', 'live', 'done'),
+  current: isCount(MAX_BLOCKS),
+  clock: exact({ startedAt: (v) => v === null || isNumber(v), elapsed: isNumber }),
+  wentWell: isString,
+  improve: isString,
+});
+
+/** A practice's fields are well formed, and a live practice's current block is in its plan. */
+export const isValidPractice: Check = (value) => {
+  if (!practiceFields(value)) return false;
+  const practice = value as { blocks?: unknown[]; current?: number; status?: string };
+  if (practice.status === 'live' && (practice.current ?? 0) >= (practice.blocks?.length ?? 0)) return false;
+  return true;
+};
 
 /** A game's fields are well formed, and a live game's current segment is in its plan. */
 export const isValidGame: Check = (value) => {

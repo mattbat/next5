@@ -18,13 +18,15 @@ import { createGame, deleteTeam, setTeamArchived, sharedAway, updateTeam } from 
 import { shareCsv } from '../data/share';
 import type { Game, Player, Team } from '../data/types';
 import { formatGameDate } from '../domain/game';
+import { alwaysBring } from '../domain/practice';
 import { seasonStats, seasonStatsCsv } from '../domain/stats';
 import { gamePath, navigate, paths } from '../router';
 import { PlayerSheet } from './PlayerSheet';
+import { PracticeTab } from './PracticeTab';
 import { RULE_HELP } from './ruleHelp';
 import { HelpLink } from '../help/parts';
 
-type Tab = 'games' | 'roster' | 'stats' | 'settings';
+type Tab = 'games' | 'practice' | 'roster' | 'stats' | 'settings';
 
 const TAB_KEY = 'next5.teamTab.';
 
@@ -32,7 +34,7 @@ const TAB_KEY = 'next5.teamTab.';
 function lastTab(teamId: string): Tab {
   try {
     const tab = sessionStorage.getItem(TAB_KEY + teamId);
-    if (tab === 'roster' || tab === 'stats' || tab === 'settings') return tab;
+    if (tab === 'practice' || tab === 'roster' || tab === 'stats' || tab === 'settings') return tab;
   } catch {
     // Storage unavailable.
   }
@@ -97,13 +99,15 @@ export function TeamScreen({ teamId }: { teamId: string }) {
         onChange={setTab}
         options={[
           { value: 'games', label: 'Games' },
-          { value: 'roster', label: `Roster (${players.filter((p) => p.active).length})` },
+          { value: 'practice', label: 'Practice' },
+          { value: 'roster', label: 'Roster' },
           { value: 'stats', label: 'Stats' },
           { value: 'settings', label: 'Settings' },
         ]}
       />
       {tab === 'roster' && <Roster team={team} players={players} />}
       {tab === 'games' && <Games team={team} games={games ?? []} hasPlayers={players.length > 0} />}
+      {tab === 'practice' && <PracticeTab team={team} />}
       {tab === 'stats' && <SeasonStats team={team} players={players} games={games ?? []} />}
       {tab === 'settings' && <TeamSettings team={team} />}
     </main>
@@ -115,7 +119,7 @@ function Roster({ team, players }: { team: Team; players: Player[] }) {
 
   return (
     <Section
-      title="Players"
+      title={`Players (${players.filter((p) => p.active).length})`}
       aside={
         <button type="button" className="btn small" onClick={() => setEditing('new')}>
           + Add
@@ -356,6 +360,8 @@ function TeamSettings({ team }: { team: Team }) {
         ))}
       </Section>
 
+      <AlwaysBring team={team} />
+
       <TeamBackup team={team} />
 
       <Section title="Archive">
@@ -394,6 +400,26 @@ function TeamSettings({ team }: { team: Team }) {
         </button>
       </Section>
     </>
+  );
+}
+
+/** Equipment that goes to every practice (PR6), one item per line. */
+function AlwaysBring({ team }: { team: Team }) {
+  const [text, setText] = useState(alwaysBring(team).join('\n'));
+  const save = () => {
+    const items = text
+      .split(/[\n,]/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    void updateTeam(team.id, { alwaysBring: items });
+  };
+  return (
+    <Section title="Practice: always bring">
+      <label className="field">
+        <span>One item per line. Added to every practice’s equipment list.</span>
+        <textarea rows={5} value={text} onChange={(e) => setText(e.target.value)} onBlur={save} aria-label="Always bring" />
+      </label>
+    </Section>
   );
 }
 

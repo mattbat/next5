@@ -164,7 +164,7 @@ describe('roster', () => {
       const avery = await db.players.filter((p) => p.name === 'Avery').first();
       expect(avery).toMatchObject({ skills: { G: 3 }, active: false });
     });
-    expect(screen.getByRole('radio', { name: 'Roster (9)' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Players (9)' })).toBeInTheDocument();
   });
 
   it('removes a player after confirming', async () => {
