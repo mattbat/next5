@@ -256,7 +256,7 @@ Coverage thresholds are enforced in `vite.config.ts`: 95% of lines for `src/engi
 
 ### Beta previews
 
-Cloudflare Pages builds every pushed branch (REL5) and comments the preview links on its pull request. Open a draft PR, open the branch link (`<branch>.next5.pages.dev`, the same for every push) in Safari on the iPhone, and add it to the Home Screen. It installs as **next5 β**, with its own data. To try it with real teams, back up in the real app and restore the file in the beta.
+Cloudflare Pages builds every pushed branch (REL5) and comments the preview links on its pull request. Open a draft PR, open the branch link (`<branch>.next5-4gi.pages.dev`, with `/` in the branch name turned into `-`; the same for every push) in Safari on the iPhone, and add it to the Home Screen. It installs as **next5 β**, with its own data. To try it with real teams, back up in the real app and restore the file in the beta.
 
 A beta build is any build with `CF_PAGES=1` (Cloudflare sets it) or `BETA=1`: base path `/`, a Beta label on every screen, Settings → Beta (branch, Erase beta data), the waiting `changes/` notes as "Coming next", and `noindex`. See `scripts/beta-lib.mjs` and `vite.config.ts`. Try one locally with `BETA=1 npx vite build && npx vite preview`.
 
