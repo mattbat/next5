@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { BETA } from '../beta';
 import { Section, TopBar } from '../components/ui';
 import { lastError } from '../errorLog';
 import { paths } from '../router';
@@ -36,6 +37,7 @@ function readings(): [string, string][] {
   return [
     ['Version', `${__APP_VERSION__} (${__COMMIT__})`],
     ['Build', __BUILD_TIME__],
+    ['Channel', BETA ? `beta, from ${BETA.branch}` : 'release'],
     ['Last error', describeLastError()],
     ['Running as app (Home Screen)', isStandalone() ? 'yes' : 'no'],
     ['Secure page (https)', window.isSecureContext ? 'yes' : 'no'],

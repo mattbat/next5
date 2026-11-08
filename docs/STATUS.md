@@ -163,6 +163,7 @@ The handoff state is an optional, unindexed `handoff` field on games, so the Dex
 | REL2 | ✅ | `npm run release -- <bump>` writes the release; merging its PR deploys, tags `vX.Y.Z` and publishes a GitHub release (`.github/workflows/ci.yml`). |
 | REL3 | ✅ | Notes in `changes/`, checked in CI ("Changelog note" job; `no-changelog` label to skip). `CHANGELOG.md` and `src/changelog.json`; the app shows the notes once after an update and under Settings → What’s new. |
 | REL4 | ✅ | Diagnostics shows the version and commit. |
+| REL5 | 🟡 📱 | Beta builds when `CF_PAGES=1` (or `BETA=1`): `scripts/beta-lib.mjs` and `vite.config.ts` (base `/`, "next5 β", `noindex` and `robots.txt`); `src/beta.ts`; the Beta label in `TopBar`; Settings → Beta (branch, Erase beta data) and Coming next; Diagnostics → Channel. Cloudflare Pages project linked (2026-11-07). Still to check: a preview opening and installing on an iPhone. |
 
 ## 16. Stretch goals
 

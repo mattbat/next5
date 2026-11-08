@@ -190,6 +190,7 @@ src/
 e2e/            Playwright tests
 scripts/screens/  Takes the help screenshots (npm run screenshots)
 scripts/release.mjs  Releases and the changelog check (npm run release)
+scripts/beta-lib.mjs  Beta preview builds (REL5)
 changes/        Changelog notes waiting for the next release
 CHANGELOG.md    What changed in each release
 public/help/    Help screenshots, <name>-dark.webp and <name>-light.webp
@@ -221,7 +222,8 @@ Segments in `fixed` (already played) are never changed. `locks` pin single playe
 - `src/engine/generate.property.test.ts`: fast-check generates hundreds of random rosters, requirements, absences and fixed segments, and checks that positions are always covered, time stays within 1, bench stretches stay within the limit, played segments never change, unavailable players never play, and locks are always kept (or the error names a segment whose locks really can't work).
 - `src/App.test.tsx`: walks the main workflows through the real screens against an in-memory IndexedDB.
 - `src/screens/Help.test.tsx`: the intro, and every help topic renders with links and screenshots that exist.
-- `scripts/release-lib.test.mjs`: the release and changelog helpers.
+- `scripts/release-lib.test.mjs`: the release and changelog helpers. `scripts/beta-lib.test.mjs`: beta builds.
+- `src/screens/Beta.test.tsx`: a beta build's label, Settings → Beta and Coming next, and that the real app shows none of it.
 - Engine, game-logic and script tests run in plain Node; screen tests run in jsdom (`test.projects` in `vite.config.ts`).
 - `e2e/`: Playwright, in WebKit at 402×874 (iPhone 17) for the full game flow, and in Chromium for offline launch.
 
@@ -241,6 +243,14 @@ Coverage thresholds are enforced in `vite.config.ts`: 95% of lines for `src/engi
 2. **End-to-end** (build, then Playwright)
 3. **Changelog note** (pull requests only): the PR adds a note in `changes/`, or is a complete release, or has the `no-changelog` label
 4. **Deploy to GitHub Pages**: only when a push to `main` raises the version (a release), and only if the test jobs pass. It also tags `vX.Y.Z` and publishes a GitHub release with that version's changelog. Running the workflow by hand on `main` redeploys it as it is.
+
+### Beta previews
+
+Cloudflare Pages builds every pushed branch (REL5) and comments the preview links on its pull request. Open a draft PR, open the branch link (`<branch>.next5.pages.dev`, the same for every push) in Safari on the iPhone, and add it to the Home Screen. It installs as **next5 β**, with its own data. To try it with real teams, back up in the real app and restore the file in the beta.
+
+A beta build is any build with `CF_PAGES=1` (Cloudflare sets it) or `BETA=1`: base path `/`, a Beta label on every screen, Settings → Beta (branch, Erase beta data), the waiting `changes/` notes as "Coming next", and `noindex`. See `scripts/beta-lib.mjs` and `vite.config.ts`. Try one locally with `BETA=1 npx vite build && npx vite preview`.
+
+Cloudflare project settings: build command `npx vite build`, output `dist`, `NODE_VERSION=24`, automatic production deployments off (the real app is on GitHub Pages), preview branches: all non-production branches.
 
 ### Releases
 

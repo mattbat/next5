@@ -255,6 +255,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | REL2 | **Merging isn't releasing.** Work merges to `main` without reaching coaches. A release is its own pull request made with `npm run release -- minor` (or patch, or major); merging it deploys to GitHub Pages, tags `vX.Y.Z` and publishes a GitHub release. Running the CI workflow by hand redeploys `main` as it is. |
 | REL3 | **Changelog:** every pull request that changes the app adds a short note for coaches in `changes/` (new, improved or fixed); CI fails one without a note unless it has the `no-changelog` label. A release collects the notes into `CHANGELOG.md` and `src/changelog.json`. The app shows them once after an update (never during a game or the first-run intro) and under Settings → What's new. |
 | REL4 | Diagnostics shows the version and the commit it was built from. |
+| REL5 | **Beta previews** (added 2026-11-07). Every pushed branch gets an https preview on Cloudflare Pages, linked from its pull request, so a change can be tried on an iPhone before it merges. A preview is a beta build: it runs from its own address, so its data never mixes with the real app's; it's named "next5 β" on the Home Screen; every screen shows a Beta label; Settings says which branch it was built from, lists the waiting changelog notes as "Coming next" and can erase its data (after offering a backup); and search engines are told to skip it. Production builds and releases (REL2) don't change. |
 
 ## 15. Screens (initial list)
 
@@ -321,6 +322,7 @@ The coach plans a game, an assistant can run the substitutions on their own phon
 | 2026-11-05 | Dropped: pre-filled texts to a saved number and QR codes for sharing a game, and keeping a player's earlier statuses when a new one is set (review item A1). |
 | 2026-11-05 | Dropped: a full accessibility pass (Dynamic Type and VoiceOver), a splash screen (the app opens fast enough without one), an install count, favorite lineups, and automatic cloud backup and sync. No server is wanted, so next5 stays fully on the phone (N4 is unchanged). |
 | 2026-11-04 | Releases (REL1–REL4): semantic versions, chosen with the user; a changelog note in every pull request; deploys happen only on a release, not on every merge. |
+| 2026-11-07 | Beta previews (REL5) run on Cloudflare Pages, linked to this repo, rather than a second GitHub repo or a folder on mattbat.com: each preview gets its own https address, so its data stays apart from the real app's. The real app and releases stay on GitHub Pages. New features are tested on their preview before they merge. |
 | 2026-11-03 | During a game, coach-picked substitutions are never blocked. Breaking a rule, including position coverage, shows a warning and "Swap anyway". Generated plans still always cover positions. |
 
 ## 18. Open questions
