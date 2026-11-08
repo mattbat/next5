@@ -1,7 +1,9 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import { useRef, useState } from 'react';
 import { Info, Section, Segmented, TopBar } from '../components/ui';
+import { BETA, versionLabel } from '../beta';
 import { db } from '../data/db';
+import { eraseEverything } from '../data/repo';
 import {
   backUp,
   formatBackupDate,
@@ -23,8 +25,8 @@ function plural(n: number, word: string) {
   return `${n} ${word}${n === 1 ? '' : 's'}`;
 }
 
-/** Settings: appearance (D10), backup and restore (B1, B2), updates and app info (B4). */
-export function SettingsScreen() {
+/** Settings: appearance (D10), backup and restore (B1, B2), updates and app info (B4), and beta builds (REL5). */
+export function SettingsScreen({ reload = () => window.location.reload() }: { reload?: () => void }) {
   const [theme, setTheme] = useState(themePreference);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +75,24 @@ export function SettingsScreen() {
     );
   };
 
+  // Beta only: start over, after offering a backup (REL5).
+  const onErase = async () => {
+    if ((localTeams?.length ?? 0) > 0 && window.confirm('Back up this beta copy first? Choose Cancel to skip the backup.')) {
+      const before = lastBackupAt();
+      const result = await backUp();
+      setLast(lastBackupAt());
+      if (lastBackupAt() === before) {
+        show(`${result} Nothing was erased.`);
+        return;
+      }
+    }
+    if (!window.confirm('Erase every team, game and setting in this beta copy? The real next5 isn’t affected. This can’t be undone.')) {
+      return;
+    }
+    await eraseEverything();
+    reload();
+  };
+
   const checkForUpdates = async () => {
     try {
       const registration = await navigator.serviceWorker?.getRegistration();
@@ -88,6 +108,8 @@ export function SettingsScreen() {
     }
   };
 
+  // On a beta build, the changes waiting for the next release (REL5).
+  const comingNext = BETA && Object.keys(BETA.next).length > 0 ? { version: 'next', date: '', ...BETA.next } : null;
   const summary = pending ? summarize(pending) : null;
   // Teams on this phone that "Replace everything" would delete (a one-team backup doesn't have the others).
   const inBackup = new Set(pending?.teams.map((t) => t.id));
@@ -106,6 +128,19 @@ export function SettingsScreen() {
         <p className="error" role="alert">
           {error}
         </p>
+      )}
+
+      {BETA && (
+        <Section title="Beta">
+          <p className="hint">
+            This is a test copy of next5, built from <b>{BETA.branch}</b>. Its teams and games are kept apart from the
+            real app, so nothing you do here changes them. To try it with your real teams, back up in the real app and
+            restore the file here.
+          </p>
+          <button type="button" className="btn danger wide" onClick={() => void onErase()}>
+            Erase beta data
+          </button>
+        </Section>
       )}
 
       <Section title="Help">
@@ -206,12 +241,20 @@ export function SettingsScreen() {
           Check for updates
         </button>
         <p className="hint">
-          next5 version {__APP_VERSION__} · <a href={paths.diagnostics()}>Diagnostics</a>
+          next5 version {versionLabel()} · <a href={paths.diagnostics()}>Diagnostics</a>
         </p>
       </Section>
 
-      {RELEASES.length > 0 && (
+      {(RELEASES.length > 0 || comingNext) && (
         <Section title="What’s new">
+          {comingNext && (
+            <div className="release">
+              <p className="release-head">
+                <b>Coming next</b> · not released yet
+              </p>
+              <ReleaseNotes release={comingNext} />
+            </div>
+          )}
           {RELEASES.slice(0, showAllReleases ? undefined : 1).map((release) => (
             <div key={release.version} className="release">
               <p className="release-head">

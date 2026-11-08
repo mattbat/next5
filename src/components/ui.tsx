@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from 'react';
+import { BETA } from '../beta';
 import type { Position } from '../data/types';
 import { canGoBack } from '../router';
 
@@ -39,6 +40,8 @@ export function TopBar({
       )}
       <h1 className="topbar-title">{title}</h1>
       <span className="topbar-action">{action}</span>
+      {/* A preview build of a branch, not the real app (REL5). */}
+      {BETA && <span className="beta-badge">Beta</span>}
     </header>
   );
 }

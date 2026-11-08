@@ -154,6 +154,22 @@ export async function deleteGame(id: string): Promise<void> {
   await db.games.delete(id);
 }
 
+/**
+ * Erases every team, player and game, and the app's saved settings, as if
+ * next5 were new on this phone. Only beta builds offer it (REL5).
+ */
+export async function eraseEverything(storage: Storage = localStorage): Promise<void> {
+  await db.transaction('rw', db.teams, db.players, db.games, async () => {
+    await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
+  });
+  try {
+    const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter((k) => k?.startsWith('next5.'));
+    for (const key of keys) storage.removeItem(key!);
+  } catch {
+    // Storage unavailable: nothing saved there to erase.
+  }
+}
+
 // Handing a game to the assistant and back (SH1–SH6)
 
 /**

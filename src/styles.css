@@ -154,6 +154,7 @@ input[type='date'] {
 }
 
 .topbar {
+  position: relative;
   display: grid;
   /* Side columns are at least 72px and grow to fit links like "Settings" in any
      font; equal 1fr sides keep the title centered whenever there is room. */
@@ -161,6 +162,24 @@ input[type='date'] {
   align-items: center;
   min-height: 52px;
   margin: 0 -4px 8px;
+}
+
+/* Above the title on a beta build (REL5); takes no space, so layouts match the real app. */
+.beta-badge {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 6px;
+  border-radius: 4px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  pointer-events: none;
 }
 
 .topbar-title {
