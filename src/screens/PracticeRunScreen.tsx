@@ -8,11 +8,14 @@ import {
   finishPractice,
   formatClock,
   groupLabel,
+  lateBlocks,
   nextBlock,
   pauseClock,
   remainingMs,
   resumeClock,
   skipBlock,
+  undoRun,
+  withUndo,
   type DrillIndex,
 } from '../domain/practice';
 import { usePracticeData } from '../hooks/usePracticeData';
@@ -70,6 +73,11 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
   // Blocks done or skipped so far count, so skipping one doesn't renumber the rest.
   const active = practice.blocks.filter((b, i) => i <= practice.current || !b.skipped);
   const position = practice.current + 1;
+  // Drills that won't finish within the target length at this pace (PR4a).
+  const late = lateBlocks(practice, now());
+  const lateNames = practice.blocks
+    .filter((b) => late.has(b.id))
+    .map((b) => b.stations.map((s) => drillName(drillIndex, s.drillId)).join(' + '));
 
   // Beep once at one minute left and three times at zero, once per block.
   const beeped = useRef<{ block: string; at: Set<string> }>({ block: block.id, at: new Set() });
@@ -86,19 +94,17 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
     }
   });
 
-  const act = (change: (p: Practice) => Partial<Practice> | null) => void editPractice(practice.id, change);
+  // Every timer button can be undone, in case of a wrong tap (PR7a).
+  const act = (label: string, change: (p: Practice) => Partial<Practice> | null, then?: () => void) =>
+    void editPractice(practice.id, (p) => withUndo(p, label, change(p))).then(then);
+  const toReview = () => navigate(paths.practice(practice.id));
+  const last = upcoming.length === 0;
   const end = () => {
     if (!window.confirm('End practice now? Drills not reached are marked skipped.')) return;
-    void editPractice(practice.id, (p) => finishPractice(p, now())).then(() => navigate(paths.practice(practice.id)));
+    act('End practice', (p) => finishPractice(p, now()), toReview);
   };
-  const next = () => {
-    const last = upcoming.length === 0;
-    void editPractice(practice.id, (p) => nextBlock(p, now())).then(() => last && navigate(paths.practice(practice.id)));
-  };
-  const skip = () => {
-    const last = upcoming.length === 0;
-    void editPractice(practice.id, (p) => skipBlock(p, now())).then(() => last && navigate(paths.practice(practice.id)));
-  };
+  const next = () => act(last ? 'Finish practice' : 'Next', (p) => nextBlock(p, now()), last ? toReview : undefined);
+  const skip = () => act('Skip', (p) => skipBlock(p, now()), last ? toReview : undefined);
 
   return (
     <main className="screen with-footer practice-run" onPointerDown={unlock}>
@@ -121,16 +127,27 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       </section>
 
       <div className="run-controls">
-        <button type="button" className="btn secondary" onClick={() => act((p) => (running ? pauseClock(p, now()) : resumeClock(p, now())))}>
+        <button type="button" className="btn secondary" onClick={() => act(running ? 'Pause' : 'Resume', (p) => (running ? pauseClock(p, now()) : resumeClock(p, now())))}>
           {running ? 'Pause' : 'Resume'}
         </button>
-        <button type="button" className="btn secondary" onClick={() => act(addMinute)}>
+        <button type="button" className="btn secondary" onClick={() => act('+1 min', addMinute)}>
           +1 min
         </button>
         <button type="button" className="btn secondary" onClick={skip}>
           Skip
         </button>
       </div>
+      {practice.lastRun && (
+        <button type="button" className="btn small secondary run-undo" onClick={() => void editPractice(practice.id, undoRun)}>
+          ↶ Undo {practice.lastRun.label}
+        </button>
+      )}
+
+      {late.size > 0 && (
+        <p className="late-note" role="status">
+          {Math.max(...late.values())} min past your {practice.length} min at this pace. Won’t finish on time: {lateNames.join(', ')}.
+        </p>
+      )}
 
       <ul className="run-stations">
         {block.stations.map((s, i) => {

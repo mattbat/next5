@@ -123,9 +123,9 @@ Only one phone runs a game at a time. After you share a game that's in progress,
 
 ### Planning practices
 
-Each team has a **Practice** tab. Tap **Drill library** to build your drills (or **Add starter drills** for about 20 common 9U and 12U drills to start from), then **+ New practice**: add drills, set their minutes, run several at once as **stations** with a coach for each, and split the players into balanced **scrimmage teams**. The plan shows the equipment to bring and whether you need the full court, and shares as text: the full plan, a card for each coach, and a one-pager for parents.
+Each team has a **Practice** tab. Tap **Drill library** to build your drills (or **Add starter drills** for about 20 common 9U and 12U drills to start from), then **+ New practice**: add drills, set their minutes, drag them into order, run several at once as **stations** with a coach for each, and split the players into balanced **scrimmage teams**. The plan shows the equipment to bring and whether you need the full court, and shares as text: the full plan, a card for each coach, and a one-pager for parents.
 
-**Start practice** runs a big countdown for each drill, with **Pause**, **+1 min**, **Skip** and **Next**, and a beep at one minute left. Afterwards, note what went well and what to work on. The Practice tab's **Season focus** shows how much time went to each kind of work (defense, offense, inbounding…) and each drill.
+**Start practice** runs a big countdown for each drill, with **Pause**, **+1 min**, **Skip**, **Next** and **↶ Undo**, a beep at one minute left, and a warning when you’re running past your planned length. Afterwards, note what went well and what to work on. The Practice tab's **Season focus** shows how much time went to each kind of work (defense, offense, inbounding…) and each drill.
 
 ### Updates
 
@@ -157,7 +157,7 @@ npm run dev          # http://localhost:5173/next5/
 |---------|--------------|
 | `npm run dev` | Dev server with hot reload |
 | `npm run build` | Type-check and build to `dist/` |
-| `npm run preview` | Serve the production build at http://localhost:4173/next5/ |
+| `npm run preview` | Serve the production build at http://localhost:4173/next5/ (the e2e tests use their own port, 4317) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no output |
 | `npm test` | Unit, property and component tests with coverage |

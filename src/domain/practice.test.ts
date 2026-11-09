@@ -3,6 +3,11 @@ import { describe, expect, it } from 'vitest';
 import type { Drill, Player, Practice, PracticeBlock, Station, Team } from '../data/types';
 import {
   addMinute,
+  blockEnds,
+  lateBlocks,
+  parseEquipment,
+  undoRun,
+  withUndo,
   blockFor,
   coachesIn,
   drillNotes,
@@ -121,6 +126,34 @@ describe('the plan', () => {
     ]);
   });
 
+  it('lists the same thing once however each drill words it, with each drill’s amount', () => {
+    const drills = indexDrills([
+      drill('a', { name: 'Closeouts', equipment: ['3–4 balls', 'Cones'] }),
+      drill('b', { name: 'Form shooting', equipment: ['A ball for every two players'] }),
+      drill('c', { name: 'Dribbling', equipment: ['A ball for each player', 'cone'] }),
+      drill('d', { name: 'Scrimmage', equipment: ['Pinnies', 'A ball'] }),
+    ]);
+    const blocks = ['a', 'b', 'c', 'd'].map((id) => block(id, 5, [station(id)]));
+    expect(equipmentList({ blocks }, drills, ['Basketballs', 'Practice pinnies'])).toEqual([
+      {
+        item: 'Basketballs',
+        for: ['Closeouts (3–4)', 'Form shooting (1 per 2 players)', 'Dribbling (1 per player)', 'Scrimmage (1)'],
+      },
+      { item: 'Practice pinnies', for: ['Scrimmage'] },
+      { item: 'Cones', for: ['Closeouts', 'Dribbling'] },
+    ]);
+  });
+
+  it('reads what an equipment line is and how many', () => {
+    expect(parseEquipment('3–4 balls')).toEqual({ key: 'basketball', name: 'Balls', amount: '3–4' });
+    expect(parseEquipment('A ball for each pair')).toEqual({ key: 'basketball', name: 'Ball', amount: '1 per pair' });
+    expect(parseEquipment('10 cones')).toEqual({ key: 'cone', name: 'Cones', amount: '10' });
+    expect(parseEquipment('Water bottles').key).toBe('water');
+    expect(parseEquipment('Bibs').key).toBe('pinnie');
+    expect(parseEquipment('Ball pump').key).toBe('ball pump');
+    expect(parseEquipment('Agility ladder')).toEqual({ key: 'agility ladder', name: 'Agility ladder', amount: '' });
+  });
+
   it('names each coach once', () => {
     expect(coachesIn(plan)).toEqual(['Coach Sam', 'Coach Lee']);
   });
@@ -129,8 +162,63 @@ describe('the plan', () => {
     expect(blockFor(drill('x', { minutes: 7 }), 'b9')).toEqual(block('b9', 7, [station('x')]));
     const ids = (blocks: PracticeBlock[]) => blocks.map((b) => b.id);
     expect(ids(moveBlock(plan.blocks, 0, 1))).toEqual(['b2', 'b1', 'b3']);
+    expect(ids(moveBlock(plan.blocks, 0, 2))).toEqual(['b2', 'b3', 'b1']);
+    expect(ids(moveBlock(plan.blocks, 2, 0))).toEqual(['b3', 'b1', 'b2']);
     expect(ids(moveBlock(plan.blocks, 0, -1))).toEqual(['b1', 'b2', 'b3']);
-    expect(ids(moveBlock(plan.blocks, 2, 1))).toEqual(['b1', 'b2', 'b3']);
+    expect(ids(moveBlock(plan.blocks, 2, 3))).toEqual(['b1', 'b2', 'b3']);
+  });
+
+  // PR4, property: dragging a block keeps every block exactly once and puts it where it was dropped.
+  it('moves any block anywhere without losing one', () => {
+    fc.assert(
+      fc.property(fc.integer({ min: 1, max: 12 }), fc.nat(), fc.nat(), (n, a, b) => {
+        const blocks = Array.from({ length: n }, (_, i) => block('b' + i, 5, []));
+        const from = a % n;
+        const to = b % n;
+        const moved = moveBlock(blocks, from, to);
+        expect(moved.map((x) => x.id).sort()).toEqual(blocks.map((x) => x.id).sort());
+        expect(moved[to]!.id).toBe('b' + from);
+      }),
+    );
+  });
+});
+
+describe('running over the target length (PR4a)', () => {
+  const plan = practice({
+    length: 20,
+    blocks: [
+      block('b1', 8, [station('warm')]),
+      block('b2', 10, [station('shoot')]),
+      block('b3', 5, [station('close')]),
+      block('b4', 4, [station('water')]),
+    ],
+  });
+
+  it('marks the drills that end after the target, by how much', () => {
+    expect(blockEnds(plan, 0)).toEqual([8, 18, 23, 27]);
+    expect([...lateBlocks(plan, 0)]).toEqual([
+      ['b3', 3],
+      ['b4', 7],
+    ]);
+    expect(lateBlocks({ ...plan, length: 30 }, 0).size).toBe(0);
+    // A skipped drill doesn't count, and doesn't push the others later.
+    const skipped = { ...plan, blocks: plan.blocks.map((b) => (b.id === 'b3' ? { ...b, skipped: true } : b)) };
+    expect([...lateBlocks(skipped, 0).keys()]).toEqual(['b4']);
+  });
+
+  it('uses how long drills really took once practice is running', () => {
+    // The warm-up ran 12 minutes, not 8, and the second drill has run 11 of its 10.
+    const live = practice({
+      ...plan,
+      length: 30,
+      status: 'live',
+      current: 1,
+      blocks: [{ ...plan.blocks[0]!, actualSeconds: 720 }, ...plan.blocks.slice(1)],
+      clock: { startedAt: 0, elapsed: 0 },
+    });
+    expect(blockEnds(live, 11 * 60_000)).toEqual([12, 23, 28, 32]);
+    expect([...lateBlocks(live, 11 * 60_000)]).toEqual([['b4', 2]]);
+    expect(lateBlocks({ ...live, status: 'done' }, 11 * 60_000).size).toBe(0);
   });
 });
 
@@ -200,6 +288,30 @@ describe('scrimmage teams', () => {
         }
       }),
     );
+  });
+});
+
+describe('undo while running (PR7a)', () => {
+  const plan = practice({ blocks: [block('b1', 5, [station('warm')]), block('b2', 5, [station('shoot')])] });
+
+  it('undoes the last timer button, keeping the clock as it was', () => {
+    const live = { ...plan, ...startPractice(plan, 0)! };
+    const tapped = { ...live, ...withUndo(live, 'Next', nextBlock(live, 60_000)) };
+    expect(tapped).toMatchObject({ current: 1, lastRun: { label: 'Next' } });
+    const back = { ...tapped, ...undoRun(tapped) };
+    expect(back).toMatchObject({ current: 0, status: 'live', clock: { startedAt: 0, elapsed: 0 }, lastRun: undefined });
+    expect(back.blocks[0]!.actualSeconds).toBeUndefined();
+    // The warm-up kept running while the wrong drill was showing.
+    expect(remainingMs(back, 90_000)).toBe(5 * 60_000 - 90_000);
+    expect(undoRun(back)).toBeNull();
+    expect(withUndo(live, 'Start', null)).toBeNull();
+  });
+
+  it('brings a finished practice back', () => {
+    const live = { ...plan, ...startPractice(plan, 0)! };
+    const ended = { ...live, ...withUndo(live, 'End practice', finishPractice(live, 30_000)) };
+    expect(ended.status).toBe('done');
+    expect({ ...ended, ...undoRun(ended) }).toMatchObject({ status: 'live', current: 0 });
   });
 });
 

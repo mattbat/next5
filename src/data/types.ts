@@ -200,6 +200,15 @@ export interface Practice extends Record {
   clock: PracticeClock;
   wentWell: string;
   improve: string;
+  /** The run state before the last timer button, so Undo can put it back (PR7a). */
+  lastRun?: PracticeUndo;
+}
+
+/** What a timer button changed, for Undo (PR7a). */
+export interface PracticeUndo {
+  /** The button, for Undo's label, e.g. "Next". */
+  label: string;
+  before: Pick<Practice, 'blocks' | 'current' | 'clock' | 'status'>;
 }
 
 /** This phone's side of a game handoff (SH3). */

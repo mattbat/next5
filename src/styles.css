@@ -2333,21 +2333,6 @@ textarea:focus {
   margin-left: auto;
 }
 
-.icon-btn {
-  width: 40px;
-  height: 36px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--line);
-  background: var(--surface-2);
-  color: var(--text);
-  font-size: 18px;
-  font-weight: 700;
-}
-
-.icon-btn:disabled {
-  opacity: 0.35;
-}
-
 /* 👍 / 👎 and a note (PR8). */
 .rating {
   display: flex;
@@ -2515,4 +2500,74 @@ textarea:focus {
 .run-sound {
   margin-top: 16px;
   color: var(--text-2);
+}
+
+/* Drills that won't finish within the target length (PR4a). */
+.late-note {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 15px;
+}
+
+.block.late {
+  box-shadow: inset 0 0 0 2px var(--warn);
+}
+
+.block.late.running {
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 2px var(--warn);
+}
+
+.late-tag {
+  margin: 0 0 4px;
+  color: var(--warn);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Drag and drop (PR4). */
+.drag-handle {
+  flex: none;
+  width: 36px;
+  height: 40px;
+  margin-left: -8px;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  font-size: 22px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.block-head .block-when {
+  flex: 1;
+}
+
+.blocks.dragging {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.blocks.dragging .block:not(.dragged) {
+  transition: transform 150ms ease;
+}
+
+.block.dragged {
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+/* Undo the last timer button (PR7a). */
+.run-undo {
+  display: flex;
+  margin: -6px auto 16px;
 }

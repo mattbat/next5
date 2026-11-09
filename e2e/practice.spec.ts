@@ -55,6 +55,25 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await expect(page.getByText('31 of 75 min')).toBeVisible();
   await expectFits(page, 'Practice plan');
 
+  // Drag the scrimmage by its handle to the top of the plan, then back to the end.
+  const dragTo = async (name: string, target: string) => {
+    const handle = await page.getByRole('button', { name: `Drag ${name} to reorder` }).boundingBox();
+    const goal = await page.getByRole('listitem', { name: target }).boundingBox();
+    await page.mouse.move(handle!.x + handle!.width / 2, handle!.y + handle!.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(handle!.x + 10, goal!.y + 10, { steps: 12 });
+    await page.mouse.up();
+  };
+  // Middle block in the middle of the screen, so no handle is under the fixed footer.
+  await page.getByRole('listitem', { name: 'Block 2' }).evaluate((el) => el.scrollIntoView({ block: 'center' }));
+  await dragTo('Scrimmage', 'Block 1');
+  await expect(page.getByRole('listitem', { name: 'Block 1' })).toContainText('Scrimmage');
+  await expect(page.getByRole('listitem', { name: 'Block 2' })).toContainText('Dynamic warm-up');
+  await page.getByRole('button', { name: 'Drag Scrimmage to reorder' }).focus();
+  await page.keyboard.press('ArrowDown');
+  await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('listitem', { name: 'Block 3' })).toContainText('Scrimmage');
+
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByRole('heading', { name: 'Block 1 of 3' })).toBeVisible();
   await expect(page.getByRole('timer')).toHaveText(/^(8:00|7:5\d)$/);

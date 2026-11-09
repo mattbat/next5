@@ -649,7 +649,7 @@ export const TOPICS: Topic[] = [
             time and target length if you like.
           </li>
           <li>
-            Tap <b>+ Add drill</b> for each drill. Change a drill’s minutes with − and +, and its place with ↑ and ↓.{' '}
+            Tap <b>+ Add drill</b> for each drill. Change a drill’s minutes with − and +. To change the order, drag a drill by its ⠿ handle.{' '}
             <b>Skip</b> keeps a drill in the plan without running it.
           </li>
           <li>
@@ -662,7 +662,7 @@ export const TOPICS: Topic[] = [
           </li>
         </Steps>
         <p>
-          The plan shows the total against your target and whether you need the full court. <b>Equipment</b> lists your
+          The plan shows the total against your target and whether you need the full court. If it runs long, the drills that won’t finish in time are outlined, with how far past your target each one ends. <b>Equipment</b> lists your
           team’s always-bring items (change them in the team’s Settings tab) plus what the drills need.
         </p>
         <h2>Share it</h2>
@@ -675,7 +675,7 @@ export const TOPICS: Topic[] = [
         <p>
           <b>Start practice</b> shows a big countdown for the current drill, with its coaching points and who’s in each
           group. <b>Pause</b>, <b>+1 min</b>, <b>Skip</b> and <b>Next</b> do what they say. It beeps at one minute left and
-          at zero, keeps the screen on, and keeps time even if you close the app. Tap 👍 or 👎 on a drill as you go.
+          at zero, keeps the screen on, and keeps time even if you close the app. Tap 👍 or 👎 on a drill as you go. Tapped the wrong button? <b>↶ Undo</b> under the timer puts it back, and the timer screen warns you when you’re running late.
         </p>
         <Tip>
           iPhone only plays the beep after you’ve tapped the practice screen once, so tap <b>Pause</b> and <b>Resume</b>{' '}

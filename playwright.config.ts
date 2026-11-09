@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 4173;
+// Not Vite's default 4173, which other projects on the same machine often have
+// open (strictPort then fails the run). E2E_PORT overrides it.
+const PORT = Number(process.env.E2E_PORT ?? 4317);
 
 /**
  * End-to-end tests (REQUIREMENTS.md Q-4) against the production build.

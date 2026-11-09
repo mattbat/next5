@@ -23,6 +23,43 @@ export function plannedMinutes(practice: Pick<Practice, 'blocks'>): number {
   return activeBlocks(practice).reduce((sum, b) => sum + b.minutes, 0);
 }
 
+/**
+ * When each block ends, in minutes from the start of practice; null for a
+ * skipped block (PR4a). Before practice it's the plan. While it runs,
+ * finished blocks count for how long they really took and the current one
+ * for at least as long as it has been running, so running over pushes the
+ * rest later.
+ */
+export function blockEnds(practice: Pick<Practice, 'blocks' | 'status' | 'current' | 'clock'>, now: number): (number | null)[] {
+  let at = 0;
+  return practice.blocks.map((b, i) => {
+    if (practice.status !== 'planned' && i < practice.current) {
+      if (b.actualSeconds === undefined) return null;
+      at += b.actualSeconds / 60;
+      return at;
+    }
+    if (b.skipped) return null;
+    const running = practice.status === 'live' && i === practice.current;
+    at += running ? Math.max(b.minutes, elapsedMs(practice.clock, now) / 60_000) : b.minutes;
+    return at;
+  });
+}
+
+/**
+ * The blocks that won't finish within the practice's target length (PR4a),
+ * with how far past it each ends, in whole minutes (at least 1).
+ */
+export function lateBlocks(practice: Pick<Practice, 'blocks' | 'status' | 'current' | 'clock' | 'length'>, now: number): Map<string, number> {
+  const late = new Map<string, number>();
+  if (practice.status === 'done') return late;
+  blockEnds(practice, now).forEach((end, i) => {
+    if (end !== null && end > practice.length + 0.01 && (practice.status === 'planned' || i >= practice.current)) {
+      late.set(practice.blocks[i]!.id, Math.max(1, Math.ceil(end - practice.length - 0.01)));
+    }
+  });
+  return late;
+}
+
 /** True when any drill still in the plan needs the full court (PR4). */
 export function needsFullCourt(practice: Pick<Practice, 'blocks'>, drills: DrillIndex): boolean {
   return activeBlocks(practice).some((b) => b.stations.some((s) => drills.get(s.drillId)?.court === 'full'));
@@ -33,22 +70,67 @@ export const alwaysBring = (team: Pick<Team, 'alwaysBring'>): string[] => team.a
 
 export interface EquipmentItem {
   item: string;
-  /** Drills that need it; empty for always-bring items. */
+  /** Drills that need it, with how many if the drill says, e.g. "Closeouts (3–4)"; empty for always-bring items. */
   for: string[];
+}
+
+/** Words that name the same thing on a checklist. */
+const SAME_ITEM: Record<string, string> = {
+  ball: 'basketball',
+  bball: 'basketball',
+  pinny: 'pinnie',
+  bib: 'pinnie',
+  'practice pinnie': 'pinnie',
+  'practice jersey': 'pinnie',
+  'water bottle': 'water',
+};
+
+/**
+ * Splits an equipment line into what it is and how many (PR6):
+ * "3–4 balls" → ball, "3–4"; "A ball for every two players" → ball, "1 per 2 players";
+ * "Practice pinnies" → practice pinnie.
+ */
+export function parseEquipment(text: string): { key: string; name: string; amount: string } {
+  let name = text.trim();
+  let amount = '';
+  const count = /^(a|an|one|\d+(?:\s*[–-]\s*\d+)?)\s+/i.exec(name);
+  if (count) {
+    const n = count[1]!.toLowerCase();
+    amount = n === 'a' || n === 'an' || n === 'one' ? '1' : count[1]!.replace(/\s/g, '');
+    name = name.slice(count[0].length);
+  }
+  const per = /\s+(?:for each|for every|per)\s+(.+)$/i.exec(name);
+  if (per) {
+    const who = per[1]!.replace(/^(?:one|1)\s+/i, '').replace(/^two\s+/i, '2 ');
+    amount = `${amount || '1'} per ${who}`;
+    name = name.slice(0, per.index);
+  }
+  const singular = (word: string) =>
+    /ies$/i.test(word) ? word.slice(0, -3) + (/pinnies$/i.test(word) ? 'ie' : 'y') : /[^s]s$/i.test(word) && word.length > 3 ? word.slice(0, -1) : word;
+  const words = name.toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length > 0) words[words.length - 1] = singular(words[words.length - 1]!);
+  const base = words.join(' ');
+  const last = words[words.length - 1] ?? '';
+  const key = SAME_ITEM[base] ?? (SAME_ITEM[last] ? [...words.slice(0, -1), SAME_ITEM[last]].join(' ') : base);
+  return { key, name: name.charAt(0).toUpperCase() + name.slice(1), amount };
 }
 
 /**
  * One checklist for a practice (PR6): the team's always-bring items, then
- * what the drills still in the plan need. Items are matched ignoring case.
+ * what the drills still in the plan need. The same thing is listed once
+ * however it's written ("Basketballs", "3–4 balls", "A ball for each
+ * player"), with each drill's amount next to its name.
  */
 export function equipmentList(practice: Pick<Practice, 'blocks'>, drills: DrillIndex, always: string[]): EquipmentItem[] {
   const items = new Map<string, EquipmentItem>();
   const add = (item: string, drill?: string) => {
-    const name = item.trim();
-    if (!name) return;
-    const key = name.toLowerCase();
+    if (!item.trim()) return;
+    const { key, name, amount } = parseEquipment(item);
     const entry = items.get(key) ?? { item: name, for: [] };
-    if (drill && !entry.for.includes(drill)) entry.for.push(drill);
+    if (drill) {
+      const label = amount ? `${drill} (${amount})` : drill;
+      if (!entry.for.includes(label)) entry.for.push(label);
+    }
     items.set(key, entry);
   };
   for (const item of always) add(item);
@@ -220,6 +302,26 @@ export function finishPractice(practice: RunState, now: number): RunState {
     return { ...b, skipped: true };
   });
   return { blocks, status: 'done', current: practice.current, clock: { startedAt: null, elapsed: 0 } };
+}
+
+/**
+ * A timer button's changes plus what to restore if it was a mistake
+ * (PR7a). Only the last one can be undone.
+ */
+export function withUndo(practice: Practice, label: string, changes: Partial<Practice> | null): Partial<Practice> | null {
+  if (!changes) return null;
+  const { blocks, current, clock, status } = practice;
+  return { ...changes, lastRun: { label, before: { blocks, current, clock, status } } };
+}
+
+/**
+ * Puts the practice back as it was before the last timer button. The clock
+ * comes back as it was too: if it was running, the time since still counts,
+ * because the drill kept going.
+ */
+export function undoRun(practice: Practice): Partial<Practice> | null {
+  if (!practice.lastRun) return null;
+  return { ...practice.lastRun.before, lastRun: undefined };
 }
 
 // Season stats (PR9)
@@ -463,11 +565,11 @@ export function blockFor(drill: Pick<Drill, 'id' | 'minutes'>, id: string): Prac
   return { id, minutes: drill.minutes, stations: [{ drillId: drill.id, coach: '', group: 'all' }], skipped: false };
 }
 
-/** Moves a block up (-1) or down (+1). */
-export function moveBlock(blocks: PracticeBlock[], index: number, by: -1 | 1): PracticeBlock[] {
-  const to = index + by;
-  if (to < 0 || to >= blocks.length) return blocks;
+/** Moves the block at `from` to position `to` (PR4: drag and drop). Out-of-range moves change nothing. */
+export function moveBlock(blocks: PracticeBlock[], from: number, to: number): PracticeBlock[] {
+  if (from === to || from < 0 || to < 0 || from >= blocks.length || to >= blocks.length) return blocks;
   const copy = [...blocks];
-  [copy[index], copy[to]] = [copy[to]!, copy[index]!];
+  const [moved] = copy.splice(from, 1);
+  copy.splice(to, 0, moved!);
   return copy;
 }

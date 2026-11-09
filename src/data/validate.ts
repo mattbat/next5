@@ -157,6 +157,15 @@ const practiceFields = shape({
   clock: exact({ startedAt: (v) => v === null || isNumber(v), elapsed: isNumber }),
   wentWell: isString,
   improve: isString,
+  lastRun: exact({
+    label: isString,
+    before: exact({
+      blocks: listOf(isBlock, MAX_BLOCKS),
+      current: isCount(MAX_BLOCKS),
+      clock: exact({ startedAt: (v) => v === null || isNumber(v), elapsed: isNumber }),
+      status: oneOf('planned', 'live', 'done'),
+    }),
+  }),
 });
 
 /** A practice's fields are well formed, and a live practice's current block is in its plan. */

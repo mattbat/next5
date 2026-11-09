@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Empty, Info, Jersey, Section, Segmented, Stepper, TopBar } from '../components/ui';
 import { deletePractice, editPractice, newId, togglePracticeAttending, updatePractice, updateStation } from '../data/repo';
 import { shareText } from '../data/share';
@@ -13,6 +13,7 @@ import {
   equipmentList,
   formatTime,
   groupLabel,
+  lateBlocks,
   moveBlock,
   movePlayer,
   needsFullCourt,
@@ -22,9 +23,12 @@ import {
   splitTeams,
   startPractice,
   stationCardText,
+  undoRun,
+  withUndo,
   type DrillIndex,
 } from '../domain/practice';
 import { formatGameDate } from '../domain/game';
+import { useBlockDrag } from '../hooks/useBlockDrag';
 import { usePracticeData } from '../hooks/usePracticeData';
 import { navigate, paths } from '../router';
 import { HelpLink } from '../help/parts';
@@ -62,6 +66,19 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
   const editable = (index: number) => !done && (!live || index > practice.current);
   const total = plannedMinutes(practice);
   const starts = blockStarts(practice);
+  // Drills that won't finish within the target length (PR4a).
+  const now = useNow(live);
+  const late = lateBlocks(practice, now);
+  const firstLate = practice.blocks.find((b) => late.has(b.id));
+  const firstMovable = live ? practice.current + 1 : 0;
+  const drag = useBlockDrag(practice.blocks.map((b) => b.id), done ? practice.blocks.length : firstMovable, (id, move) =>
+    // Resolved against the latest saved plan, so quick moves never use a stale position.
+    void editPractice(practice.id, (p) => {
+      const from = p.blocks.findIndex((b) => b.id === id);
+      const to = 'to' in move ? move.to : from + move.by;
+      return to < firstMovable ? null : { blocks: moveBlock(p.blocks, from, to) };
+    }),
+  );
 
   const pick = (drill: Drill) => {
     const target = picking?.blockId ?? null;
@@ -87,7 +104,7 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
     await editPractice(practice.id, (p) => {
       const run = startPractice(p, Date.now());
       started = run !== null;
-      return run;
+      return withUndo(p, 'Start practice', run);
     });
     if (started) navigate(paths.practiceRun(practice.id));
     else setMessage('Add a drill that isn’t skipped before starting.');
@@ -104,6 +121,18 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
         </p>
       )}
 
+      {done && practice.lastRun && (
+        <p className="notice notice-actions" role="status">
+          <span>Practice ended.</span>
+          <button
+            type="button"
+            className="link"
+            onClick={() => void editPractice(practice.id, undoRun).then(() => navigate(paths.practiceRun(practice.id)))}
+          >
+            ↶ Undo {practice.lastRun.label}
+          </button>
+        </p>
+      )}
       {done && <Review practice={practice} />}
 
       {!done && <Details practice={practice} />}
@@ -118,13 +147,24 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
       >
         <p className="hint">
           {needsFullCourt(practice, drillIndex) ? 'Needs the full court.' : 'Half court is enough.'}
-          {total > practice.length && ` ${total - practice.length} min over your target.`} <HelpLink topic="practice">Planning practices</HelpLink>
+          <HelpLink topic="practice">Planning practices</HelpLink>
         </p>
+        {firstLate && (
+          <p className="late-note" role="status">
+            {live ? 'Running' : 'Planned'} {Math.max(...late.values())} min past your{' '}
+            {practice.length} min. Highlighted drills won’t finish on time.
+          </p>
+        )}
         {practice.blocks.length === 0 && <Empty>No drills yet. Tap + Add drill to build the plan from your library.</Empty>}
-        <ol className="blocks">
+        <ol className={`blocks ${drag.dragging !== null ? 'dragging' : ''}`}>
           {practice.blocks.map((block, i) => (
             <BlockCard
               key={block.id}
+              lateBy={late.get(block.id) ?? null}
+              dragHandle={editable(i) ? drag.handleProps(i) : null}
+              itemRef={drag.register(i)}
+              itemStyle={drag.itemStyle(i)}
+              isDragged={drag.dragging === i}
               practice={practice}
               block={block}
               index={i}
@@ -133,7 +173,6 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
               editable={editable(i)}
               done={done}
               onChange={(change) => changeBlock(block.id, change)}
-              onMove={(by) => void editPractice(practice.id, (p) => ({ blocks: moveBlock(p.blocks, i, by) }))}
               onAddStation={() => setPicking({ blockId: block.id })}
             />
           ))}
@@ -210,6 +249,17 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
   );
 }
 
+/** The time, kept current every few seconds while practice runs, so running late shows up. */
+function useNow(live: boolean): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => setNow(Date.now()), 5_000);
+    return () => window.clearInterval(id);
+  }, [live]);
+  return now;
+}
+
 /** Text kept locally while typing and saved when the field loses focus, so typing never races the database. */
 function TextField({
   label,
@@ -263,7 +313,12 @@ function Details({ practice }: { practice: Practice }) {
           value={practice.length}
           min={15}
           max={180}
-          onChange={(v) => update({ length: v > practice.length ? Math.ceil(v / 5) * 5 : Math.floor(v / 5) * 5 })}
+          // Steps of 5 from the latest saved length, so quick taps all count.
+          onChange={(v) =>
+            void editPractice(practice.id, (p) => ({
+              length: Math.min(180, Math.max(15, v > practice.length ? Math.floor(p.length / 5) * 5 + 5 : Math.ceil(p.length / 5) * 5 - 5)),
+            }))
+          }
         />
       </div>
       <TextField label="Focus (optional)" value={practice.focus} placeholder="e.g. Defense" onSave={(focus) => update({ focus })} />
@@ -288,8 +343,12 @@ function BlockCard({
   editable,
   done,
   onChange,
-  onMove,
   onAddStation,
+  lateBy,
+  dragHandle,
+  itemRef,
+  itemStyle,
+  isDragged,
 }: {
   practice: Practice;
   block: PracticeBlock;
@@ -299,8 +358,13 @@ function BlockCard({
   editable: boolean;
   done: boolean;
   onChange: (change: (b: PracticeBlock) => PracticeBlock | null) => void;
-  onMove: (by: -1 | 1) => void;
   onAddStation: () => void;
+  /** Minutes past the target length this block ends, or null if it finishes in time (PR4a). */
+  lateBy: number | null;
+  dragHandle: ReturnType<ReturnType<typeof useBlockDrag>['handleProps']> | null;
+  itemRef: (el: HTMLElement | null) => void;
+  itemStyle: CSSProperties | undefined;
+  isDragged: boolean;
 }) {
   const live = practice.status === 'live';
   const running = live && index === practice.current;
@@ -308,23 +372,39 @@ function BlockCard({
     start === null ? 'Skipped' : practice.time ? formatTime(addTime(practice.time, start)) : start === 0 ? 'Start' : `+${start} min`;
   const stations = block.stations.length > 1;
   const actual = block.actualSeconds !== undefined ? Math.round(block.actualSeconds / 60) : null;
-  const firstEditable = live ? practice.current + 1 : 0;
+  const name = block.stations.map((s) => drillName(drillIndex, s.drillId)).join(' + ');
 
   return (
-    <li className={`block ${block.skipped ? 'skipped' : ''} ${running ? 'running' : ''}`} aria-label={`Block ${index + 1}`}>
+    <li
+      ref={itemRef}
+      style={itemStyle}
+      className={`block ${block.skipped ? 'skipped' : ''} ${running ? 'running' : ''} ${lateBy !== null ? 'late' : ''} ${isDragged ? 'dragged' : ''}`}
+      aria-label={`Block ${index + 1}`}
+    >
       <div className="block-head">
+        {dragHandle && (
+          <button type="button" className="drag-handle" aria-label={`Drag ${name} to reorder`} {...dragHandle}>
+            ⠿
+          </button>
+        )}
         <span className="block-when">
           {running ? 'Now' : when}
           {stations && ' · Stations'}
         </span>
         {editable ? (
-          <Stepper label="minutes" value={block.minutes} min={1} max={90} onChange={(minutes) => onChange((b) => ({ ...b, minutes }))} />
+          <Stepper label="minutes" value={block.minutes} min={1} max={90} onChange={(minutes) => onChange((b) => ({ ...b, minutes: Math.min(90, Math.max(1, b.minutes + (minutes > block.minutes ? 1 : -1))) }))}
+          />
         ) : (
           <span className="block-minutes">
             {actual !== null && done ? `${actual} of ${block.minutes} min` : `${block.minutes} min`}
           </span>
         )}
       </div>
+      {lateBy !== null && (
+        <p className="late-tag">
+          {running ? 'Running late: ' : ''}ends {lateBy} min past your {practice.length} min
+        </p>
+      )}
       <ul className="stations">
         {block.stations.map((s, si) => (
           <li key={si} className="station">
@@ -379,17 +459,9 @@ function BlockCard({
           <button type="button" className="link small" onClick={() => onChange((b) => ({ ...b, skipped: !b.skipped }))}>
             {block.skipped ? 'Unskip' : 'Skip'}
           </button>
-          <span className="block-move">
-            <button type="button" className="icon-btn" aria-label="Move up" disabled={index <= firstEditable} onClick={() => onMove(-1)}>
-              ↑
-            </button>
-            <button type="button" className="icon-btn" aria-label="Move down" disabled={index >= practice.blocks.length - 1} onClick={() => onMove(1)}>
-              ↓
-            </button>
-          </span>
           <button
             type="button"
-            className="link small danger-text"
+            className="link small danger-text push-right"
             onClick={() => window.confirm('Remove this block from the plan?') && onChange(() => null)}
           >
             Remove

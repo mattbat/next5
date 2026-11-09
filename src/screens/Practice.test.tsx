@@ -137,10 +137,23 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     expect(screen.getByText(/Needs the full court/)).toBeInTheDocument();
     await user.click(within(block(1)).getByRole('button', { name: 'More minutes' }));
     expect(await screen.findByText('32 of 75 min')).toBeInTheDocument();
-    await user.click(within(block(3)).getByRole('button', { name: 'Move up' }));
+    // Reorder by the drag handle; its arrow keys move a block one place.
+    expect(screen.queryByRole('button', { name: 'Move up' })).not.toBeInTheDocument();
+    within(block(3)).getByRole('button', { name: 'Drag Scrimmage to reorder' }).focus();
+    await user.keyboard('{ArrowUp}');
     await waitFor(() => expect(within(block(2)).getByText('Scrimmage')).toBeInTheDocument());
-    await user.click(within(block(2)).getByRole('button', { name: 'Move down' }));
+    within(block(2)).getByRole('button', { name: 'Drag Scrimmage to reorder' }).focus();
+    await user.keyboard('{ArrowDown}');
     await waitFor(() => expect(within(block(3)).getByText('Scrimmage')).toBeInTheDocument());
+
+    // PR4a: a target of 25 minutes leaves the scrimmage (ending at 32) highlighted.
+    expect(screen.queryByText(/won’t finish on time/)).not.toBeInTheDocument();
+    for (let i = 0; i < 10; i++) await user.click(screen.getByRole('button', { name: 'Fewer minutes of practice' }));
+    expect(await screen.findByText('32 of 25 min')).toBeInTheDocument();
+    expect(screen.getByText(/7 min past your 25 min\. Highlighted drills won’t finish on time\./)).toBeInTheDocument();
+    expect(block(3)).toHaveClass('late');
+    expect(within(block(3)).getByText('ends 7 min past your 25 min')).toBeInTheDocument();
+    expect(block(2)).not.toHaveClass('late');
 
     // Coaches and groups for the stations.
     await user.type(within(block(2)).getByLabelText('Coach for Closeouts'), 'Coach Sam');
@@ -179,10 +192,24 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     expect(await screen.findByText('Paused')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Resume' }));
     await user.click(screen.getByRole('button', { name: 'Went well' }));
+    expect(screen.getByText(/Won’t finish on time: Scrimmage\./)).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Next' }));
+    expect(await screen.findByRole('heading', { name: 'Block 2 of 3', level: 1 })).toBeInTheDocument();
+
+    // PR7a: a wrong tap can be undone.
+    await user.click(screen.getByRole('button', { name: '↶ Undo Next' }));
+    expect(await screen.findByRole('heading', { name: 'Block 1 of 3', level: 1 })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Undo/ })).not.toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Next' }));
     expect(await screen.findByRole('heading', { name: 'Block 2 of 3', level: 1 })).toBeInTheDocument();
     expect(screen.getByText('Coach Sam · Team A · Half court')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(await screen.findByRole('heading', { name: 'Block 3 of 3', level: 1 })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Finish practice' }));
+
+    // Finished by mistake: undo from the review goes back to the last drill.
+    expect(await screen.findByRole('heading', { name: 'Practice review', level: 1 })).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '↶ Undo Finish practice' }));
     expect(await screen.findByRole('heading', { name: 'Block 3 of 3', level: 1 })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Finish practice' }));
 
