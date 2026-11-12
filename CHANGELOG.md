@@ -4,6 +4,12 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.4.0 (2026-11-12)
+
+### New
+
+- Plan practices on the new Practice tab: pick drills from your drill library (or start from about 20 starter drills), run stations with several coaches, drag drills into order, split balanced scrimmage teams, see one equipment list, share the plan with coaches and parents, see which drills won’t finish on time if it runs long, run it with a timer (with Undo for a wrong tap), and see how much time the season has spent on each kind of drill.
+
 ## 0.3.0 (2026-11-06)
 
 ### New
