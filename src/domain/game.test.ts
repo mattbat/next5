@@ -13,7 +13,9 @@ import {
   segmentLabel,
   sortLineup,
   startGame,
+  undoLabel,
   undoSegment,
+  withUndo,
 } from './game';
 
 const team: Team = {
@@ -185,6 +187,15 @@ describe('running a game', () => {
     expect(game.status).toBe('final');
     game = undoSegment(game);
     expect(game).toMatchObject({ status: 'live', current: 7 });
+  });
+
+  it('undoing a segment forgets a change made in it, so Undo can’t bring that segment’s subs back', () => {
+    let game = nextSegment(startGame(plannedGame()));
+    game = withUndo(game, { ...game, subbedOut: [game.plan[1]![0]!] }, 'swapNow');
+    game = undoSegment(game);
+    expect(game.current).toBe(0);
+    expect(game.lastChange).toBeUndefined();
+    expect(undoLabel(game)).toBeNull();
   });
 
   it('ends a game early, keeping the plan, and Undo reopens it at the same segment (D9)', () => {
