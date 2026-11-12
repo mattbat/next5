@@ -1,7 +1,8 @@
 import { db } from './db';
 import { receivedHandoff, roleOf, type GameHandoff } from './handoff';
 import { DEFAULT_FORMAT, DEFAULT_POSITIONS, DEFAULT_RULES, DEMO_PLAYERS } from './defaults';
-import type { Game, Player, Team } from './types';
+import { STARTER_DRILLS } from './starterDrills';
+import type { Drill, Game, Player, Practice, Station, Team } from './types';
 
 /**
  * The only module that reads and writes storage. Screens call these
@@ -59,11 +60,12 @@ export async function setTeamArchived(id: string, archived: boolean): Promise<vo
   await updateTeam(id, { archived });
 }
 
-/** Deletes a team with its players and games. */
+/** Deletes a team with its players, games and practices. */
 export async function deleteTeam(id: string): Promise<void> {
-  await db.transaction('rw', db.teams, db.players, db.games, async () => {
+  await db.transaction('rw', [db.teams, db.players, db.games, db.practices], async () => {
     await db.players.where('teamId').equals(id).delete();
     await db.games.where('teamId').equals(id).delete();
+    await db.practices.where('teamId').equals(id).delete();
     await db.teams.delete(id);
   });
 }
@@ -154,13 +156,118 @@ export async function deleteGame(id: string): Promise<void> {
   await db.games.delete(id);
 }
 
+// Drills (PR2, PR3)
+
+export type DrillFields = Pick<Drill, 'name' | 'minutes' | 'court' | 'tags' | 'equipment' | 'notes'>;
+
+export async function createDrill(fields: DrillFields): Promise<Drill> {
+  const drill: Drill = stamp({ ...fields, name: fields.name.trim(), retired: false });
+  await db.drills.add(drill);
+  return drill;
+}
+
+export async function updateDrill(id: string, changes: Partial<Omit<Drill, 'id' | 'createdAt'>>): Promise<void> {
+  await db.drills.update(id, { ...changes, updatedAt: Date.now() });
+}
+
+/** True when a practice uses the drill, so deleting it would lose history. */
+export async function drillInUse(id: string): Promise<boolean> {
+  const practices = await db.practices.toArray();
+  return practices.some((p) => p.blocks.some((b) => b.stations.some((s) => s.drillId === id)));
+}
+
+/** Deletes a drill no practice uses; returns false (and keeps it) if one does. Retire it instead. */
+export async function deleteDrill(id: string): Promise<boolean> {
+  return db.transaction('rw', db.drills, db.practices, async () => {
+    if (await drillInUse(id)) return false;
+    await db.drills.delete(id);
+    return true;
+  });
+}
+
+/** Adds the starter drills not already in the library (PR3). Returns how many were added. */
+export async function addStarterDrills(): Promise<number> {
+  return db.transaction('rw', db.drills, async () => {
+    const have = new Set((await db.drills.toArray()).map((d) => d.starter).filter(Boolean));
+    const missing = STARTER_DRILLS.filter((s) => !have.has(s.key));
+    await db.drills.bulkAdd(
+      missing.map(({ key, ...fields }) => stamp({ ...fields, tags: [...fields.tags], equipment: [...fields.equipment], retired: false, starter: key })),
+    );
+    return missing.length;
+  });
+}
+
+// Practices (PR1, PR4–PR8)
+
+/** A new practice: today, every active player attending, an empty plan (PR1). */
+export async function createPractice(team: Team): Promise<Practice> {
+  const players = await db.players.where('teamId').equals(team.id).toArray();
+  const practice: Practice = stamp({
+    teamId: team.id,
+    date: today(),
+    time: '',
+    length: 75,
+    focus: '',
+    parentNote: '',
+    attending: players.filter((p) => p.active).map((p) => p.id),
+    blocks: [],
+    teams: { A: [], B: [] },
+    status: 'planned' as const,
+    current: 0,
+    clock: { startedAt: null, elapsed: 0 },
+    wentWell: '',
+    improve: '',
+  });
+  await db.practices.add(practice);
+  return practice;
+}
+
+export async function updatePractice(id: string, changes: Partial<Omit<Practice, 'id' | 'teamId' | 'createdAt'>>): Promise<void> {
+  await db.practices.update(id, { ...changes, updatedAt: Date.now() });
+}
+
 /**
- * Erases every team, player and game, and the app's saved settings, as if
- * next5 were new on this phone. Only beta builds offer it (REL5).
+ * Changes a practice from its latest saved copy, so quick taps on the plan
+ * or the timer never overwrite each other.
+ */
+export async function editPractice(id: string, change: (practice: Practice) => Partial<Practice> | null): Promise<void> {
+  await db.transaction('rw', db.practices, async () => {
+    const practice = await db.practices.get(id);
+    if (!practice) return;
+    const changes = change(practice);
+    if (changes) await db.practices.update(id, { ...changes, updatedAt: Date.now() });
+  });
+}
+
+/** Changes one station of one block (rating, note, coach, group, drill). */
+export async function updateStation(practiceId: string, blockId: string, index: number, changes: Partial<Station>): Promise<void> {
+  await editPractice(practiceId, (p) => ({
+    blocks: p.blocks.map((b) =>
+      b.id !== blockId ? b : { ...b, stations: b.stations.map((s, i) => (i === index ? { ...s, ...changes } : s)) },
+    ),
+  }));
+}
+
+export async function deletePractice(id: string): Promise<void> {
+  await db.practices.delete(id);
+}
+
+export async function togglePracticeAttending(practiceId: string, playerId: string): Promise<void> {
+  await editPractice(practiceId, (p) => {
+    const attending = p.attending.includes(playerId) ? p.attending.filter((id) => id !== playerId) : [...p.attending, playerId];
+    // Someone not coming can't be on a scrimmage team.
+    const teams = { A: p.teams.A.filter((id) => attending.includes(id)), B: p.teams.B.filter((id) => attending.includes(id)) };
+    return { attending, teams };
+  });
+}
+
+/**
+ * Erases every team, player, game, drill and practice, and the app's saved
+ * settings, as if next5 were new on this phone. Only beta builds offer it (REL5).
  */
 export async function eraseEverything(storage: Storage = localStorage): Promise<void> {
-  await db.transaction('rw', db.teams, db.players, db.games, async () => {
-    await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
+  await db.transaction('rw', [db.teams, db.players, db.games, db.drills, db.practices], async () => {
+    await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear(), db.drills.clear(), db.practices.clear()]);
   });
   try {
     const keys = Array.from({ length: storage.length }, (_, i) => storage.key(i)).filter((k) => k?.startsWith('next5.'));

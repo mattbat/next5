@@ -191,7 +191,10 @@ export function SettingsScreen({ reload = () => window.location.reload() }: { re
           <div className="restore">
             <p>
               This backup has <b>{plural(summary.teamNames.length, 'team')}</b> ({summary.teamNames.join(', ') || 'none'}),{' '}
-              {plural(summary.players, 'player')} and {plural(summary.games, 'game')}.
+              {plural(summary.players, 'player')} and {plural(summary.games, 'game')}
+              {summary.practices + summary.drills > 0 &&
+                `, with ${plural(summary.practices, 'practice')} and ${plural(summary.drills, 'drill')}`}
+              .
             </p>
             <button type="button" className="btn wide" onClick={() => void onRestore('merge')}>
               Merge into this phone

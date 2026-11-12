@@ -31,6 +31,8 @@ export interface Team extends Record {
   defaultFormat: GameFormat;
   defaultRules: RuleSettings;
   archived: boolean;
+  /** Equipment that goes to every practice (PR6). Missing: the defaults. */
+  alwaysBring?: string[];
 }
 
 export interface Player extends Record {
@@ -120,6 +122,93 @@ export interface LastChange {
   /** What it was, for the Undo button's label, e.g. "Sub out now". */
   label: string;
   before: ChangeSnapshot;
+}
+
+// Practice planning (PR1–PR11)
+
+export type Court = 'half' | 'full';
+
+/** A drill in the library, shared by all teams (PR2). */
+export interface Drill extends Record {
+  name: string;
+  /** Default length in minutes. */
+  minutes: number;
+  court: Court;
+  /** e.g. Defense, Offense, Inbounding. */
+  tags: string[];
+  equipment: string[];
+  /** Coaching points. */
+  notes: string;
+  /** Hidden from the drill picker; kept in stats. */
+  retired: boolean;
+  /** Which starter drill this came from (PR3), so adding them again skips it. */
+  starter?: string;
+}
+
+/** Who goes to a station: everyone, or scrimmage team A or B (PR5). */
+export type StationGroup = 'all' | 'A' | 'B';
+
+/** One drill in a block; several stations in a block run at the same time (PR4). */
+export interface Station {
+  drillId: string;
+  /** Which coach runs it, e.g. "Coach Sam". Optional. */
+  coach: string;
+  group: StationGroup;
+  /** How it went (PR8). */
+  rating?: 'up' | 'down';
+  note?: string;
+}
+
+export interface PracticeBlock {
+  id: string;
+  minutes: number;
+  stations: Station[];
+  skipped: boolean;
+  /** How long it really took, once finished (PR7). */
+  actualSeconds?: number;
+}
+
+export type PracticeStatus = 'planned' | 'live' | 'done';
+
+/**
+ * The current block's timer (PR7), stored so it keeps going if the app is
+ * closed. Running: `elapsed` ms before `startedAt`, plus the time since.
+ */
+export interface PracticeClock {
+  startedAt: number | null;
+  elapsed: number;
+}
+
+export interface Practice extends Record {
+  teamId: string;
+  /** ISO date, yyyy-mm-dd. */
+  date: string;
+  /** Start time, "18:00", or '' if not set. */
+  time: string;
+  /** Target length in minutes. */
+  length: number;
+  focus: string;
+  /** Shown on the parent one-pager (PR10). */
+  parentNote: string;
+  attending: PlayerId[];
+  blocks: PracticeBlock[];
+  /** Scrimmage teams (PR5). Empty until split. */
+  teams: { A: PlayerId[]; B: PlayerId[] };
+  status: PracticeStatus;
+  /** Index of the block running while live. */
+  current: number;
+  clock: PracticeClock;
+  wentWell: string;
+  improve: string;
+  /** The run state before the last timer button, so Undo can put it back (PR7a). */
+  lastRun?: PracticeUndo;
+}
+
+/** What a timer button changed, for Undo (PR7a). */
+export interface PracticeUndo {
+  /** The button, for Undo's label, e.g. "Next". */
+  label: string;
+  before: Pick<Practice, 'blocks' | 'current' | 'clock' | 'status'>;
 }
 
 /** This phone's side of a game handoff (SH3). */

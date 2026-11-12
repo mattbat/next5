@@ -2101,3 +2101,473 @@ button.sub-in {
 .release-list li + li {
   margin-top: 4px;
 }
+
+/* Five team tabs (Games, Practice, Roster, Stats, Settings): tighter still. */
+.segmented:has(> :nth-child(5)) button {
+  padding: 0 3px;
+  font-size: 13px;
+}
+
+/* Practice planning (PR1–PR10) */
+
+.top-gap {
+  margin-top: 12px;
+}
+
+.nowrap {
+  white-space: nowrap;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: inherit;
+  font: inherit;
+  /* 16px+ prevents iOS from zooming into inputs. */
+  font-size: 17px;
+  outline: none;
+  resize: vertical;
+}
+
+textarea:focus {
+  border-color: var(--accent);
+}
+
+.status-done {
+  color: var(--text-2);
+}
+
+.link.small {
+  min-height: 36px;
+  padding: 6px 4px;
+  font-size: 15px;
+}
+
+.link.inline {
+  min-height: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+.danger-text {
+  color: var(--out);
+}
+
+/* Tags as toggle pills. */
+.tag-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-picker.scroll {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  margin: 8px -16px 0;
+  padding: 0 16px 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.tag {
+  flex: none;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tag.on {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.drill-filter {
+  margin-bottom: 12px;
+}
+
+.drill-history {
+  margin: 0 0 12px;
+  padding-left: 18px;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+.drill-history li + li {
+  margin-top: 4px;
+}
+
+.plan-total {
+  color: var(--text-2);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* The plan: one card per block, stations inside. */
+.blocks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.block {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.block.running {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.block.skipped {
+  opacity: 0.5;
+}
+
+.block.skipped .station-name b {
+  text-decoration: line-through;
+}
+
+.block-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 44px;
+}
+
+.block-when {
+  color: var(--text-2);
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.block-minutes {
+  color: var(--text-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.stations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.station {
+  padding: 6px 0;
+  min-width: 0;
+}
+
+.station + .station {
+  border-top: 1px solid var(--line);
+}
+
+.station-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  min-height: 32px;
+}
+
+.station-name b {
+  overflow-wrap: anywhere;
+}
+
+.station-name .link {
+  margin-left: auto;
+}
+
+.station-edit {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.station-edit .coach-input {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+}
+
+.station-edit .segmented {
+  flex: none;
+}
+
+.station-edit .segmented button {
+  padding: 0 10px;
+  min-height: 34px;
+}
+
+.station-meta {
+  margin: 2px 0 0;
+  color: var(--text-2);
+  font-size: 15px;
+}
+
+.block-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 4px;
+  border-top: 1px solid var(--line);
+  padding-top: 4px;
+}
+
+.block-move {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+/* 👍 / 👎 and a note (PR8). */
+.rating {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.rate {
+  flex: none;
+  width: 44px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  font-size: 18px;
+}
+
+.rate.on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.rating .rate-note {
+  flex: 1;
+  min-width: 0;
+  min-height: 40px;
+}
+
+/* Scrimmage teams side by side. */
+.team-cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.team-col {
+  padding: 4px 12px 10px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.team-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.team-player {
+  width: 100%;
+  min-height: 40px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--text);
+  text-align: left;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-buttons {
+  display: grid;
+  gap: 8px;
+}
+
+/* Season focus bars (PR9). */
+.stats-table .bar-col {
+  width: 35%;
+  padding-right: 0;
+}
+
+.bar {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--accent);
+  min-width: 2px;
+}
+
+/* Running a practice (PR7). */
+.run-clock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0 8px;
+}
+
+.run-time {
+  font-family: var(--font-display);
+  font-size: 84px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-clock.soon .run-time {
+  color: var(--warn);
+}
+
+.run-clock.over .run-time {
+  color: var(--out);
+}
+
+.run-sub {
+  color: var(--text-2);
+  font-weight: 600;
+}
+
+.run-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.run-controls .btn {
+  padding: 0 8px;
+}
+
+.run-stations {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+}
+
+.run-station {
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  min-width: 0;
+}
+
+.run-station h2 {
+  margin: 0;
+  font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.run-station .hint {
+  margin: 4px 0 0;
+}
+
+.run-notes {
+  margin: 8px 0 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.run-next {
+  margin-top: 16px;
+}
+
+.run-next p {
+  margin: 4px 0 0;
+  color: var(--text-2);
+}
+
+.run-sound {
+  margin-top: 16px;
+  color: var(--text-2);
+}
+
+/* Drills that won't finish within the target length (PR4a). */
+.late-note {
+  margin: 0 0 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--warn-bg);
+  color: var(--warn-text);
+  font-size: 15px;
+}
+
+.block.late {
+  box-shadow: inset 0 0 0 2px var(--warn);
+}
+
+.block.late.running {
+  box-shadow: inset 0 0 0 2px var(--accent), 0 0 0 2px var(--warn);
+}
+
+.late-tag {
+  margin: 0 0 4px;
+  color: var(--warn);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+/* Drag and drop (PR4). */
+.drag-handle {
+  flex: none;
+  width: 36px;
+  height: 40px;
+  margin-left: -8px;
+  border: none;
+  background: none;
+  color: var(--text-3);
+  font-size: 22px;
+  line-height: 1;
+  cursor: grab;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.block-head .block-when {
+  flex: 1;
+}
+
+.blocks.dragging {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.blocks.dragging .block:not(.dragged) {
+  transition: transform 150ms ease;
+}
+
+.block.dragged {
+  box-shadow: var(--shadow);
+  cursor: grabbing;
+}
+
+.push-right {
+  margin-left: auto;
+}
+
+/* Undo the last timer button (PR7a). */
+.run-undo {
+  display: flex;
+  margin: -6px auto 16px;
+}

@@ -1,12 +1,14 @@
 import { db, upgradeGameV2, upgradeGameV3 } from './db';
 import { shareFile } from './share';
-import type { Game, Player, Team } from './types';
-import { isValidGame, isValidPlayer, isValidTeam } from './validate';
+import type { Drill, Game, Player, Practice, Team } from './types';
+import { isValidDrill, isValidGame, isValidPlayer, isValidPractice, isValidTeam } from './validate';
 
 /**
  * Backup and restore (REQUIREMENTS.md B1–B3). A backup is a JSON file with
  * every team, player and game (or one team's), which the coach saves through
- * the iOS share sheet and can restore later on any device.
+ * the iOS share sheet and can restore later on any device. Since practice
+ * planning (PR11) it also holds the drill library and practices; the layout
+ * version didn't change, because older apps simply ignore them.
  */
 
 export const BACKUP_FORMAT = 'next5-backup';
@@ -20,18 +22,32 @@ export interface Backup {
   teams: Team[];
   players: Player[];
   games: Game[];
+  /** The drill library (PR11). Missing in backups from before practice planning. */
+  drills?: Drill[];
+  practices?: Practice[];
 }
 
-/** Collects everything, or one team with its players and games. */
+/** Collects everything, or one team with its players, games and practices (plus the whole drill library). */
 export async function createBackup(teamId?: string): Promise<Backup> {
-  const [teams, players, games] = teamId
+  const [teams, players, games, practices] = teamId
     ? await Promise.all([
         db.teams.where('id').equals(teamId).toArray(),
         db.players.where('teamId').equals(teamId).toArray(),
         db.games.where('teamId').equals(teamId).toArray(),
+        db.practices.where('teamId').equals(teamId).toArray(),
       ])
-    : await Promise.all([db.teams.toArray(), db.players.toArray(), db.games.toArray()]);
-  return { format: BACKUP_FORMAT, version: BACKUP_VERSION, exportedAt: new Date().toISOString(), teams, players, games };
+    : await Promise.all([db.teams.toArray(), db.players.toArray(), db.games.toArray(), db.practices.toArray()]);
+  const drills = await db.drills.toArray();
+  return {
+    format: BACKUP_FORMAT,
+    version: BACKUP_VERSION,
+    exportedAt: new Date().toISOString(),
+    teams,
+    players,
+    games,
+    drills,
+    practices,
+  };
 }
 
 /** Lowercase words joined by dashes, for file names. */
@@ -74,6 +90,12 @@ export function parseBackup(text: string): ParseResult {
   if (![teams, players, games].every((list) => Array.isArray(list) && list.every(hasId))) {
     return { ok: false, message: 'This backup is damaged and can’t be restored.' };
   }
+  // Drills and practices (PR11) are optional, for backups made before them.
+  const drills = data.drills ?? [];
+  const practices = data.practices ?? [];
+  if (!Array.isArray(drills) || !Array.isArray(practices) || !drills.every(isValidDrill) || !practices.every(isValidPractice)) {
+    return { ok: false, message: 'This backup is damaged and can’t be restored.' };
+  }
   const gameList = (games as Partial<Game>[]).map((game) => {
     const copy = structuredClone(game);
     upgradeGameV2(copy);
@@ -92,6 +114,8 @@ export function parseBackup(text: string): ParseResult {
       teams: teams as Team[],
       players: players as Player[],
       games: gameList,
+      ...(data.drills === undefined ? {} : { drills: drills as Drill[] }),
+      practices: practices as Practice[],
     },
   };
 }
@@ -100,6 +124,8 @@ export interface BackupSummary {
   teamNames: string[];
   players: number;
   games: number;
+  practices: number;
+  drills: number;
 }
 
 export function summarize(backup: Backup): BackupSummary {
@@ -107,6 +133,8 @@ export function summarize(backup: Backup): BackupSummary {
     teamNames: backup.teams.map((t) => t.name),
     players: backup.players.length,
     games: backup.games.length,
+    practices: backup.practices?.length ?? 0,
+    drills: backup.drills?.length ?? 0,
   };
 }
 
@@ -120,19 +148,25 @@ export interface RestoreResult {
 
 /**
  * Restores a backup (B2).
- * - replace: everything on this device is replaced by the backup.
+ * - replace: everything on this device is replaced by the backup. The drill
+ *   library is kept when the backup is from before practice planning (PR11).
  * - merge: records missing here are added; for records in both, the more
  *   recently changed copy wins. Nothing on this device is deleted.
  */
 export async function restoreBackup(backup: Backup, mode: RestoreMode): Promise<RestoreResult> {
   const result: RestoreResult = { added: 0, updated: 0, kept: 0 };
-  await db.transaction('rw', db.teams, db.players, db.games, async () => {
+  const drills = backup.drills ?? [];
+  const practices = backup.practices ?? [];
+  await db.transaction('rw', [db.teams, db.players, db.games, db.drills, db.practices], async () => {
     if (mode === 'replace') {
-      await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
+      await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear(), db.practices.clear()]);
+      if (backup.drills) await db.drills.clear();
       await db.teams.bulkPut(backup.teams);
       await db.players.bulkPut(backup.players);
       await db.games.bulkPut(backup.games);
-      result.added = backup.teams.length + backup.players.length + backup.games.length;
+      await db.drills.bulkPut(drills);
+      await db.practices.bulkPut(practices);
+      result.added = backup.teams.length + backup.players.length + backup.games.length + drills.length + practices.length;
       return;
     }
     const merge = async <T extends { id: string; updatedAt: number }>(
@@ -156,6 +190,8 @@ export async function restoreBackup(backup: Backup, mode: RestoreMode): Promise<
     await merge(backup.teams, (id) => db.teams.get(id), (t) => db.teams.put(t));
     await merge(backup.players, (id) => db.players.get(id), (p) => db.players.put(p));
     await merge(backup.games, (id) => db.games.get(id), (g) => db.games.put(g));
+    await merge(drills, (id) => db.drills.get(id), (d) => db.drills.put(d));
+    await merge(practices, (id) => db.practices.get(id), (p) => db.practices.put(p));
   });
   return result;
 }

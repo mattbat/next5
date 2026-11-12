@@ -40,5 +40,6 @@ test('backs up, loses everything, and restores it from the backup file (B1, B2)'
   await page.getByRole('link', { name: 'Back', exact: true }).click();
   await page.getByRole('link', { name: /Demo Hoopers/ }).click();
   await expect(page.getByRole('link', { name: /vs Rockets/ })).toBeVisible();
-  await expect(page.getByRole('radio', { name: 'Roster (10)' })).toBeVisible();
+  await page.getByRole('radio', { name: 'Roster' }).click();
+  await expect(page.getByRole('heading', { name: 'Players (10)' })).toBeVisible();
 });

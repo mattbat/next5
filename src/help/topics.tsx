@@ -18,7 +18,7 @@ export interface Topic {
   body: ReactNode;
 }
 
-export const GROUPS = ['Getting started', 'Before the game', 'Game day', 'After the game', 'Sharing and your data', 'Questions'] as const;
+export const GROUPS = ['Getting started', 'Before the game', 'Game day', 'After the game', 'Practice', 'Sharing and your data', 'Questions'] as const;
 
 export const TOPICS: Topic[] = [
   {
@@ -620,6 +620,72 @@ export const TOPICS: Topic[] = [
         <Shot name="stats" />
         <p>
           <b>Export season stats (CSV)</b> opens in Excel, Numbers or Google Sheets. Skill levels are never included.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'practice',
+    title: 'Planning practices',
+    summary: 'Drills, stations, scrimmage teams, the timer and what you worked on.',
+    group: 'Practice',
+    body: (
+      <>
+        <p>
+          Each team has a <b>Practice</b> tab. A practice is a list of drills from your <b>Drill library</b>, which all
+          your teams share. Run it with a timer, then note how it went.
+        </p>
+        <h2>Your drills</h2>
+        <p>
+          Tap <b>Drill library</b> on the Practice tab. <b>Add starter drills</b> puts about 20 common drills for 9U and
+          12U teams in your library, each with coaching points; keep, change or delete any of them. <b>+ New drill</b>{' '}
+          adds your own: a length, half or full court, tags such as <i>Defense</i> or <i>Inbounding</i>, equipment and
+          coaching points. A drill you no longer use can be <b>Retired</b>: it leaves the list but stays in your stats.
+        </p>
+        <h2>Plan a practice</h2>
+        <Steps>
+          <li>
+            Tap <b>+ New practice</b>. Like a new game, it starts with today’s date and everyone attending. Set a start
+            time and target length if you like.
+          </li>
+          <li>
+            Tap <b>+ Add drill</b> for each drill. Change a drill’s minutes with − and +. To change the order, drag a drill by its ⠿ handle.{' '}
+            <b>Skip</b> keeps a drill in the plan without running it.
+          </li>
+          <li>
+            Have more than one coach? Tap <b>+ Station</b> to run another drill at the same time, and type who runs each
+            one. Set a station to <b>A</b> or <b>B</b> to send one scrimmage team to it.
+          </li>
+          <li>
+            Under <b>Scrimmage teams</b>, tap <b>Balanced</b> (by skill level and position) or <b>Random</b>. Tap a player
+            to move them to the other team. Skill levels are never shown.
+          </li>
+        </Steps>
+        <p>
+          The plan shows the total against your target and whether you need the full court. If it runs long, the drills that won’t finish in time are outlined, with how far past your target each one ends. <b>Equipment</b> lists your
+          team’s always-bring items (change them in the team’s Settings tab) plus what the drills need.
+        </p>
+        <h2>Share it</h2>
+        <p>
+          <b>Full plan for coaches</b>, a <b>Station card</b> for each coach (only their drills, groups and coaching
+          points) and a <b>One-pager for parents</b> (when, how long and what you’ll work on) go out as text through
+          Messages, Mail or Notes, where you can also print them.
+        </p>
+        <h2>Run it</h2>
+        <p>
+          <b>Start practice</b> shows a big countdown for the current drill, with its coaching points and who’s in each
+          group. <b>Pause</b>, <b>+1 min</b>, <b>Skip</b> and <b>Next</b> do what they say. It beeps at one minute left and
+          at zero, keeps the screen on, and keeps time even if you close the app. Tap 👍 or 👎 on a drill as you go. Tapped the wrong button? <b>↶ Undo</b> under the timer puts it back, and the timer screen warns you when you’re running late.
+        </p>
+        <Tip>
+          iPhone only plays the beep after you’ve tapped the practice screen once, so tap <b>Pause</b> and <b>Resume</b>{' '}
+          or anywhere on it when you start.
+        </Tip>
+        <h2>Afterwards</h2>
+        <p>
+          The practice review has <b>What went well</b> and <b>Work on next time</b>, and your 👍, 👎 and notes for each
+          drill, which show on the drill when you next edit it. The Practice tab’s <b>Season focus</b> shows the minutes
+          spent on each tag and each drill, so you can see whether you’ve really been working on defense.
         </p>
       </>
     ),

@@ -27,7 +27,7 @@ test('plans and runs a full game on an iPhone-sized screen', async ({ page }) =>
   // Try the app with the demo team.
   await page.getByRole('button', { name: 'Load demo team' }).click();
   await expect(page.getByRole('heading', { name: 'Demo Hoopers' })).toBeVisible();
-  await expect(page.getByRole('radio', { name: 'Roster (10)' })).toBeVisible();
+  await expect(page.getByRole('radio', { name: 'Roster' })).toBeVisible();
   await expectNoHorizontalScroll(page);
 
   // Plan a game without one player.

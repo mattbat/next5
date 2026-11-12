@@ -109,12 +109,12 @@ describe('per-game stats (S3)', () => {
 });
 
 describe('season stats (S4)', () => {
-  it('has a Stats tab between Roster and Settings', async () => {
+  it('has a Stats tab between Roster and Settings, after Games and Practice', async () => {
     const team = await createDemoTeam();
     await goTo(`#/team/${team.id}`);
     render(<App />);
     await screen.findByRole('radio', { name: 'Games' });
-    expect(screen.getAllByRole('radio').map((r) => r.textContent)).toEqual(['Games', 'Roster (10)', 'Stats', 'Settings']);
+    expect(screen.getAllByRole('radio').map((r) => r.textContent)).toEqual(['Games', 'Practice', 'Roster', 'Stats', 'Settings']);
     await userEvent.setup().click(screen.getByRole('radio', { name: 'Stats' }));
     expect(screen.getByText(/No finished games yet/)).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /Export/ })).not.toBeInTheDocument();

@@ -121,6 +121,12 @@ Some ways to use it:
 
 Only one phone runs a game at a time. After you share a game that's in progress, your phone shows **The other phone is running this game** and won't let you tap Next or make swaps. If the other phone can't carry on (a dead battery, say), tap **Take back control**. A phone that has already played further won't let an older copy wipe out its swaps.
 
+### Planning practices
+
+Each team has a **Practice** tab. Tap **Drill library** to build your drills (or **Add starter drills** for about 20 common 9U and 12U drills to start from), then **+ New practice**: add drills, set their minutes, drag them into order, run several at once as **stations** with a coach for each, and split the players into balanced **scrimmage teams**. The plan shows the equipment to bring and whether you need the full court, and shares as text: the full plan, a card for each coach, and a one-pager for parents.
+
+**Start practice** runs a big countdown for each drill, with **Pause**, **+1 min**, **Skip**, **Next** and **↶ Undo**, a beep at one minute left, and a warning when you’re running past your planned length. Afterwards, note what went well and what to work on. The Practice tab's **Season focus** shows how much time went to each kind of work (defense, offense, inbounding…) and each drill.
+
 ### Updates
 
 When a new version is ready, a banner says **A new version of next5 is ready**. Tap **Update** when convenient; your teams and games are kept. The banner never appears on the screens of a game in progress. After updating, a short note says what's new; **Settings → What's new** lists every version.
@@ -151,7 +157,7 @@ npm run dev          # http://localhost:5173/next5/
 |---------|--------------|
 | `npm run dev` | Dev server with hot reload |
 | `npm run build` | Type-check and build to `dist/` |
-| `npm run preview` | Serve the production build at http://localhost:4173/next5/ |
+| `npm run preview` | Serve the production build at http://localhost:4173/next5/ (the e2e tests use their own port, 4317) |
 | `npm run lint` | ESLint |
 | `npm run typecheck` | TypeScript, no output |
 | `npm test` | Unit, property and component tests with coverage |
@@ -176,16 +182,19 @@ src/
   domain/       Game logic shared by screens: labels, Next/Undo, ending early (game.ts),
                 plan editing: locks, swaps, redo (planning.ts), game-day changes: swaps,
                 statuses, re-plan, overtime (changes.ts), stats and CSV (stats.ts),
-                the plan as text (planText.ts)
+                the plan as text (planText.ts), practices: teams, timer, stats and
+                shared texts (practice.ts)
   data/         Storage: Dexie schema (db.ts), the only module that writes (repo.ts),
                 backup files and restore (backup.ts), share sheet / download (share.ts),
                 handing a game to the assistant by link or file (handoff.ts), checks on
-                files and links from outside (validate.ts), What's new (whatsNew.ts)
+                files and links from outside (validate.ts), What's new (whatsNew.ts),
+                starter drills (starterDrills.ts)
   screens/      One component per screen
   components/   Shared UI (top bar, toggles, sheets, G/F/C position chips, update banner,
                 What's new, install hint, first-run intro)
   help/         The in-app guide: topics (topics.tsx), screenshot list (shots.ts), intro state
-  hooks/        useGameData, useWakeLock, useInLiveGame
+  hooks/        useGameData, usePracticeData, useDrillFilter, useWakeLock, useInLiveGame
+  practiceSound.ts  The practice timer's beeps
   changelog.json  Release notes the app shows (written by npm run release)
 e2e/            Playwright tests
 scripts/screens/  Takes the help screenshots (npm run screenshots)
@@ -223,6 +232,7 @@ Segments in `fixed` (already played) are never changed. `locks` pin single playe
 - `src/App.test.tsx`: walks the main workflows through the real screens against an in-memory IndexedDB.
 - `src/screens/Help.test.tsx`: the intro, and every help topic renders with links and screenshots that exist.
 - `scripts/release-lib.test.mjs`: the release and changelog helpers. `scripts/beta-lib.test.mjs`: beta builds.
+- `src/domain/practice.test.ts`, `src/data/practice.test.ts`, `src/screens/Practice.test.tsx` and `e2e/practice.spec.ts`: practice planning, from scrimmage teams (a property test) to running a practice on a narrow phone.
 - `src/screens/Beta.test.tsx`: a beta build's label, Settings → Beta and Coming next, and that the real app shows none of it.
 - Engine, game-logic and script tests run in plain Node; screen tests run in jsdom (`test.projects` in `vite.config.ts`).
 - `e2e/`: Playwright, in WebKit at 402×874 (iPhone 17) for the full game flow, and in Chromium for offline launch.
@@ -246,7 +256,7 @@ Coverage thresholds are enforced in `vite.config.ts`: 95% of lines for `src/engi
 
 ### Beta previews
 
-Cloudflare Pages builds every pushed branch (REL5) and comments the preview links on its pull request. Open a draft PR, open the branch link (`<branch>.next5.pages.dev`, the same for every push) in Safari on the iPhone, and add it to the Home Screen. It installs as **next5 β**, with its own data. To try it with real teams, back up in the real app and restore the file in the beta.
+Cloudflare Pages builds every pushed branch (REL5) and comments the preview links on its pull request. Open a draft PR, open the branch link (`<branch>.next5-4gi.pages.dev`, with `/` in the branch name turned into `-`; the same for every push) in Safari on the iPhone, and add it to the Home Screen. It installs as **next5 β**, with its own data. To try it with real teams, back up in the real app and restore the file in the beta.
 
 A beta build is any build with `CF_PAGES=1` (Cloudflare sets it) or `BETA=1`: base path `/`, a Beta label on every screen, Settings → Beta (branch, Erase beta data), the waiting `changes/` notes as "Coming next", and `noindex`. See `scripts/beta-lib.mjs` and `vite.config.ts`. Try one locally with `BETA=1 npx vite build && npx vite preview`.
 

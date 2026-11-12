@@ -16,7 +16,7 @@ import { addPlayer, createDemoTeam, createGame, createTeam, updateTeam } from '.
 import { shareFile } from './share';
 
 beforeEach(async () => {
-  await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear()]);
+  await Promise.all([db.teams.clear(), db.players.clear(), db.games.clear(), db.drills.clear(), db.practices.clear()]);
   localStorage.clear();
 });
 
@@ -34,7 +34,7 @@ describe('createBackup and parseBackup', () => {
     await createGame(team);
     const backup = await createBackup();
     expect(backup).toMatchObject({ format: BACKUP_FORMAT, version: 1 });
-    expect(summarize(backup)).toEqual({ teamNames: ['Demo Hoopers'], players: 10, games: 1 });
+    expect(summarize(backup)).toEqual({ teamNames: ['Demo Hoopers'], players: 10, games: 1, practices: 0, drills: 0 });
 
     const parsed = parseBackup(JSON.stringify(backup));
     expect(parsed).toEqual({ ok: true, backup });
@@ -46,7 +46,7 @@ describe('createBackup and parseBackup', () => {
     await addPlayer(b.id, { name: 'Zed', number: '1', skills: {} });
     await createGame(a);
     const backup = await createBackup(b.id);
-    expect(summarize(backup)).toEqual({ teamNames: ['Rockets'], players: 1, games: 0 });
+    expect(summarize(backup)).toEqual({ teamNames: ['Rockets'], players: 1, games: 0, practices: 0, drills: 0 });
     expect(backupFileName(backup, b.name)).toMatch(/^next5-rockets-\d{4}-\d{2}-\d{2}\.json$/);
     expect(backupFileName(backup)).toMatch(/^next5-backup-\d{4}-\d{2}-\d{2}\.json$/);
     expect(backupFileName(backup, '!!!')).toMatch(/^next5-team-/);
