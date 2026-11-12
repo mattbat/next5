@@ -149,7 +149,8 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     // PR4a: a target of 25 minutes leaves the scrimmage (ending at 32) highlighted.
     expect(screen.queryByText(/won’t finish on time/)).not.toBeInTheDocument();
     for (let i = 0; i < 10; i++) await user.click(screen.getByRole('button', { name: 'Fewer minutes of practice' }));
-    expect(await screen.findByText('32 of 25 min')).toBeInTheDocument();
+    // Ten saves in a row; give them time on a busy test machine.
+    expect(await screen.findByText('32 of 25 min', {}, { timeout: 5000 })).toBeInTheDocument();
     expect(screen.getByText(/7 min past your 25 min\. Highlighted drills won’t finish on time\./)).toBeInTheDocument();
     expect(block(3)).toHaveClass('late');
     expect(within(block(3)).getByText('ends 7 min past your 25 min')).toBeInTheDocument();

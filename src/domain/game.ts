@@ -233,7 +233,9 @@ export function undoSegment(game: Game): Game {
   const onCourt = new Set(game.plan[current]?.map((s) => s.playerId));
   const subbedOut = last.filter((s) => !onCourt.has(s.playerId));
   const events = endedEarly(game) ? game.events.slice(0, -1) : game.events;
-  return { ...game, played, subbedOut, current, status: 'live', events };
+  // A change remembered for Undo belongs to the segment being left; restoring
+  // it later would bring back that segment's subbed-out players.
+  return { ...withoutLastChange(game), played, subbedOut, current, status: 'live', events };
 }
 
 
