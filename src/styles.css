@@ -2289,26 +2289,27 @@ textarea:focus {
   margin-left: auto;
 }
 
+/* Coach, group and picked players each get their own full-width row, so four group options fit on a narrow phone. */
 .station-edit {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
   margin-top: 4px;
 }
 
 .station-edit .coach-input {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   min-height: 40px;
 }
 
-.station-edit .segmented {
-  flex: none;
+.station-edit .segmented button {
+  min-height: 34px;
 }
 
-.station-edit .segmented button {
-  padding: 0 10px;
-  min-height: 34px;
+.station-edit .station-players {
+  align-self: flex-start;
+  text-align: left;
 }
 
 .station-meta {

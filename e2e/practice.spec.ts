@@ -25,6 +25,8 @@ async function expectFits(page: Page, screen: string) {
 test.use({ viewport: { width: 375, height: 667 } });
 
 test('plans, runs and reviews a practice on a narrow phone', async ({ page }) => {
+  // A long walk through every practice screen; the default 30 s is too tight on a slow machine.
+  test.setTimeout(60_000);
   await page.goto('./');
   await page.getByRole('button', { name: 'Load demo team' }).click();
   await page.getByRole('radio', { name: 'Practice' }).click();
@@ -73,6 +75,23 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('listitem', { name: 'Block 3' })).toContainText('Scrimmage');
+
+  // A custom group: the coach box, All/A/B/Custom and the picked players each fit (PR4).
+  await second.getByRole('radiogroup', { name: 'Group for Closeouts' }).getByRole('radio', { name: 'Custom' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Players for Closeouts' });
+  // The tick shows once it's saved, so click the row and wait rather than check().
+  await sheet.locator('label.list-item').first().click();
+  await expect(sheet.getByRole('checkbox').first()).toBeChecked();
+  await expectFits(page, 'Custom players sheet');
+  await sheet.getByRole('button', { name: 'Done' }).click();
+  await expect(second.getByRole('button', { name: 'Choose players for Closeouts' })).toContainText('1 player:');
+  await page.addStyleTag({ content: WIDE_FONT });
+  const cramped = await second.evaluate((block) =>
+    [...block.querySelectorAll('.station-edit, .station-edit *')]
+      .filter((el) => el.scrollWidth > el.clientWidth + 1 || (el.matches('.coach-input') && el.clientWidth < 200))
+      .map((el) => `${el.tagName.toLowerCase()}.${el.className} ${el.clientWidth}/${el.scrollWidth}px`),
+  );
+  expect(cramped, 'Practice plan: station controls cut off').toEqual([]);
 
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByRole('heading', { name: 'Block 1 of 3' })).toBeVisible();

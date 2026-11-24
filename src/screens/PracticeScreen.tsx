@@ -171,6 +171,7 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
               itemStyle={drag.itemStyle(i)}
               isDragged={drag.dragging === i}
               practice={practice}
+              roster={roster}
               block={block}
               index={i}
               start={starts[i] ?? null}
@@ -411,6 +412,7 @@ function Details({ practice }: { practice: Practice }) {
 
 function BlockCard({
   practice,
+  roster,
   block,
   index,
   start,
@@ -427,6 +429,7 @@ function BlockCard({
   isDragged,
 }: {
   practice: Practice;
+  roster: Player[];
   block: PracticeBlock;
   index: number;
   start: number | null;
@@ -525,10 +528,15 @@ function BlockCard({
                   ]}
                 />
                 {s.group === 'custom' && (
-                  <button type="button" className="link small" aria-label={`Choose players for ${drillName(drillIndex, s.drillId)}`} onClick={() => onChoose(si)}>
+                  <button
+                    type="button"
+                    className="link small station-players"
+                    aria-label={`Choose players for ${drillName(drillIndex, s.drillId)}`}
+                    onClick={() => onChoose(si)}
+                  >
                     {stationPlayerIds(practice, s).length === 0
                       ? 'Choose players'
-                      : `${stationPlayerIds(practice, s).length} ${stationPlayerIds(practice, s).length === 1 ? 'player' : 'players'} · Choose`}
+                      : `${stationPlayerIds(practice, s).length} ${stationPlayerIds(practice, s).length === 1 ? 'player' : 'players'}: ${stationPlayerNames(practice, s, roster)} · Choose`}
                   </button>
                 )}
               </div>

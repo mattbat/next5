@@ -269,7 +269,7 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     // The other station is for everyone, so nobody is left out yet.
     expect(within(sheet1).queryByText(/Not in a drill yet:/)).not.toBeInTheDocument();
     await user.click(within(sheet1).getByRole('button', { name: 'Done' }));
-    expect(screen.getByRole('button', { name: 'Choose players for Closeouts' })).toHaveTextContent('1 player · Choose');
+    expect(screen.getByRole('button', { name: 'Choose players for Closeouts' })).toHaveTextContent(/^1 player: \w+ · Choose$/);
 
     // The same player in the second station moves out of the first.
     await group('Form shooting', 'Custom');
