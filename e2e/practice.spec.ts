@@ -42,6 +42,11 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await page.getByRole('link', { name: 'Back' }).click();
 
   await page.getByRole('button', { name: '+ New practice' }).click();
+  await expectFits(page, 'New practice (empty)');
+  const [date, time] = await Promise.all(
+    ['input[type="date"]', 'input[type="time"]'].map((s) => page.locator(s).evaluate((el) => el.getBoundingClientRect().height)),
+  );
+  expect(time, 'Date and Start are the same height').toBe(date);
   for (const drill of ['Dynamic warm-up', 'Closeouts', 'Scrimmage']) {
     await page.getByRole('button', { name: '+ Add drill' }).click();
     if (drill === 'Dynamic warm-up') await expectFits(page, 'Drill picker');

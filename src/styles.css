@@ -119,11 +119,22 @@ input:focus {
   border-color: var(--accent);
 }
 
-input[type='date'] {
+/* iOS draws date and time inputs its own way: a different height for time, and
+   a built-in minimum width that pushes two side by side off a narrow phone. */
+input[type='date'],
+input[type='time'] {
   -webkit-appearance: none;
   appearance: none;
   display: flex;
   align-items: center;
+  height: var(--tap);
+  min-width: 0;
+}
+
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: left;
 }
 
 .sr-only {
@@ -568,6 +579,15 @@ input[type='date'] {
 .field-row {
   display: flex;
   gap: 12px;
+}
+
+/* Fields share the row and may shrink below their input's natural width. */
+.field-row > .field {
+  min-width: 0;
+}
+
+.field-row > .field.grow {
+  flex: 1 1 0;
 }
 
 .field.number {
@@ -2163,8 +2183,12 @@ textarea:focus {
   gap: 6px;
 }
 
+/* Filter tags: rows set inline (up to three), filled column by column, scrolling sideways if they still don't fit. */
 .tag-picker.scroll {
-  flex-wrap: nowrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: start;
   overflow-x: auto;
   margin: 8px -16px 0;
   padding: 0 16px 4px;
