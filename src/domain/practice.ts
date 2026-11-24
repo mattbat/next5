@@ -502,7 +502,8 @@ export function setStationPlayer(blocks: PracticeBlock[], blockId: string, stati
               if (picked) return has ? s : { ...s, players: [...(s.players ?? []), playerId] };
               return has ? { ...s, players: (s.players ?? []).filter((id) => id !== playerId) } : s;
             }
-            return picked && has && s.group === 'custom' ? { ...s, players: (s.players ?? []).filter((id) => id !== playerId) } : s;
+            // Also clears picks kept on a station switched to All/A/B, so switching it back can't double-book anyone.
+            return picked && has ? { ...s, players: (s.players ?? []).filter((id) => id !== playerId) } : s;
           }),
         },
   );

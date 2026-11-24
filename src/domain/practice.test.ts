@@ -503,6 +503,15 @@ describe('custom station groups (PR4)', () => {
     expect(stationPlayerIds(plan, { ...s, group: 'custom' })).toEqual(['Bea', 'Ann']);
   });
 
+  it('picking a player clears them from kept picks on a station switched away from custom', () => {
+    const switched = plan.blocks.map((b, i) =>
+      i === 0 ? { ...b, stations: b.stations.map((s, k) => (k === 0 ? { ...s, group: 'A' as const } : s)) } : b,
+    );
+    const blocks = setStationPlayer(switched, 'b1', 1, 'Ann', true);
+    expect(blocks[0]!.stations[0]!.players).toEqual(['Bea']);
+    expect(blocks[0]!.stations[1]!.players).toEqual(['Ann']);
+  });
+
   it('knows who is already in another drill, and who is in none', () => {
     const b = plan.blocks[0]!;
     expect([...inOtherStations(plan, b, 1)].sort()).toEqual(['Ann', 'Bea']);
