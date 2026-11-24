@@ -1,6 +1,6 @@
 import { useEffect, useState, type CSSProperties } from 'react';
-import { Empty, Info, Jersey, Section, Segmented, Stepper, TopBar } from '../components/ui';
-import { deletePractice, editPractice, newId, togglePracticeAttending, updatePractice, updateStation } from '../data/repo';
+import { Empty, Info, Jersey, PositionChips, Section, Segmented, Sheet, Stepper, TopBar } from '../components/ui';
+import { deletePractice, editPractice, newId, toggleStationPlayer, togglePracticeAttending, updatePractice, updateStation } from '../data/repo';
 import { shareText } from '../data/share';
 import type { Drill, Player, Practice, PracticeBlock, StationGroup, Team } from '../data/types';
 import {
@@ -13,6 +13,8 @@ import {
   equipmentList,
   formatTime,
   groupLabel,
+  inOtherStations,
+  notInAnyStation,
   lateBlocks,
   moveBlock,
   movePlayer,
@@ -21,6 +23,8 @@ import {
   plannedMinutes,
   practicePlanText,
   splitTeams,
+  stationPlayerIds,
+  stationPlayerNames,
   startPractice,
   stationCardText,
   undoRun,
@@ -59,6 +63,7 @@ interface PlanProps {
 
 function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
   const [picking, setPicking] = useState<{ blockId: string | null } | null>(null);
+  const [choosing, setChoosing] = useState<{ blockId: string; index: number } | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const done = practice.status === 'done';
   const live = practice.status === 'live';
@@ -174,6 +179,7 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
               done={done}
               onChange={(change) => changeBlock(block.id, change)}
               onAddStation={() => setPicking({ blockId: block.id })}
+              onChoose={(stationIndex) => setChoosing({ blockId: block.id, index: stationIndex })}
             />
           ))}
         </ol>
@@ -237,6 +243,10 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
         </footer>
       )}
 
+      {choosing && (
+        <PlayersSheet practice={practice} team={team} roster={roster} drillIndex={drillIndex} {...choosing} onClose={() => setChoosing(null)} />
+      )}
+
       {picking && (
         <DrillPicker
           drills={drills}
@@ -246,6 +256,71 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
         />
       )}
     </main>
+  );
+}
+
+/** Hand-picks the players for a custom station (PR4). A player is in one drill per block. */
+function PlayersSheet({
+  practice,
+  team,
+  roster,
+  drillIndex,
+  blockId,
+  index,
+  onClose,
+}: {
+  practice: Practice;
+  team: Team;
+  roster: Player[];
+  drillIndex: DrillIndex;
+  blockId: string;
+  index: number;
+  onClose: () => void;
+}) {
+  const block = practice.blocks.find((b) => b.id === blockId);
+  const station = block?.stations[index];
+  if (!block || !station) return null;
+  const byId = new Map(roster.map((p) => [p.id, p]));
+  const attending = practice.attending
+    .map((id) => byId.get(id))
+    .filter((p): p is Player => !!p)
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const elsewhere = inOtherStations(practice, block, index);
+  const picked = station.players ?? [];
+  const idle = block.stations.length > 1 ? notInAnyStation(practice, block) : [];
+  const idleNames = stationPlayerNames({ attending: practice.attending, teams: practice.teams }, { group: 'custom', players: idle }, roster);
+  return (
+    <Sheet title={`Players for ${drillName(drillIndex, station.drillId)}`} onClose={onClose}>
+      {attending.length === 0 ? (
+        <p className="hint">Nobody is marked as attending. Mark who is coming under Attending first.</p>
+      ) : (
+        <>
+          <p className="hint">A player is in one drill at a time in this block. Ticking someone moves them here.</p>
+          <ul className="list">
+            {attending.map((p) => (
+              <li key={p.id}>
+                <label className="list-item check">
+                  <Jersey number={p.number} />
+                  <span className="list-title">
+                    {p.name}
+                    {elsewhere.has(p.id) && !picked.includes(p.id) && <span className="list-sub">In another drill</span>}
+                  </span>
+                  <PositionChips skills={p.skills} positions={team.positions} />
+                  <input
+                    type="checkbox"
+                    checked={picked.includes(p.id)}
+                    onChange={() => void toggleStationPlayer(practice.id, blockId, index, p.id)}
+                    aria-label={`${p.name} in this drill`}
+                  />
+                  <span className="checkmark" aria-hidden />
+                </label>
+              </li>
+            ))}
+          </ul>
+          {idleNames && <p className="hint">Not in a drill yet: {idleNames}</p>}
+        </>
+      )}
+    </Sheet>
   );
 }
 
@@ -344,6 +419,7 @@ function BlockCard({
   done,
   onChange,
   onAddStation,
+  onChoose,
   lateBy,
   dragHandle,
   itemRef,
@@ -359,6 +435,8 @@ function BlockCard({
   done: boolean;
   onChange: (change: (b: PracticeBlock) => PracticeBlock | null) => void;
   onAddStation: () => void;
+  /** Opens the player picker for a custom station. */
+  onChoose: (stationIndex: number) => void;
   /** Minutes past the target length this block ends, or null if it finishes in time (PR4a). */
   lateBy: number | null;
   dragHandle: ReturnType<ReturnType<typeof useBlockDrag>['handleProps']> | null;
@@ -434,13 +512,25 @@ function BlockCard({
                 <Segmented<StationGroup>
                   label={`Group for ${drillName(drillIndex, s.drillId)}`}
                   value={s.group}
-                  onChange={(group) => void updateStation(practice.id, block.id, si, { group })}
+                  onChange={(group) => {
+                    void updateStation(practice.id, block.id, si, { group });
+                    // Picking Custom the first time goes straight to choosing.
+                    if (group === 'custom' && !s.players?.length) onChoose(si);
+                  }}
                   options={[
                     { value: 'all', label: 'All' },
                     { value: 'A', label: 'A' },
                     { value: 'B', label: 'B' },
+                    { value: 'custom', label: 'Custom' },
                   ]}
                 />
+                {s.group === 'custom' && (
+                  <button type="button" className="link small" aria-label={`Choose players for ${drillName(drillIndex, s.drillId)}`} onClick={() => onChoose(si)}>
+                    {stationPlayerIds(practice, s).length === 0
+                      ? 'Choose players'
+                      : `${stationPlayerIds(practice, s).length} ${stationPlayerIds(practice, s).length === 1 ? 'player' : 'players'} · Choose`}
+                  </button>
+                )}
               </div>
             ) : (
               (s.coach || s.group !== 'all') && (

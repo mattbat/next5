@@ -233,6 +233,81 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     expect(within(byDrill).queryByText('Closeouts')).not.toBeInTheDocument();
   });
 
+  it('hand-picks players for custom stations, one drill per block (PR4)', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await addStarterDrills();
+    const practice = await createPractice(team);
+    const all = await db.drills.toArray();
+    const d1 = all.find((d) => d.name === 'Closeouts')!;
+    const d2 = all.find((d) => d.name === 'Form shooting')!;
+    await editPractice(practice.id, () => ({
+      blocks: [
+        {
+          id: 'b1',
+          minutes: 10,
+          skipped: false,
+          stations: [
+            { drillId: d1.id, coach: '', group: 'all' as const },
+            { drillId: d2.id, coach: '', group: 'all' as const },
+          ],
+        },
+      ],
+    }));
+    await goTo(paths.practice(practice.id));
+    render(<App />);
+
+    const group = async (name: string, option: string) =>
+      user.click(within(await screen.findByRole('radiogroup', { name: `Group for ${name}` })).getByRole('radio', { name: option }));
+    await group('Closeouts', 'Custom');
+    const sheet1 = await screen.findByRole('dialog', { name: 'Players for Closeouts' });
+    expect(within(sheet1).getAllByRole('checkbox')).toHaveLength(10);
+    expect(within(sheet1).getAllByText('G').length).toBeGreaterThan(0);
+    const firstName = (await db.players.where('teamId').equals(team.id).sortBy('name'))[0]!.name;
+    await user.click(within(sheet1).getByRole('checkbox', { name: `${firstName} in this drill` }));
+    await waitFor(async () => expect((await db.practices.get(practice.id))!.blocks[0]!.stations[0]!.players).toHaveLength(1));
+    // The other station is for everyone, so nobody is left out yet.
+    expect(within(sheet1).queryByText(/Not in a drill yet:/)).not.toBeInTheDocument();
+    await user.click(within(sheet1).getByRole('button', { name: 'Done' }));
+    expect(screen.getByRole('button', { name: 'Choose players for Closeouts' })).toHaveTextContent('1 player · Choose');
+
+    // The same player in the second station moves out of the first.
+    await group('Form shooting', 'Custom');
+    const sheet2 = await screen.findByRole('dialog', { name: 'Players for Form shooting' });
+    const row = within(sheet2).getByRole('checkbox', { name: `${firstName} in this drill` }).closest('label') as HTMLElement;
+    expect(within(row).getByText('In another drill')).toBeInTheDocument();
+    await user.click(within(row).getByRole('checkbox'));
+    await waitFor(async () => {
+      const stations = (await db.practices.get(practice.id))!.blocks[0]!.stations;
+      expect(stations[0]!.players).toEqual([]);
+      expect(stations[1]!.players).toHaveLength(1);
+    });
+    expect(await within(sheet2).findByText(/Not in a drill yet:/)).toBeInTheDocument();
+    await user.click(within(sheet2).getByRole('button', { name: 'Done' }));
+    expect(screen.getByRole('button', { name: 'Choose players for Closeouts' })).toHaveTextContent('Choose players');
+
+    // The run screen lists the picked names.
+    await user.click(screen.getByRole('button', { name: 'Start practice' }));
+    expect(await screen.findByRole('heading', { name: 'Block 1 of 1', level: 1 })).toBeInTheDocument();
+    expect(screen.getByText(firstName)).toBeInTheDocument();
+  });
+
+  it('asks to mark attendance before picking players', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    await addStarterDrills();
+    const practice = await createPractice(team);
+    const drill = (await db.drills.toArray())[0]!;
+    await editPractice(practice.id, () => ({
+      attending: [],
+      blocks: [{ id: 'b1', minutes: 5, skipped: false, stations: [{ drillId: drill.id, coach: '', group: 'all' as const }] }],
+    }));
+    await goTo(paths.practice(practice.id));
+    render(<App />);
+    await user.click(await screen.findByRole('radio', { name: 'Custom' }));
+    expect(await screen.findByText(/Nobody is marked as attending/)).toBeInTheDocument();
+  });
+
   it('changes the team’s always-bring list in team Settings (PR6)', async () => {
     const user = userEvent.setup();
     const team = await createDemoTeam();
