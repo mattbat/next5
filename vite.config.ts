@@ -39,7 +39,7 @@ function betaPage(): Plugin {
     transformIndexHtml(html) {
       if (!beta) return html;
       return html
-        .replace('<title>next5</title>', `<title>${appName}</title>`)
+        .replace(/<title>[^<]*<\/title>/, `<title>${appName}</title>`)
         .replace('content="next5" />', `content="${appName}" />`)
         .replace('<meta charset="UTF-8" />', '<meta charset="UTF-8" />\n    <meta name="robots" content="noindex, nofollow" />');
     },
