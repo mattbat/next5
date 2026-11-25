@@ -863,6 +863,8 @@ input[type='time']::-webkit-date-and-time-value {
   max-height: 92dvh;
   margin: 0 auto;
   overflow-y: auto;
+  /* Don't hand a swipe on to the page behind; containScroll() covers iOS. */
+  overscroll-behavior: contain;
   padding: 8px 16px calc(var(--safe-bottom) + 16px);
   background: var(--surface);
   border-radius: 20px 20px 0 0;
