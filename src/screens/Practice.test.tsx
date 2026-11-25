@@ -175,11 +175,12 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     expect(screen.getByText('Practice pinnies')).toBeInTheDocument();
 
     // PR10: sharing.
-    await user.click(screen.getByRole('button', { name: 'Station card: Coach Sam' }));
+    expect(screen.queryByRole('button', { name: /Station card/ })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Coaches’ plan' }));
     await waitFor(() => expect(shared).toHaveLength(1));
-    expect(shared[0]).toContain('Closeouts');
-    expect(shared[0]).not.toContain('Form shooting');
-    await user.click(screen.getByRole('button', { name: 'One-pager for parents' }));
+    expect(shared[0]).toContain('Closeouts\n  Coach: Coach Sam\n  Players: Team A');
+    expect(shared[0]).toContain('Form shooting\n  Coach: Coach Lee\n  Players: Team B');
+    await user.click(screen.getByRole('button', { name: 'Parents' }));
     await waitFor(() => expect(shared).toHaveLength(2));
     expect(shared[1]).toContain('What we’ll work on:');
     expect(shared[1]).not.toContain('Coach Sam');
@@ -320,6 +321,45 @@ describe('a practice from plan to review (PR1, PR4–PR10)', () => {
     await user.type(box, 'Balls\nCones');
     await user.tab();
     await waitFor(async () => expect((await db.teams.get(team.id))!.alwaysBring).toEqual(['Balls', 'Cones']));
+  });
+
+  it('shares the coaches’ plan as a PDF file (PR10)', async () => {
+    const user = userEvent.setup();
+    const team = await createDemoTeam();
+    const practice = await createPractice(team);
+    const files: File[] = [];
+    Object.assign(navigator, {
+      canShare: () => true,
+      share: vi.fn(async ({ files: f }: { files: File[] }) => {
+        files.push(...f);
+      }),
+    });
+    await goTo(paths.practice(practice.id));
+    render(<App />);
+    await user.click(await screen.findByRole('button', { name: 'Coaches’ plan (PDF)' }));
+    await waitFor(() => expect(files).toHaveLength(1), { timeout: 10_000 });
+    expect(files[0]!.name).toBe(`Practice plan ${practice.date}.pdf`);
+    expect(files[0]!.type).toBe('application/pdf');
+    expect(await screen.findByRole('status')).toHaveTextContent('Plan shared.');
+    delete (navigator as { canShare?: unknown }).canShare;
+  });
+
+  it('makes web links in coaching points tappable on the timer screen', async () => {
+    const team = await createDemoTeam();
+    const drill = await createDrill({ name: 'Form shooting', minutes: 8, court: 'half', tags: [], equipment: [], notes: 'Elbow in. Video: https://example.com/form.' });
+    const practice = await createPractice(team);
+    await editPractice(practice.id, () => ({
+      status: 'live' as const,
+      current: 0,
+      clock: { startedAt: null, elapsed: 0 },
+      blocks: [{ id: 'b1', minutes: 8, skipped: false, stations: [{ drillId: drill.id, coach: '', group: 'all' as const }] }],
+    }));
+    await goTo(paths.practiceRun(practice.id));
+    render(<App />);
+    const link = await screen.findByRole('link', { name: 'https://example.com/form' });
+    expect(link).toHaveAttribute('href', 'https://example.com/form');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('opens a running practice on its timer, and explains one that isn’t running', async () => {

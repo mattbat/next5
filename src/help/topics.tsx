@@ -672,9 +672,11 @@ export const TOPICS: Topic[] = [
         </p>
         <h2>Share it</h2>
         <p>
-          <b>Full plan for coaches</b>, a <b>Station card</b> for each coach (only their drills, groups and coaching
-          points) and a <b>One-pager for parents</b> (when, how long and what you’ll work on) go out as text through
-          Messages, Mail or Notes, where you can also print them.
+          <b>Coaches’ plan</b> is one detailed plan for every coach: each drill with its start and end time, who coaches it,
+          which players are there, the equipment and the coaching points, so a coach can run practice from it alone. With
+          rotating stations it lists each rotation and who is at which station. It goes out as text through Messages, Mail or
+          Notes, or tap <b>Coaches’ plan (PDF)</b> for a file sized for a phone. Web links in the coaching points are tappable.{' '}
+          <b>Parents</b> is a short one-pager (when, how long and what you’ll work on).
         </p>
         <h2>Run it</h2>
         <p>

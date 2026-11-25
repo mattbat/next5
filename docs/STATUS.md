@@ -142,7 +142,7 @@ Built on branch `claude/practice-planning` (2026-11-07), waiting to be tried on 
 | PR7a | ✅ 📱 | `withUndo` / `undoRun`: each timer button stores the run state before it in `lastRun` (optional field, no schema change); **↶ Undo …** under the timer, and on the review after End or Finish. One step, like Game Day. |
 | PR8 | ✅ 📱 | 👍/👎 and a note per station, on the run screen and the review; **What went well** and **Work on next time**. Past notes show in the drill's editor (`drillNotes`). |
 | PR9 | ✅ | Practice tab → **Season focus**: minutes and % by tag (with bars), and uses, minutes, last date and 👍/👎 by drill (`practiceStats`). Uses actual run time when known. |
-| PR10 | ✅ 📱 | Share as text: full plan, a station card per named coach, and a parent one-pager (`practicePlanText`, `stationCardText`, `parentText`). |
+| PR10 | ✅ 📱 | Share: one detailed coaches' plan as text or PDF (`coachesPlan` in `src/domain/practicePlan.ts` builds the document once; `planText` and the jsPDF renderer in `src/data/practicePdf.ts` draw it), and a parent one-pager (`parentText`). Web links in coaching points are tappable (`splitLinks`, `LinkedText`). |
 | PR11 | ✅ | Optional `drills` and `practices` in backups (`BACKUP_VERSION` stays 1; older apps ignore them). Replace keeps the drill library when restoring a backup from before practices. Validated like games. Schema v4 adds the two tables; migration test from v3. |
 
 Fixed on 2026-11-08: quick taps on the practice length and drill minutes steppers could be lost (they now step from the saved value). The e2e tests now use port 4317 (`E2E_PORT` to change it), since Vite’s default 4173 is often taken by another project.

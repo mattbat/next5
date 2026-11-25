@@ -1,14 +1,13 @@
 import { useEffect, useState, type CSSProperties } from 'react';
 import { Empty, Info, Jersey, PositionChips, Section, Segmented, Sheet, Stepper, TopBar } from '../components/ui';
 import { deletePractice, editPractice, newId, toggleStationPlayer, togglePracticeAttending, updatePractice, updateStation } from '../data/repo';
-import { shareText } from '../data/share';
+import { shareFile, shareText } from '../data/share';
 import type { Drill, Player, Practice, PracticeBlock, StationGroup, Team } from '../data/types';
 import {
   addTime,
   alwaysBring,
   blockFor,
   blockStarts,
-  coachesIn,
   drillName,
   equipmentList,
   formatTime,
@@ -23,17 +22,16 @@ import {
   plannedMinutes,
   rotationCount,
   rotationLength,
-  practicePlanText,
   splitTeams,
   stationPlayerIds,
   stationPlayerNames,
   startPractice,
-  stationCardText,
   undoRun,
   withUndo,
   type DrillIndex,
 } from '../domain/practice';
 import { formatGameDate } from '../domain/game';
+import { coachesPlan, coachesPlanText } from '../domain/practicePlan';
 import { useBlockDrag } from '../hooks/useBlockDrag';
 import { usePracticeData } from '../hooks/usePracticeData';
 import { navigate, paths } from '../router';
@@ -119,6 +117,19 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
 
   const share = async (title: string, text: string) => setMessage(await shareText(title, text));
 
+  // The PDF library is loaded only now, so it isn't part of the app's first load.
+  const sharePdf = async () => {
+    setMessage('Making the PDF…');
+    try {
+      const { buildPlanPdf, practicePdfName } = await import('../data/practicePdf');
+      const pdf = await buildPlanPdf(coachesPlan(practice, team, drillIndex, roster), `${team.name} practice plan`);
+      const outcome = await shareFile(practicePdfName(practice.date), pdf, 'application/pdf');
+      setMessage(outcome === 'cancelled' ? 'Sharing cancelled.' : outcome === 'shared' ? 'Plan shared.' : 'PDF downloaded.');
+    } catch {
+      setMessage('Couldn’t make the PDF. Try the text plan instead.');
+    }
+  };
+
   return (
     <main className="screen with-footer">
       <TopBar title={done ? 'Practice review' : 'Practice'} back={paths.team(team.id)} />
@@ -198,23 +209,16 @@ function Plan({ practice, team, roster, drills, drillIndex }: PlanProps) {
       {!done && <Equipment practice={practice} team={team} drillIndex={drillIndex} />}
 
       <Section title="Share">
-        <p className="hint">As text for Messages, Mail or Notes, where you can also print it. Skill levels are never included.</p>
+        <p className="hint">The coaches’ plan has every drill with its times, coaches, players, equipment and coaching points, so a coach can run practice from it. Skill levels are never included.</p>
         <div className="share-buttons">
-          <button type="button" className="btn secondary wide" onClick={() => void share('Practice plan', practicePlanText(practice, team, drillIndex, roster))}>
-            Full plan for coaches
+          <button type="button" className="btn secondary wide" onClick={() => void share('Practice plan', coachesPlanText(practice, team, drillIndex, roster))}>
+            Coaches’ plan
           </button>
-          {coachesIn(practice).map((coach) => (
-            <button
-              key={coach}
-              type="button"
-              className="btn secondary wide"
-              onClick={() => void share(`Practice: ${coach}`, stationCardText(practice, team, drillIndex, roster, coach))}
-            >
-              Station card: {coach}
-            </button>
-          ))}
+          <button type="button" className="btn secondary wide" onClick={() => void sharePdf()}>
+            Coaches’ plan (PDF)
+          </button>
           <button type="button" className="btn secondary wide" onClick={() => void share('Practice for parents', parentText(practice, team, drillIndex))}>
-            One-pager for parents
+            Parents
           </button>
         </div>
       </Section>

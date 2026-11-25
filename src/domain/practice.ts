@@ -520,7 +520,7 @@ export function blockStarts(practice: Pick<Practice, 'blocks'>): (number | null)
 }
 
 /** "6:08 PM" with a start time, else "0:08" into practice. */
-function startLabel(practice: Pick<Practice, 'time'>, minutes: number): string {
+export function startLabel(practice: Pick<Practice, 'time'>, minutes: number): string {
   if (practice.time) return formatTime(addTime(practice.time, minutes));
   return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`;
 }
@@ -603,89 +603,21 @@ export function rotatingGroupLabel(from: Pick<Station, 'group' | 'drillId'>, dri
   return from.group === 'custom' ? `${drillName(drills, from.drillId)} group` : GROUP_LABEL[from.group];
 }
 
-function heading(practice: Practice, team: Team): string {
-  const when = [formatGameDate(practice.date), practice.time ? formatTime(practice.time) : ''].filter(Boolean).join(', ');
-  return `${team.name} practice · ${when} · ${plannedMinutes(practice)} min`;
+/** "Sat, Nov 28, 6:00 PM": the date, and the start time if set. */
+export const whenLabel = (practice: Pick<Practice, 'date' | 'time'>): string =>
+  [formatGameDate(practice.date), practice.time ? formatTime(practice.time) : ''].filter(Boolean).join(', ');
+
+export function heading(practice: Practice, team: Team): string {
+  return `${team.name} practice · ${whenLabel(practice)} · ${plannedMinutes(practice)} min`;
 }
 
-function names(ids: string[], roster: Player[]): string {
+export function names(ids: string[], roster: Player[]): string {
   const byId = new Map(roster.map((p) => [p.id, p.name]));
   return ids
     .map((id) => byId.get(id))
     .filter((n): n is string => !!n)
     .sort((a, b) => a.localeCompare(b))
     .join(', ');
-}
-
-function stationLine(s: Station, drills: DrillIndex, practice: Practice, roster: Player[]): string {
-  const custom = s.group === 'custom' ? stationPlayerNames(practice, s, roster) : '';
-  const group = s.group === 'all' ? '' : custom ? `${GROUP_LABEL[s.group]}: ${custom}` : GROUP_LABEL[s.group];
-  return [drillName(drills, s.drillId), s.coach.trim(), group].filter(Boolean).join(' · ');
-}
-
-/** The whole plan for coaches (PR10): read-only, for a message, Notes or printing. */
-export function practicePlanText(practice: Practice, team: Team, drills: DrillIndex, roster: Player[]): string {
-  const starts = blockStarts(practice);
-  const lines = [heading(practice, team)];
-  if (practice.focus.trim()) lines.push(`Focus: ${practice.focus.trim()}`);
-  lines.push(needsFullCourt(practice, drills) ? 'Court: full court' : 'Court: half court is enough', '');
-  practice.blocks.forEach((block, i) => {
-    const start = starts[i];
-    if (start === null || start === undefined) return;
-    const time = `${startLabel(practice, start)} · ${block.minutes} min`;
-    if (block.stations.length === 1) {
-      lines.push(`${time} · ${stationLine(block.stations[0]!, drills, practice, roster)}`);
-    } else if (rotationCount(block) > 1) {
-      lines.push(`${time} · Stations, rotate every ${rotationLength(block)}:`);
-      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
-    } else {
-      lines.push(`${time} · Stations at the same time:`);
-      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
-    }
-  });
-  if (practice.teams.A.length + practice.teams.B.length > 0) {
-    lines.push('', `Team A: ${names(practice.teams.A, roster)}`, `Team B: ${names(practice.teams.B, roster)}`);
-  }
-  const equipment = equipmentList(practice, drills, alwaysBring(team));
-  if (equipment.length > 0) lines.push('', `Bring: ${equipment.map((e) => e.item).join(', ')}`);
-  return lines.join('\n') + '\n';
-}
-
-/**
- * One coach's station card (PR10): only the blocks they run, with times,
- * the group and its players, and the drill's coaching points.
- */
-export function stationCardText(practice: Practice, team: Team, drills: DrillIndex, roster: Player[], coach: string): string {
-  const starts = blockStarts(practice);
-  const lines = [`${coach}: ${heading(practice, team)}`, ''];
-  practice.blocks.forEach((block, i) => {
-    const start = starts[i];
-    if (start === null || start === undefined) return;
-    for (const s of block.stations) {
-      if (s.coach.trim().toLowerCase() !== coach.trim().toLowerCase()) continue;
-      const drill = drills.get(s.drillId);
-      lines.push(`${startLabel(practice, start)} · ${block.minutes} min · ${drillName(drills, s.drillId)}`);
-      const count = rotationCount(block);
-      if (count > 1) {
-        // Each group in the order it arrives at this station (PR4b).
-        const si = block.stations.indexOf(s);
-        const arriving = Array.from({ length: count }, (_, r) => groupFrom(block, si, r));
-        lines.push(`  Groups rotate every ${rotationLength(block)}: ${arriving.map((g) => rotatingGroupLabel(g, drills)).join(', then ')}`);
-        for (const g of arriving) {
-          if (g.group === 'all') continue;
-          const who = stationPlayerNames(practice, g, roster);
-          lines.push(`  ${rotatingGroupLabel(g, drills)}: ${who || (g.group === 'custom' ? 'no players picked' : 'not split yet')}`);
-        }
-      } else if (s.group !== 'all') {
-        const who = stationPlayerNames(practice, s, roster);
-        lines.push(`  ${GROUP_LABEL[s.group]}: ${who || (s.group === 'custom' ? 'no players picked' : 'not split yet')}`);
-      }
-      if (drill?.equipment.length) lines.push(`  Needs: ${drill.equipment.join(', ')}`);
-      if (drill?.notes.trim()) lines.push(`  ${drill.notes.trim()}`);
-      lines.push('');
-    }
-  });
-  return lines.join('\n');
 }
 
 /**

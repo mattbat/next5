@@ -2528,6 +2528,7 @@ textarea:focus {
 }
 
 .run-notes {
+  overflow-wrap: anywhere;
   margin: 8px 0 0;
   font-size: 16px;
   line-height: 1.4;
