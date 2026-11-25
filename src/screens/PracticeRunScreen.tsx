@@ -14,6 +14,7 @@ import {
   remainingMs,
   resumeClock,
   skipBlock,
+  stationPlayerNames,
   undoRun,
   withUndo,
   type DrillIndex,
@@ -69,7 +70,6 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
   const block = practice.blocks[practice.current]!;
   const remaining = remainingMs(practice, now());
   const upcoming = practice.blocks.slice(practice.current + 1).filter((b) => !b.skipped);
-  const byId = new Map(roster.map((p) => [p.id, p.name]));
   // Blocks done or skipped so far count, so skipping one doesn't renumber the rest.
   const active = practice.blocks.filter((b, i) => i <= practice.current || !b.skipped);
   const position = practice.current + 1;
@@ -152,14 +152,7 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       <ul className="run-stations">
         {block.stations.map((s, i) => {
           const drill = drillIndex.get(s.drillId);
-          const players =
-            s.group === 'all'
-              ? ''
-              : practice.teams[s.group]
-                  .map((id) => byId.get(id))
-                  .filter((n): n is string => !!n)
-                  .sort((a, b) => a.localeCompare(b))
-                  .join(', ');
+          const players = stationPlayerNames(practice, s, roster);
           return (
             <li key={i} className="run-station">
               <h2>{drillName(drillIndex, s.drillId)}</h2>

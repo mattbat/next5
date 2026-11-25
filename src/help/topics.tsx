@@ -654,7 +654,9 @@ export const TOPICS: Topic[] = [
           </li>
           <li>
             Have more than one coach? Tap <b>+ Station</b> to run another drill at the same time, and type who runs each
-            one. Set a station to <b>A</b> or <b>B</b> to send one scrimmage team to it.
+            one. Set a station to <b>A</b> or <b>B</b> to send one scrimmage team to it, or to <b>Custom</b> to pick the
+            players yourself, for example guards at one drill and centers at another. The list shows each player’s
+            positions; a player is in one drill at a time, so ticking someone already in another drill moves them.
           </li>
           <li>
             Under <b>Scrimmage teams</b>, tap <b>Balanced</b> (by skill level and position) or <b>Random</b>. Tap a player

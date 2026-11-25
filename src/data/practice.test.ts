@@ -13,6 +13,7 @@ import {
   editPractice,
   newId,
   togglePracticeAttending,
+  toggleStationPlayer,
   updateStation,
 } from './repo';
 import { STARTER_DRILLS } from './starterDrills';
@@ -83,6 +84,24 @@ describe('practices', () => {
       stations[0],
       { drillId: 'd2', coach: 'Coach Sam', group: 'all', rating: 'up' },
     ]);
+  });
+
+  it('moves a player between custom stations of a block, one save at a time', async () => {
+    const team = await createDemoTeam();
+    const practice = await createPractice(team);
+    const stations = [
+      { drillId: 'd1', coach: '', group: 'custom' as const },
+      { drillId: 'd2', coach: '', group: 'custom' as const },
+    ];
+    await editPractice(practice.id, () => ({ blocks: [{ id: 'b1', minutes: 8, skipped: false, stations }] }));
+    await Promise.all([toggleStationPlayer(practice.id, 'b1', 0, 'p1'), toggleStationPlayer(practice.id, 'b1', 0, 'p2')]);
+    await toggleStationPlayer(practice.id, 'b1', 1, 'p1');
+    const saved = (await db.practices.get(practice.id))!;
+    expect(saved.blocks[0]!.stations.map((s) => s.players)).toEqual([['p2'], ['p1']]);
+    expect(isValidPractice(saved)).toBe(true);
+    await toggleStationPlayer(practice.id, 'b1', 1, 'p1');
+    expect((await db.practices.get(practice.id))!.blocks[0]!.stations[1]!.players).toEqual([]);
+    await toggleStationPlayer(practice.id, 'nope', 0, 'p1');
   });
 
   it('are deleted with their team', async () => {

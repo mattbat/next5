@@ -24,7 +24,13 @@ export function useDrillFilter(drills: Drill[]) {
     <div className="drill-filter">
       <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drills" aria-label="Search drills" />
       {tagsInUse.length > 0 && (
-        <div className="tag-picker scroll" role="group" aria-label="Filter by tag">
+        <div
+          className="tag-picker scroll"
+          role="group"
+          aria-label="Filter by tag"
+          // Up to three rows, so there's less sideways scrolling; fewer rows when there are only a few tags.
+          style={{ gridTemplateRows: `repeat(${Math.min(3, Math.ceil(tagsInUse.length / 4))}, auto)` }}
+        >
           {tagsInUse.map((t) => (
             <button key={t} type="button" className={`tag ${tag === t ? 'on' : ''}`} aria-pressed={tag === t} onClick={() => setTag(tag === t ? null : t)}>
               {t}

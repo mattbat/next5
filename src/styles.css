@@ -119,11 +119,22 @@ input:focus {
   border-color: var(--accent);
 }
 
-input[type='date'] {
+/* iOS draws date and time inputs its own way: a different height for time, and
+   a built-in minimum width that pushes two side by side off a narrow phone. */
+input[type='date'],
+input[type='time'] {
   -webkit-appearance: none;
   appearance: none;
   display: flex;
   align-items: center;
+  height: var(--tap);
+  min-width: 0;
+}
+
+input[type='date']::-webkit-date-and-time-value,
+input[type='time']::-webkit-date-and-time-value {
+  margin: 0;
+  text-align: left;
 }
 
 .sr-only {
@@ -570,6 +581,15 @@ input[type='date'] {
   gap: 12px;
 }
 
+/* Fields share the row and may shrink below their input's natural width. */
+.field-row > .field {
+  min-width: 0;
+}
+
+.field-row > .field.grow {
+  flex: 1 1 0;
+}
+
 .field.number {
   width: 84px;
 }
@@ -843,6 +863,8 @@ input[type='date'] {
   max-height: 92dvh;
   margin: 0 auto;
   overflow-y: auto;
+  /* Don't hand a swipe on to the page behind; containScroll() covers iOS. */
+  overscroll-behavior: contain;
   padding: 8px 16px calc(var(--safe-bottom) + 16px);
   background: var(--surface);
   border-radius: 20px 20px 0 0;
@@ -2163,8 +2185,12 @@ textarea:focus {
   gap: 6px;
 }
 
+/* Filter tags: rows set inline (up to three), filled column by column, scrolling sideways if they still don't fit. */
 .tag-picker.scroll {
-  flex-wrap: nowrap;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  justify-content: start;
   overflow-x: auto;
   margin: 8px -16px 0;
   padding: 0 16px 4px;
@@ -2289,26 +2315,27 @@ textarea:focus {
   margin-left: auto;
 }
 
+/* Coach, group and picked players each get their own full-width row, so four group options fit on a narrow phone. */
 .station-edit {
   display: flex;
+  flex-direction: column;
   gap: 8px;
-  align-items: center;
+  align-items: stretch;
   margin-top: 4px;
 }
 
 .station-edit .coach-input {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
   min-height: 40px;
 }
 
-.station-edit .segmented {
-  flex: none;
+.station-edit .segmented button {
+  min-height: 34px;
 }
 
-.station-edit .segmented button {
-  padding: 0 10px;
-  min-height: 34px;
+.station-edit .station-players {
+  align-self: flex-start;
+  text-align: left;
 }
 
 .station-meta {

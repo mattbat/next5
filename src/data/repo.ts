@@ -1,6 +1,7 @@
 import { db } from './db';
 import { receivedHandoff, roleOf, type GameHandoff } from './handoff';
 import { DEFAULT_FORMAT, DEFAULT_POSITIONS, DEFAULT_RULES, DEMO_PLAYERS } from './defaults';
+import { setStationPlayer } from '../domain/practice';
 import { STARTER_DRILLS } from './starterDrills';
 import type { Drill, Game, Player, Practice, Station, Team } from './types';
 
@@ -246,6 +247,16 @@ export async function updateStation(practiceId: string, blockId: string, index: 
       b.id !== blockId ? b : { ...b, stations: b.stations.map((s, i) => (i === index ? { ...s, ...changes } : s)) },
     ),
   }));
+}
+
+/** Picks a player for a custom station, or takes them off it; a player is in one drill per block (PR4). */
+export async function toggleStationPlayer(practiceId: string, blockId: string, index: number, playerId: string): Promise<void> {
+  await editPractice(practiceId, (p) => {
+    const station = p.blocks.find((b) => b.id === blockId)?.stations[index];
+    if (!station) return null;
+    const picked = !(station.players ?? []).includes(playerId);
+    return { blocks: setStationPlayer(p.blocks, blockId, index, playerId, picked) };
+  });
 }
 
 export async function deletePractice(id: string): Promise<void> {

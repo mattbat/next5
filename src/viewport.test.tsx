@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { DiagnosticsScreen } from './screens/DiagnosticsScreen';
-import { appHeight, blockZoom, isStandalone, trackAppHeight } from './viewport';
+import { appHeight, blockZoom, containScroll, isStandalone, trackAppHeight } from './viewport';
 
 function setWindow({ inner, screenHeight, standalone }: { inner: [number, number]; screenHeight: number; standalone: boolean }) {
   vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(inner[0]);
@@ -83,5 +83,58 @@ describe('DiagnosticsScreen', () => {
     expect(screen.getByText('Build').nextSibling).toHaveTextContent(/UTC/);
     window.dispatchEvent(new Event('resize'));
     expect(screen.getByText('Safe areas (top / right / bottom / left)')).toBeInTheDocument();
+  });
+});
+
+describe('containScroll', () => {
+  function sheet({ scrollTop, clientHeight, scrollHeight }: { scrollTop: number; clientHeight: number; scrollHeight: number }) {
+    const el = document.createElement('div');
+    Object.defineProperty(el, 'scrollTop', { value: scrollTop, configurable: true });
+    Object.defineProperty(el, 'clientHeight', { value: clientHeight });
+    Object.defineProperty(el, 'scrollHeight', { value: scrollHeight });
+    return el;
+  }
+  function touch(el: HTMLElement, type: 'touchstart' | 'touchmove', x: number, y: number): Event {
+    const e = new Event(type, { cancelable: true });
+    Object.defineProperty(e, 'touches', { value: [{ clientX: x, clientY: y }] });
+    el.dispatchEvent(e);
+    return e;
+  }
+  /** Whether a swipe from y=300 to `toY` would reach the page behind. */
+  function swipe(el: HTMLElement, toY: number, toX = 100): boolean {
+    touch(el, 'touchstart', 100, 300);
+    return touch(el, 'touchmove', toX, toY).defaultPrevented;
+  }
+
+  it('cancels swipes on a sheet that fits, so the page behind stays put', () => {
+    const el = sheet({ scrollTop: 0, clientHeight: 400, scrollHeight: 400 });
+    const stop = containScroll(el);
+    expect(swipe(el, 200)).toBe(true);
+    expect(swipe(el, 400)).toBe(true);
+    stop();
+    expect(swipe(el, 200)).toBe(false);
+  });
+
+  it('lets a long sheet scroll, cancelling only past its top and bottom', () => {
+    const top = sheet({ scrollTop: 0, clientHeight: 400, scrollHeight: 1000 });
+    containScroll(top);
+    expect(swipe(top, 400)).toBe(true); // pulling down at the top
+    expect(swipe(top, 200)).toBe(false); // scrolling the sheet down
+
+    const middle = sheet({ scrollTop: 300, clientHeight: 400, scrollHeight: 1000 });
+    containScroll(middle);
+    expect(swipe(middle, 400)).toBe(false);
+    expect(swipe(middle, 200)).toBe(false);
+
+    const bottom = sheet({ scrollTop: 600, clientHeight: 400, scrollHeight: 1000 });
+    containScroll(bottom);
+    expect(swipe(bottom, 200)).toBe(true); // pushing up at the bottom
+    expect(swipe(bottom, 400)).toBe(false);
+  });
+
+  it('leaves sideways swipes alone, for a row of filter tags', () => {
+    const el = sheet({ scrollTop: 0, clientHeight: 400, scrollHeight: 400 });
+    containScroll(el);
+    expect(swipe(el, 310, 0)).toBe(false);
   });
 });
