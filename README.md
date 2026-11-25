@@ -275,3 +275,7 @@ Repository setting: **Settings → Pages → Source: GitHub Actions**.
 ### Changing stored data
 
 The IndexedDB schema lives in `src/data/db.ts`. Never edit an existing `version(n)`. Add `version(n + 1)` with an `upgrade()` that migrates old records, and add a test for it. App updates must never lose a coach's data.
+
+## License
+
+[MIT](LICENSE). Use it, change it, share it; keep the copyright notice.
