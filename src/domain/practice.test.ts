@@ -16,7 +16,12 @@ import {
   finishPractice,
   formatClock,
   formatTime,
+  groupAt,
   indexDrills,
+  rotationAt,
+  rotationCount,
+  rotationEnds,
+  rotationLength,
   moveBlock,
   movePlayer,
   needsFullCourt,
@@ -333,7 +338,7 @@ describe('running a practice', () => {
     const resumed = { ...paused, ...resumeClock(paused, 100_000) };
     expect(elapsedMs(resumed.clock, 160_000)).toBe(120_000);
     expect(resumeClock(resumed, 200_000)).toEqual({ clock: resumed.clock });
-    expect(remainingMs({ ...resumed, ...addMinute(resumed) }, 160_000)).toBe(4 * 60_000);
+    expect(remainingMs({ ...resumed, ...addMinute(resumed, 160_000) }, 160_000)).toBe(4 * 60_000);
     expect(remainingMs(resumed, 400_000)).toBe(-60_000);
   });
 
@@ -451,5 +456,96 @@ describe('shared texts', () => {
 
   it('counts minutes into practice when there is no start time', () => {
     expect(practicePlanText({ ...plan, time: '' }, team, DRILLS, roster)).toContain('0:08 · 12 min');
+  });
+});
+
+describe('rotating stations (PR4b)', () => {
+  const two = [station('post', { group: 'A' }), station('guard', { group: 'B' })];
+  const three = [station('a', { group: 'A' }), station('b', { group: 'B' }), station('c')];
+
+  it('runs stations in parallel unless they rotate', () => {
+    expect(rotationCount(block('b', 12, two))).toBe(1);
+    expect(rotationEnds(block('b', 12, two))).toEqual([12 * 60_000]);
+    expect(rotationCount(block('b', 12, [station('x')], { rotate: true }))).toBe(1);
+    expect(groupAt(block('b', 12, two), 1, 0)).toBe('B');
+  });
+
+  it('splits the block evenly, to the second', () => {
+    expect(rotationEnds(block('b', 12, two, { rotate: true }))).toEqual([6 * 60_000, 12 * 60_000]);
+    expect(rotationEnds(block('b', 12, three, { rotate: true }))).toEqual([4 * 60_000, 8 * 60_000, 12 * 60_000]);
+    expect(rotationEnds(block('b', 10, three, { rotate: true }))).toEqual([200_000, 400_000, 600_000]);
+    expect(rotationLength(block('b', 10, three, { rotate: true }))).toBe('3:20');
+  });
+
+  it('knows the rotation running now', () => {
+    const b = block('b', 12, three, { rotate: true });
+    expect(rotationAt(b, 0)).toEqual({ index: 0, count: 3, remaining: 4 * 60_000 });
+    expect(rotationAt(b, 4 * 60_000)).toEqual({ index: 1, count: 3, remaining: 4 * 60_000 });
+    expect(rotationAt(b, 13 * 60_000)).toEqual({ index: 2, count: 3, remaining: -60_000 });
+  });
+
+  it('moves each group on to the next station at each rotation', () => {
+    const b = block('b', 12, three, { rotate: true });
+    expect([0, 1, 2].map((s) => groupAt(b, s, 0))).toEqual(['A', 'B', 'all']);
+    expect([0, 1, 2].map((s) => groupAt(b, s, 1))).toEqual(['all', 'A', 'B']);
+    expect([0, 1, 2].map((s) => groupAt(b, s, 2))).toEqual(['B', 'all', 'A']);
+  });
+
+  it('adds +1 min to the rotation running now only', () => {
+    const live = {
+      blocks: [block('b', 12, three, { rotate: true })],
+      current: 0,
+      clock: { startedAt: 0, elapsed: 0 },
+    };
+    const added = addMinute(live, 5 * 60_000).blocks[0]!;
+    expect(added).toMatchObject({ minutes: 13, added: [0, 1, 0] });
+    expect(rotationEnds(added)).toEqual([4 * 60_000, 9 * 60_000, 13 * 60_000]);
+    // A parallel block just gets longer.
+    expect(addMinute({ ...live, blocks: [block('b', 12, three)] }, 0).blocks[0]).toEqual(block('b', 12 + 1, three));
+  });
+
+  it('always ends the last rotation with the block, in order, each a fair share', () => {
+    fc.assert(
+      fc.property(
+        fc.integer({ min: 1, max: 90 }),
+        fc.integer({ min: 2, max: 6 }),
+        fc.array(fc.nat({ max: 30 }), { maxLength: 6 }),
+        fc.nat(),
+        (minutes, n, taps, at) => {
+          let live = {
+            blocks: [block('b', minutes, Array.from({ length: n }, (_, i) => station(`d${i}`)), { rotate: true })],
+            current: 0,
+            clock: { startedAt: 0, elapsed: 0 },
+          };
+          for (const tap of taps) live = { ...live, ...addMinute(live, (tap * 60_000 + at) % (minutes * 60_000 + 1)) };
+          const b = live.blocks[0]!;
+          const ends = rotationEnds(b);
+          expect(ends).toHaveLength(n);
+          expect(ends[n - 1]).toBe(b.minutes * 60_000);
+          expect(b.minutes).toBe(minutes + taps.length);
+          ends.forEach((end, i) => {
+            expect(end % 1000).toBe(0);
+            const length = end - (i === 0 ? 0 : ends[i - 1]!);
+            // Each rotation gets the even share of the planned time (within a second), plus its own added minutes.
+            const share = (minutes * 60_000) / n + (b.added?.[i] ?? 0) * 60_000;
+            expect(Math.abs(length - share)).toBeLessThanOrEqual(1000);
+          });
+        },
+      ),
+    );
+  });
+
+  it('counts each rotating drill’s share in stats, and shows the rotation in shared texts', () => {
+    const drills = indexDrills([drill('post', { tags: ['Post'] }), drill('guard', { tags: ['Guard'] })]);
+    const done = practice({
+      status: 'done',
+      blocks: [block('b', 12, [station('post', { group: 'A', coach: 'Coach Sam' }), station('guard', { group: 'B' })], { rotate: true, actualSeconds: 720 })],
+    });
+    const stats = practiceStats([done], drills);
+    expect(stats.minutes).toBe(12);
+    expect(stats.drills.map((d) => d.minutes)).toEqual([6, 6]);
+    expect(practicePlanText({ ...done, status: 'planned' }, team, drills, [])).toContain('Stations, rotate every 6:00:');
+    const card = stationCardText({ ...done, status: 'planned' }, team, drills, [], 'Coach Sam');
+    expect(card).toContain('Groups rotate every 6:00: Team A, then Team B');
   });
 });

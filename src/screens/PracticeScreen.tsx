@@ -19,6 +19,8 @@ import {
   needsFullCourt,
   parentText,
   plannedMinutes,
+  rotationCount,
+  rotationLength,
   practicePlanText,
   splitTeams,
   startPractice,
@@ -389,7 +391,7 @@ function BlockCard({
         )}
         <span className="block-when">
           {running ? 'Now' : when}
-          {stations && ' · Stations'}
+          {stations && (rotationCount(block) > 1 ? ` · Rotate every ${rotationLength(block)}` : ' · Stations')}
         </span>
         {editable ? (
           <Stepper label="minutes" value={block.minutes} min={1} max={90} onChange={(minutes) => onChange((b) => ({ ...b, minutes: Math.min(90, Math.max(1, b.minutes + (minutes > block.minutes ? 1 : -1))) }))}
@@ -404,6 +406,24 @@ function BlockCard({
         <p className="late-tag">
           {running ? 'Running late: ' : ''}ends {lateBy} min past your {practice.length} min
         </p>
+      )}
+      {editable && stations && (
+        <div className="station-mode">
+          <Segmented<'parallel' | 'rotate'>
+            label="How the stations run"
+            value={block.rotate ? 'rotate' : 'parallel'}
+            onChange={(mode) => onChange((b) => ({ ...b, rotate: mode === 'rotate' }))}
+            options={[
+              { value: 'parallel', label: 'Parallel' },
+              { value: 'rotate', label: 'Rotate' },
+            ]}
+          />
+          <p className="hint">
+            {block.rotate
+              ? `Groups move to the next station every ${rotationLength(block)}, with a beep. The groups below are where they start.`
+              : 'Each group stays at its station for the whole block.'}
+          </p>
+        </div>
       )}
       <ul className="stations">
         {block.stations.map((s, si) => (

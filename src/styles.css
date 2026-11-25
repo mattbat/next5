@@ -2258,6 +2258,14 @@ textarea:focus {
   font-variant-numeric: tabular-nums;
 }
 
+.station-mode {
+  margin: 4px 0 6px;
+}
+
+.station-mode .hint {
+  margin: 4px 0 0;
+}
+
 .stations {
   list-style: none;
   margin: 0;
@@ -2444,6 +2452,16 @@ textarea:focus {
 .run-sub {
   color: var(--text-2);
   font-weight: 600;
+}
+
+.run-rotation {
+  margin-top: 6px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.run-rotation.soon {
+  color: var(--warn);
 }
 
 .run-controls {

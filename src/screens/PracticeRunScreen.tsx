@@ -5,14 +5,18 @@ import type { Player, Practice } from '../data/types';
 import {
   addMinute,
   drillName,
+  elapsedMs,
   finishPractice,
   formatClock,
+  groupAt,
   groupLabel,
   lateBlocks,
   nextBlock,
   pauseClock,
   remainingMs,
   resumeClock,
+  rotationAt,
+  rotationEnds,
   skipBlock,
   undoRun,
   withUndo,
@@ -68,6 +72,10 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
   const [sound, setSound] = useState(soundOn);
   const block = practice.blocks[practice.current]!;
   const remaining = remainingMs(practice, now());
+  const elapsed = elapsedMs(practice.clock, now());
+  // When the groups rotate through the stations (PR4b).
+  const rotation = rotationAt(block, elapsed);
+  const rotating = rotation.count > 1;
   const upcoming = practice.blocks.slice(practice.current + 1).filter((b) => !b.skipped);
   const byId = new Map(roster.map((p) => [p.id, p.name]));
   // Blocks done or skipped so far count, so skipping one doesn't renumber the rest.
@@ -79,7 +87,8 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
     .filter((b) => late.has(b.id))
     .map((b) => b.stations.map((s) => drillName(drillIndex, s.drillId)).join(' + '));
 
-  // Beep once at one minute left and three times at zero, once per block.
+  // Beep once at one minute left and three times at zero, once per block;
+  // twice at each rotation.
   const beeped = useRef<{ block: string; at: Set<string> }>({ block: block.id, at: new Set() });
   useEffect(() => {
     if (beeped.current.block !== block.id) beeped.current = { block: block.id, at: new Set() };
@@ -88,6 +97,14 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       marks.add('minute');
       beep(1);
     }
+    rotationEnds(block)
+      .slice(0, -1)
+      .forEach((end, i) => {
+        if (elapsed >= end && elapsed < end + 5_000 && !marks.has(`rotate${i}`)) {
+          marks.add(`rotate${i}`);
+          beep(2);
+        }
+      });
     if (remaining <= 0 && remaining > -5_000 && !marks.has('zero')) {
       marks.add('zero');
       beep(3);
@@ -124,13 +141,19 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
           {formatClock(remaining)}
         </span>
         <span className="run-sub">{running ? (remaining < 0 ? 'Over time' : 'left') : 'Paused'}</span>
+        {rotating && (
+          <span className={`run-rotation ${rotation.index < rotation.count - 1 && rotation.remaining <= 30_000 ? 'soon' : ''}`}>
+            Rotation {rotation.index + 1} of {rotation.count}
+            {rotation.index < rotation.count - 1 ? ` · rotate in ${formatClock(rotation.remaining)}` : ' · last one'}
+          </span>
+        )}
       </section>
 
       <div className="run-controls">
         <button type="button" className="btn secondary" onClick={() => act(running ? 'Pause' : 'Resume', (p) => (running ? pauseClock(p, now()) : resumeClock(p, now())))}>
           {running ? 'Pause' : 'Resume'}
         </button>
-        <button type="button" className="btn secondary" onClick={() => act('+1 min', addMinute)}>
+        <button type="button" className="btn secondary" onClick={() => act('+1 min', (p) => addMinute(p, now()))}>
           +1 min
         </button>
         <button type="button" className="btn secondary" onClick={skip}>
@@ -152,10 +175,11 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       <ul className="run-stations">
         {block.stations.map((s, i) => {
           const drill = drillIndex.get(s.drillId);
+          const group = groupAt(block, i, rotation.index);
           const players =
-            s.group === 'all'
+            group === 'all'
               ? ''
-              : practice.teams[s.group]
+              : practice.teams[group]
                   .map((id) => byId.get(id))
                   .filter((n): n is string => !!n)
                   .sort((a, b) => a.localeCompare(b))
@@ -164,7 +188,7 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
             <li key={i} className="run-station">
               <h2>{drillName(drillIndex, s.drillId)}</h2>
               <p className="station-meta">
-                {[s.coach, groupLabel(s.group), drill?.court === 'full' ? 'Full court' : 'Half court'].filter(Boolean).join(' · ')}
+                {[s.coach, groupLabel(group), drill?.court === 'full' ? 'Full court' : 'Half court'].filter(Boolean).join(' · ')}
               </p>
               {players && <p className="hint">{players}</p>}
               {drill?.notes.trim() && <p className="run-notes">{drill.notes.trim()}</p>}
@@ -185,7 +209,7 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       )}
 
       <label className="toggle-label run-sound">
-        <span>Beep at 1 minute and at 0</span>
+        <span>{rotating ? 'Beep to rotate, at 1 minute and at 0' : 'Beep at 1 minute and at 0'}</span>
         <input
           type="checkbox"
           role="switch"

@@ -127,6 +127,8 @@ const isStation: Check = (value) => {
 const isBlock = shape({
   minutes: isCount(600),
   stations: listOf(isStation, 20),
+  rotate: isBoolean,
+  added: listOf(isCount(600), 20),
   skipped: isBoolean,
   actualSeconds: isCount(),
 });
