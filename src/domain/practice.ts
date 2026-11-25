@@ -93,6 +93,10 @@ const SAME_ITEM: Record<string, string> = {
 export function parseEquipment(text: string): { key: string; name: string; amount: string } {
   let name = text.trim();
   let amount = '';
+  // An amount in brackets at the end: "Balls (1 per 2 players)", "Cones (6)".
+  // Rewritten as "1 Balls per 2 players" and "6 Cones", which the rules below read.
+  const bracket = /\s*\(\s*(a|an|one|\d+(?:\s*[–-]\s*\d+)?)(\s+[^)]*?)?\s*\)$/i.exec(name);
+  if (bracket) name = `${bracket[1]} ${name.slice(0, bracket.index)}${bracket[2] ?? ''}`;
   const count = /^(a|an|one|\d+(?:\s*[–-]\s*\d+)?)\s+/i.exec(name);
   if (count) {
     const n = count[1]!.toLowerCase();

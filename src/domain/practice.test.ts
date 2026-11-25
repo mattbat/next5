@@ -162,6 +162,24 @@ describe('the plan', () => {
     expect(parseEquipment('Agility ladder')).toEqual({ key: 'agility ladder', name: 'Agility ladder', amount: '' });
   });
 
+  it('reads an amount in brackets at the end', () => {
+    expect(parseEquipment('Balls (1 per 2 players)')).toEqual({ key: 'basketball', name: 'Balls', amount: '1 per 2 players' });
+    expect(parseEquipment('Cones (6)')).toEqual({ key: 'cone', name: 'Cones', amount: '6' });
+    expect(parseEquipment('Balls (3–4)')).toEqual({ key: 'basketball', name: 'Balls', amount: '3–4' });
+    expect(parseEquipment('Pinnies (one for each player)')).toEqual({ key: 'pinnie', name: 'Pinnies', amount: '1 per player' });
+    // Brackets that aren't an amount stay part of the name.
+    expect(parseEquipment('Cones (orange)').name).toBe('Cones (orange)');
+  });
+
+  it('lists bracketed and written-out amounts as one item', () => {
+    const drills = indexDrills([
+      drill('d1', { name: 'Partner passing', equipment: ['Balls (1 per 2 players)'] }),
+      drill('d2', { name: 'Shooting', equipment: ['3–4 balls'] }),
+    ]);
+    const plan = { blocks: [block('b1', 10, [station('d1')]), block('b2', 10, [station('d2')])] };
+    expect(equipmentList(plan, drills, [])).toEqual([{ item: 'Balls', for: ['Partner passing (1 per 2 players)', 'Shooting (3–4)'] }]);
+  });
+
   it('names each coach once', () => {
     expect(coachesIn(plan)).toEqual(['Coach Sam', 'Coach Lee']);
   });
