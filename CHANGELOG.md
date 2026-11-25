@@ -4,6 +4,12 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.6.1 (2026-11-25)
+
+### Fixed
+
+- Equipment with the amount in brackets, like “Balls (1 per 2 players)”, now shows correctly on the Bring list instead of “Balls (1”.
+
 ## 0.6.0 (2026-11-25)
 
 ### New
