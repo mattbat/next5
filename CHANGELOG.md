@@ -4,6 +4,18 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.5.0 (2026-11-25)
+
+### New
+
+- Practice stations can now be set to Custom: pick exactly which players go to a drill, for example guards at one station and centers at another. Each player can be in one drill at a time.
+- Stations can rotate: tap Rotate on a block with several stations and its time is split evenly between them, with a double beep when it’s time to move to the next station. Parallel (the default) keeps everyone at one station for the whole block.
+
+### Fixed
+
+- A new practice no longer scrolls sideways on a narrow iPhone, and the Date and Start boxes are the same height. The drill filters now sit in up to three rows, so there's less sideways scrolling to find a tag.
+- Swiping up or down on a pop-up (like choosing players for a drill) no longer scrolls the screen behind it.
+
 ## 0.4.0 (2026-11-12)
 
 ### New
