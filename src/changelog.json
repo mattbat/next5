@@ -1,5 +1,12 @@
 [
   {
+    "version": "0.6.1",
+    "date": "2026-11-25",
+    "fixed": [
+      "Equipment with the amount in brackets, like “Balls (1 per 2 players)”, now shows correctly on the Bring list instead of “Balls (1”."
+    ]
+  },
+  {
     "version": "0.6.0",
     "date": "2026-11-25",
     "new": [
