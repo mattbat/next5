@@ -165,6 +165,17 @@ export interface PracticeBlock {
   id: string;
   minutes: number;
   stations: Station[];
+  /**
+   * With several stations: true when the groups rotate through every station,
+   * the block's time split evenly between them (PR4b). Otherwise (the default)
+   * the stations run side by side for the whole block.
+   */
+  rotate?: boolean;
+  /**
+   * Minutes added with +1 min to each rotation while it ran (PR4b), so the
+   * other rotations keep their share. Already counted in `minutes`.
+   */
+  added?: number[];
   skipped: boolean;
   /** How long it really took, once finished (PR7). */
   actualSeconds?: number;

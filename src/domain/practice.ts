@@ -266,10 +266,78 @@ export function resumeClock(practice: Pick<Practice, 'clock'>, now: number): Pic
   return practice.clock.startedAt === null ? { clock: { startedAt: now, elapsed: practice.clock.elapsed } } : { clock: practice.clock };
 }
 
-/** Adds a minute to the current block. */
-export function addMinute(practice: Pick<Practice, 'blocks' | 'current'>): Pick<Practice, 'blocks'> {
+// Rotating stations (PR4b)
+
+/** How many rotations a block has: one per station when the groups rotate, else 1. */
+export const rotationCount = (block: Pick<PracticeBlock, 'stations' | 'rotate'>): number =>
+  block.rotate && block.stations.length > 1 ? block.stations.length : 1;
+
+/**
+ * When each rotation ends, in ms from the start of the block. The planned
+ * time is split evenly, to the second; a minute added with +1 min goes only
+ * to the rotation it was added in. The last one ends with the block.
+ */
+export function rotationEnds(block: Pick<PracticeBlock, 'minutes' | 'stations' | 'rotate' | 'added'>): number[] {
+  const count = rotationCount(block);
+  const added = Array.from({ length: count }, (_, i) => (count > 1 ? (block.added?.[i] ?? 0) : 0));
+  const extra = added.reduce((sum, m) => sum + m, 0);
+  const share = (Math.max(0, block.minutes - extra) * 60) / count;
+  const ends: number[] = [];
+  let addedSoFar = 0;
+  for (let i = 0; i < count; i++) {
+    addedSoFar += added[i]!;
+    ends.push(i === count - 1 ? block.minutes * 60_000 : (Math.round(share * (i + 1)) + addedSoFar * 60) * 1000);
+  }
+  return ends;
+}
+
+export interface RotationNow {
+  /** 0-based; stays on the last rotation once the block runs over. */
+  index: number;
+  count: number;
+  /** Ms until this rotation ends; negative once the block runs over. */
+  remaining: number;
+}
+
+/** Which rotation is running `elapsed` ms into the block. */
+export function rotationAt(block: Pick<PracticeBlock, 'minutes' | 'stations' | 'rotate' | 'added'>, elapsed: number): RotationNow {
+  const ends = rotationEnds(block);
+  const found = ends.findIndex((end) => elapsed < end);
+  const index = found === -1 ? ends.length - 1 : found;
+  return { index, count: ends.length, remaining: ends[index]! - elapsed };
+}
+
+/**
+ * The station whose group is at `station` during rotation `rotation`. The
+ * groups as planned are where everyone starts; at each rotation every group
+ * (its team or hand-picked players) moves on to the next station, and from
+ * the last back to the first.
+ */
+export function groupFrom(block: Pick<PracticeBlock, 'stations' | 'rotate'>, station: number, rotation: number): Station {
+  const count = rotationCount(block);
+  const from = count > 1 ? (((station - rotation) % count) + count) % count : station;
+  return block.stations[from]!;
+}
+
+/** "4:00", "3:20": one rotation's length. */
+export function rotationLength(block: Pick<PracticeBlock, 'minutes' | 'stations' | 'rotate'>): string {
+  return formatClock(rotationEnds({ ...block, added: undefined })[0]!);
+}
+
+/**
+ * Adds a minute to the current block. When its groups rotate, the minute
+ * goes to the rotation running now; the others keep their time.
+ */
+export function addMinute(practice: Pick<Practice, 'blocks' | 'current' | 'clock'>, now: number): Pick<Practice, 'blocks'> {
   return {
-    blocks: practice.blocks.map((b, i) => (i === practice.current ? { ...b, minutes: b.minutes + 1 } : b)),
+    blocks: practice.blocks.map((b, i) => {
+      if (i !== practice.current) return b;
+      const count = rotationCount(b);
+      if (count === 1) return { ...b, minutes: b.minutes + 1 };
+      const { index } = rotationAt(b, elapsedMs(practice.clock, now));
+      const added = Array.from({ length: count }, (_, k) => (b.added?.[k] ?? 0) + (k === index ? 1 : 0));
+      return { ...b, minutes: b.minutes + 1, added };
+    }),
   };
 }
 
@@ -329,7 +397,7 @@ export function undoRun(practice: Practice): Partial<Practice> | null {
 export interface TagStat {
   tag: string;
   minutes: number;
-  /** Share of practice time, 0–100. Can add up to more than 100: drills have several tags, and stations run together. */
+  /** Share of practice time, 0–100. Can add up to more than 100: drills have several tags, and stations can run side by side. */
   percent: number;
 }
 
@@ -363,6 +431,8 @@ export function practiceStats(practices: Practice[], drills: DrillIndex): Practi
     for (const block of activeBlocks(practice)) {
       const minutes = blockMinutes(block);
       total += minutes;
+      // When the groups rotate, each drill gets its share of the block (PR4b).
+      const share = minutes / rotationCount(block);
       for (const station of block.stations) {
         const drill = drills.get(station.drillId);
         const stat = byDrill.get(station.drillId) ?? {
@@ -375,13 +445,13 @@ export function practiceStats(practices: Practice[], drills: DrillIndex): Practi
           down: 0,
         };
         stat.uses++;
-        stat.minutes += minutes;
+        stat.minutes += share;
         if (practice.date > stat.lastDate) stat.lastDate = practice.date;
         if (station.rating === 'up') stat.up++;
         if (station.rating === 'down') stat.down++;
         byDrill.set(station.drillId, stat);
         const tags = drill && drill.tags.length > 0 ? drill.tags : ['Untagged'];
-        for (const tag of tags) tagMinutes.set(tag, (tagMinutes.get(tag) ?? 0) + minutes);
+        for (const tag of tags) tagMinutes.set(tag, (tagMinutes.get(tag) ?? 0) + share);
       }
     }
   }
@@ -528,6 +598,11 @@ export function notInAnyStation(practice: Attendance, block: Pick<PracticeBlock,
 const GROUP_LABEL: Record<StationGroup, string> = { all: 'Everyone', A: 'Team A', B: 'Team B', custom: 'Custom' };
 export const groupLabel = (group: StationGroup) => GROUP_LABEL[group];
 
+/** A group as it rotates (PR4b): "Team A", or "Post work group" for players picked for that drill. */
+export function rotatingGroupLabel(from: Pick<Station, 'group' | 'drillId'>, drills: DrillIndex): string {
+  return from.group === 'custom' ? `${drillName(drills, from.drillId)} group` : GROUP_LABEL[from.group];
+}
+
 function heading(practice: Practice, team: Team): string {
   const when = [formatGameDate(practice.date), practice.time ? formatTime(practice.time) : ''].filter(Boolean).join(', ');
   return `${team.name} practice · ${when} · ${plannedMinutes(practice)} min`;
@@ -560,6 +635,9 @@ export function practicePlanText(practice: Practice, team: Team, drills: DrillIn
     const time = `${startLabel(practice, start)} · ${block.minutes} min`;
     if (block.stations.length === 1) {
       lines.push(`${time} · ${stationLine(block.stations[0]!, drills, practice, roster)}`);
+    } else if (rotationCount(block) > 1) {
+      lines.push(`${time} · Stations, rotate every ${rotationLength(block)}:`);
+      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
     } else {
       lines.push(`${time} · Stations at the same time:`);
       for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
@@ -587,7 +665,18 @@ export function stationCardText(practice: Practice, team: Team, drills: DrillInd
       if (s.coach.trim().toLowerCase() !== coach.trim().toLowerCase()) continue;
       const drill = drills.get(s.drillId);
       lines.push(`${startLabel(practice, start)} · ${block.minutes} min · ${drillName(drills, s.drillId)}`);
-      if (s.group !== 'all') {
+      const count = rotationCount(block);
+      if (count > 1) {
+        // Each group in the order it arrives at this station (PR4b).
+        const si = block.stations.indexOf(s);
+        const arriving = Array.from({ length: count }, (_, r) => groupFrom(block, si, r));
+        lines.push(`  Groups rotate every ${rotationLength(block)}: ${arriving.map((g) => rotatingGroupLabel(g, drills)).join(', then ')}`);
+        for (const g of arriving) {
+          if (g.group === 'all') continue;
+          const who = stationPlayerNames(practice, g, roster);
+          lines.push(`  ${rotatingGroupLabel(g, drills)}: ${who || (g.group === 'custom' ? 'no players picked' : 'not split yet')}`);
+        }
+      } else if (s.group !== 'all') {
         const who = stationPlayerNames(practice, s, roster);
         lines.push(`  ${GROUP_LABEL[s.group]}: ${who || (s.group === 'custom' ? 'no players picked' : 'not split yet')}`);
       }

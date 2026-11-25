@@ -52,17 +52,8 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
     if (drill === 'Dynamic warm-up') await expectFits(page, 'Drill picker');
     await page.getByRole('button', { name: `Add ${drill}` }).click();
   }
-  const second = page.getByRole('listitem', { name: 'Block 2' });
-  await second.getByRole('button', { name: '+ Station' }).click();
-  await page.getByRole('button', { name: 'Add Form shooting' }).click();
-  await second.getByLabel('Coach for Form shooting').fill('Coach Alexandria');
-  await second.getByLabel('Coach for Closeouts').fill('Coach Sam');
-  await page.getByRole('button', { name: 'Balanced' }).click();
-  await expect(page.getByRole('heading', { name: 'Team A (5)' })).toBeVisible();
-  await expect(page.getByText('31 of 75 min')).toBeVisible();
-  await expectFits(page, 'Practice plan');
-
-  // Drag the scrimmage by its handle to the top of the plan, then back to the end.
+  // Drag the scrimmage by its handle to the top of the plan, then back to the end. Done while each
+  // block is one drill, so the handle and the top of the plan fit on the screen together.
   const dragTo = async (name: string, target: string) => {
     const handle = await page.getByRole('button', { name: `Drag ${name} to reorder` }).boundingBox();
     const goal = await page.getByRole('listitem', { name: target }).boundingBox();
@@ -80,6 +71,24 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('listitem', { name: 'Block 3' })).toContainText('Scrimmage');
+
+  const second = page.getByRole('listitem', { name: 'Block 2' });
+  await second.getByRole('button', { name: '+ Station' }).click();
+  await page.getByRole('button', { name: 'Add Form shooting' }).click();
+  await second.getByLabel('Coach for Form shooting').fill('Coach Alexandria');
+  await second.getByLabel('Coach for Closeouts').fill('Coach Sam');
+  await page.getByRole('button', { name: 'Balanced' }).click();
+  await expect(page.getByRole('heading', { name: 'Team A (5)' })).toBeVisible();
+  await expect(page.getByText('31 of 75 min')).toBeVisible();
+  await expectFits(page, 'Practice plan');
+
+  // Rotating stations (PR4b): the switch and its note fit, then back to parallel.
+  const mode = second.getByRole('radiogroup', { name: 'How the stations run' });
+  await mode.getByRole('radio', { name: 'Rotate' }).click();
+  await expect(second).toContainText('Groups move to the next station every 4:00');
+  await expectFits(page, 'Rotating stations');
+  await mode.getByRole('radio', { name: 'Parallel' }).click();
+  await expect(second).not.toContainText('Groups move to the next station');
 
   // A custom group: the coach box, All/A/B/Custom and the picked players each fit (PR4).
   await second.getByRole('radiogroup', { name: 'Group for Closeouts' }).getByRole('radio', { name: 'Custom' }).click();

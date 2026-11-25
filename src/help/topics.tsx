@@ -656,7 +656,10 @@ export const TOPICS: Topic[] = [
             Have more than one coach? Tap <b>+ Station</b> to run another drill at the same time, and type who runs each
             one. Set a station to <b>A</b> or <b>B</b> to send one scrimmage team to it, or to <b>Custom</b> to pick the
             players yourself, for example guards at one drill and centers at another. The list shows each player’s
-            positions; a player is in one drill at a time, so ticking someone already in another drill moves them.
+            positions; a player is in one drill at a time, so ticking someone already in another drill moves them. Stations run in{' '}
+            <b>Parallel</b> for the whole block, or tap <b>Rotate</b> to split the time between them: the groups start
+            where you set them, the timer beeps twice when it’s time to move to the next station, and the timer screen
+            shows who’s where now.
           </li>
           <li>
             Under <b>Scrimmage teams</b>, tap <b>Balanced</b> (by skill level and position) or <b>Random</b>. Tap a player

@@ -36,11 +36,11 @@ export function unlock(): void {
   }
 }
 
-/** One short beep, or `count` of them. */
+/** One short beep, or `count` of them: 2 to rotate stations, 3 at time up. */
 export function beep(count = 1): void {
   if (!soundOn()) return;
   try {
-    navigator.vibrate?.(count === 1 ? 200 : [200, 120, 200, 120, 400]);
+    navigator.vibrate?.(count === 1 ? 200 : count === 2 ? [200, 120, 400] : [200, 120, 200, 120, 400]);
   } catch {
     // No vibration.
   }
