@@ -4,6 +4,12 @@ What changed in each release of next5, in plain words for coaches. Newest first.
 
 Changes that are merged but not released yet wait as notes in [`changes/`](changes/README.md). See "Releases" in the README for how a release is made.
 
+## 0.6.0 (2026-11-25)
+
+### New
+
+- Share one detailed Coaches’ plan, as text or as a PDF made for your phone: every drill with its start and end time, coach, players, equipment and coaching points, so a coach can run practice from it alone. Rotating stations list who is where in each rotation. Web links in coaching points are now tappable. The separate station cards are gone, and the parent one-pager is now called Parents.
+
 ## 0.5.0 (2026-11-25)
 
 ### New
