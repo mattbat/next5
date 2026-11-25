@@ -105,18 +105,16 @@ jobs:
           path: playwright-report/
           retention-days: 14
 
-  deploy:
-    name: Deploy to GitHub Pages
+  # The site is built in one job and published in the next. Doing both in one
+  # job broke the 0.5.0 release: deploy-pages looked for the site package
+  # under a second after the upload, before GitHub listed it ("No artifacts
+  # named github-pages"). A new job starts well after that, as in GitHub's own
+  # Pages workflow.
+  site:
+    name: Build site for GitHub Pages
     if: needs.release.outputs.version != '' || github.event_name == 'workflow_dispatch'
     needs: [test, e2e, release]
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pages: write
-      id-token: write
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v5
@@ -129,8 +127,23 @@ jobs:
       - uses: actions/upload-pages-artifact@v4
         with:
           path: dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: [site, release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+      # The release notes script below needs the repository.
+      - uses: actions/checkout@v5
       # Tag the release and publish its changelog section as a GitHub release.
       - if: needs.release.outputs.version != ''
         env:
