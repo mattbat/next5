@@ -34,7 +34,6 @@ import {
   parentText,
   pauseClock,
   plannedMinutes,
-  practicePlanText,
   practiceStats,
   remainingMs,
   resumeClock,
@@ -42,7 +41,6 @@ import {
   skipBlock,
   splitTeams,
   startPractice,
-  stationCardText,
   teamSkill,
 } from './practice';
 
@@ -415,7 +413,6 @@ describe('season stats', () => {
 });
 
 describe('shared texts', () => {
-  const roster = [player('Avery'), player('Blake'), player('Casey')];
   const plan = practice({
     time: '18:00',
     focus: 'Defense',
@@ -435,33 +432,12 @@ describe('shared texts', () => {
     expect(formatTime('12:00')).toBe('12:00 PM');
   });
 
-  it('writes the full plan for coaches', () => {
-    const text = practicePlanText(plan, team, DRILLS, roster);
-    expect(text).toContain('9U Comets practice · ');
-    expect(text).toContain('6:00 PM · 22 min');
-    expect(text).toContain('Focus: Defense\nCourt: full court');
-    expect(text).toContain('6:00 PM · 8 min · Warm-up');
-    expect(text).toContain('6:08 PM · 12 min · Stations at the same time:\n  • Form shooting · Coach Sam · Team A\n  • Closeouts · Coach Lee · Team B');
-    expect(text).toContain('6:20 PM · 2 min · Water break');
-    expect(text).toContain('Team A: Avery, Blake\nTeam B: Casey');
-    expect(text).toContain('Bring: Basketballs, Whistle, Cones');
-  });
-
-  it('writes a station card with only that coach’s drills', () => {
-    const text = stationCardText(plan, team, DRILLS, roster, 'coach sam');
-    expect(text).toContain('6:08 PM · 12 min · Form shooting\n  Team A: Avery, Blake\n  Needs: basketballs, Cones\n  Elbow in.');
-    expect(text).not.toContain('Closeouts');
-  });
-
   it('writes the parent one-pager without groups, breaks or coaching notes', () => {
     const text = parentText(plan, team, DRILLS);
     expect(text).toContain('What we’ll work on:\n• Warm-up\n• Form shooting\n• Closeouts\n\nBring a water bottle.');
     expect(text).not.toMatch(/Water break|Team A|Elbow|Coach Sam/);
   });
 
-  it('counts minutes into practice when there is no start time', () => {
-    expect(practicePlanText({ ...plan, time: '' }, team, DRILLS, roster)).toContain('0:08 · 12 min');
-  });
 });
 
 describe('rotating stations (PR4b)', () => {
@@ -540,7 +516,7 @@ describe('rotating stations (PR4b)', () => {
     );
   });
 
-  it('counts each rotating drill’s share in stats, and shows the rotation in shared texts', () => {
+  it('counts each rotating drill’s share in stats', () => {
     const drills = indexDrills([drill('post', { tags: ['Post'] }), drill('guard', { tags: ['Guard'] })]);
     const done = practice({
       status: 'done',
@@ -549,14 +525,9 @@ describe('rotating stations (PR4b)', () => {
     const stats = practiceStats([done], drills);
     expect(stats.minutes).toBe(12);
     expect(stats.drills.map((d) => d.minutes)).toEqual([6, 6]);
-    expect(practicePlanText({ ...done, status: 'planned' }, team, drills, [])).toContain('Stations, rotate every 6:00:');
-    const card = stationCardText({ ...done, status: 'planned' }, team, drills, [], 'Coach Sam');
-    expect(card).toContain('Groups rotate every 6:00: Team A, then Team B');
   });
 
   it('moves hand-picked players with their group', () => {
-    const drills = indexDrills([drill('post', { name: 'Post work' }), drill('guard', { name: 'Guard work' })]);
-    const roster = [player('Ann'), player('Bea')];
     const plan = practice({
       attending: ['Ann', 'Bea'],
       blocks: [
@@ -567,9 +538,6 @@ describe('rotating stations (PR4b)', () => {
     });
     const b = plan.blocks[0]!;
     expect(groupFrom(b, 1, 1).players).toEqual(['Ann']);
-    const card = stationCardText(plan, team, drills, roster, 'Coach Lee');
-    expect(card).toContain('Groups rotate every 6:00: Guard work group, then Post work group');
-    expect(card).toContain('Post work group: Ann');
   });
 });
 
@@ -635,21 +603,6 @@ describe('custom station groups (PR4)', () => {
     expect([...inOtherStations(plan, mixed, 1)]).toEqual(['Cy']);
     const everyone = block('b4', 5, [station('shoot'), station('close', { group: 'custom' })]);
     expect(inOtherStations(plan, everyone, 1).size).toBe(4);
-  });
-
-  it('shows Custom in the plan text and on the station card', () => {
-    const text = practicePlanText(plan, team, DRILLS, roster);
-    expect(text).toContain('  • Form shooting · Coach Sam · Custom: Ann, Bea\n  • Closeouts · Custom\n');
-    const card = stationCardText(plan, team, DRILLS, roster, 'Coach Sam');
-    expect(card).toContain('Form shooting\n  Custom: Ann, Bea\n');
-    const none = stationCardText(
-      practice({ attending: [], blocks: [block('b', 5, [station('shoot', { coach: 'Sam', group: 'custom' })])] }),
-      team,
-      DRILLS,
-      roster,
-      'Sam',
-    );
-    expect(none).toContain('Custom: no players picked');
   });
 
   it('never puts a player in two custom stations of one block (property)', () => {

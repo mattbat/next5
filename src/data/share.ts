@@ -1,11 +1,12 @@
 /**
  * Hands a file to the user. On iPhone this opens the share sheet (Save to
  * Files, iCloud Drive, AirDrop, Mail...). Where sharing files isn't
- * supported (most desktop browsers), the file is downloaded instead.
+ * supported (most desktop browsers), the file is downloaded instead. The
+ * content is text or a binary Blob (a PDF).
  */
 export type ShareOutcome = 'shared' | 'downloaded' | 'cancelled';
 
-export async function shareFile(name: string, text: string, type = 'application/json'): Promise<ShareOutcome> {
+export async function shareFile(name: string, text: string | Blob, type = 'application/json'): Promise<ShareOutcome> {
   const file = new File([text], name, { type });
   if (typeof navigator.canShare === 'function' && navigator.canShare({ files: [file] })) {
     try {

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { LinkedText } from '../components/LinkedText';
 import { Empty, TopBar } from '../components/ui';
 import { editPractice } from '../data/repo';
 import type { Player, Practice } from '../data/types';
@@ -186,7 +187,11 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
                 {[s.coach, rotating ? rotatingGroupLabel(from, drillIndex) : groupLabel(from.group), drill?.court === 'full' ? 'Full court' : 'Half court'].filter(Boolean).join(' · ')}
               </p>
               {players && <p className="hint">{players}</p>}
-              {drill?.notes.trim() && <p className="run-notes">{drill.notes.trim()}</p>}
+              {drill?.notes.trim() && (
+                <p className="run-notes">
+                  <LinkedText text={drill.notes.trim()} />
+                </p>
+              )}
               {drill && drill.equipment.length > 0 && <p className="hint">Needs: {drill.equipment.join(', ')}</p>}
               <Rating practiceId={practice.id} blockId={block.id} index={i} station={s} />
             </li>
