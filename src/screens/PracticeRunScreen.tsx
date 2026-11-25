@@ -8,7 +8,7 @@ import {
   elapsedMs,
   finishPractice,
   formatClock,
-  groupAt,
+  groupFrom,
   groupLabel,
   lateBlocks,
   nextBlock,
@@ -17,7 +17,9 @@ import {
   resumeClock,
   rotationAt,
   rotationEnds,
+  rotatingGroupLabel,
   skipBlock,
+  stationPlayerNames,
   undoRun,
   withUndo,
   type DrillIndex,
@@ -77,7 +79,6 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
   const rotation = rotationAt(block, elapsed);
   const rotating = rotation.count > 1;
   const upcoming = practice.blocks.slice(practice.current + 1).filter((b) => !b.skipped);
-  const byId = new Map(roster.map((p) => [p.id, p.name]));
   // Blocks done or skipped so far count, so skipping one doesn't renumber the rest.
   const active = practice.blocks.filter((b, i) => i <= practice.current || !b.skipped);
   const position = practice.current + 1;
@@ -175,20 +176,14 @@ function Run({ practice, roster, drillIndex, now }: { practice: Practice; roster
       <ul className="run-stations">
         {block.stations.map((s, i) => {
           const drill = drillIndex.get(s.drillId);
-          const group = groupAt(block, i, rotation.index);
-          const players =
-            group === 'all'
-              ? ''
-              : practice.teams[group]
-                  .map((id) => byId.get(id))
-                  .filter((n): n is string => !!n)
-                  .sort((a, b) => a.localeCompare(b))
-                  .join(', ');
+          // When the groups rotate, this station has the group that started at another (PR4b).
+          const from = groupFrom(block, i, rotation.index);
+          const players = stationPlayerNames(practice, from, roster);
           return (
             <li key={i} className="run-station">
               <h2>{drillName(drillIndex, s.drillId)}</h2>
               <p className="station-meta">
-                {[s.coach, groupLabel(group), drill?.court === 'full' ? 'Full court' : 'Half court'].filter(Boolean).join(' · ')}
+                {[s.coach, rotating ? rotatingGroupLabel(from, drillIndex) : groupLabel(from.group), drill?.court === 'full' ? 'Full court' : 'Half court'].filter(Boolean).join(' · ')}
               </p>
               {players && <p className="hint">{players}</p>}
               {drill?.notes.trim() && <p className="run-notes">{drill.notes.trim()}</p>}

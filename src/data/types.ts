@@ -146,7 +146,7 @@ export interface Drill extends Record {
 }
 
 /** Who goes to a station: everyone, or scrimmage team A or B (PR5). */
-export type StationGroup = 'all' | 'A' | 'B';
+export type StationGroup = 'all' | 'A' | 'B' | 'custom';
 
 /** One drill in a block; several stations in a block run at the same time (PR4). */
 export interface Station {
@@ -154,6 +154,8 @@ export interface Station {
   /** Which coach runs it, e.g. "Coach Sam". Optional. */
   coach: string;
   group: StationGroup;
+  /** Hand-picked players when group is 'custom'. Kept if the group changes, so switching back restores them. */
+  players?: PlayerId[];
   /** How it went (PR8). */
   rating?: 'up' | 'down';
   note?: string;

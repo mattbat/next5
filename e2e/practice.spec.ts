@@ -25,6 +25,8 @@ async function expectFits(page: Page, screen: string) {
 test.use({ viewport: { width: 375, height: 667 } });
 
 test('plans, runs and reviews a practice on a narrow phone', async ({ page }) => {
+  // A long walk through every practice screen; the default 30 s is too tight on a slow machine.
+  test.setTimeout(60_000);
   await page.goto('./');
   await page.getByRole('button', { name: 'Load demo team' }).click();
   await page.getByRole('radio', { name: 'Practice' }).click();
@@ -40,22 +42,18 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await page.getByRole('link', { name: 'Back' }).click();
 
   await page.getByRole('button', { name: '+ New practice' }).click();
+  await expectFits(page, 'New practice (empty)');
+  const [date, time] = await Promise.all(
+    ['input[type="date"]', 'input[type="time"]'].map((s) => page.locator(s).evaluate((el) => el.getBoundingClientRect().height)),
+  );
+  expect(time, 'Date and Start are the same height').toBe(date);
   for (const drill of ['Dynamic warm-up', 'Closeouts', 'Scrimmage']) {
     await page.getByRole('button', { name: '+ Add drill' }).click();
     if (drill === 'Dynamic warm-up') await expectFits(page, 'Drill picker');
     await page.getByRole('button', { name: `Add ${drill}` }).click();
   }
-  const second = page.getByRole('listitem', { name: 'Block 2' });
-  await second.getByRole('button', { name: '+ Station' }).click();
-  await page.getByRole('button', { name: 'Add Form shooting' }).click();
-  await second.getByLabel('Coach for Form shooting').fill('Coach Alexandria');
-  await second.getByLabel('Coach for Closeouts').fill('Coach Sam');
-  await page.getByRole('button', { name: 'Balanced' }).click();
-  await expect(page.getByRole('heading', { name: 'Team A (5)' })).toBeVisible();
-  await expect(page.getByText('31 of 75 min')).toBeVisible();
-  await expectFits(page, 'Practice plan');
-
-  // Drag the scrimmage by its handle to the top of the plan, then back to the end.
+  // Drag the scrimmage by its handle to the top of the plan, then back to the end. Done while each
+  // block is one drill, so the handle and the top of the plan fit on the screen together.
   const dragTo = async (name: string, target: string) => {
     const handle = await page.getByRole('button', { name: `Drag ${name} to reorder` }).boundingBox();
     const goal = await page.getByRole('listitem', { name: target }).boundingBox();
@@ -73,6 +71,41 @@ test('plans, runs and reviews a practice on a narrow phone', async ({ page }) =>
   await page.keyboard.press('ArrowDown');
   await page.keyboard.press('ArrowDown');
   await expect(page.getByRole('listitem', { name: 'Block 3' })).toContainText('Scrimmage');
+
+  const second = page.getByRole('listitem', { name: 'Block 2' });
+  await second.getByRole('button', { name: '+ Station' }).click();
+  await page.getByRole('button', { name: 'Add Form shooting' }).click();
+  await second.getByLabel('Coach for Form shooting').fill('Coach Alexandria');
+  await second.getByLabel('Coach for Closeouts').fill('Coach Sam');
+  await page.getByRole('button', { name: 'Balanced' }).click();
+  await expect(page.getByRole('heading', { name: 'Team A (5)' })).toBeVisible();
+  await expect(page.getByText('31 of 75 min')).toBeVisible();
+  await expectFits(page, 'Practice plan');
+
+  // Rotating stations (PR4b): the switch and its note fit, then back to parallel.
+  const mode = second.getByRole('radiogroup', { name: 'How the stations run' });
+  await mode.getByRole('radio', { name: 'Rotate' }).click();
+  await expect(second).toContainText('Groups move to the next station every 4:00');
+  await expectFits(page, 'Rotating stations');
+  await mode.getByRole('radio', { name: 'Parallel' }).click();
+  await expect(second).not.toContainText('Groups move to the next station');
+
+  // A custom group: the coach box, All/A/B/Custom and the picked players each fit (PR4).
+  await second.getByRole('radiogroup', { name: 'Group for Closeouts' }).getByRole('radio', { name: 'Custom' }).click();
+  const sheet = page.getByRole('dialog', { name: 'Players for Closeouts' });
+  // The tick shows once it's saved, so click the row and wait rather than check().
+  await sheet.locator('label.list-item').first().click();
+  await expect(sheet.getByRole('checkbox').first()).toBeChecked();
+  await expectFits(page, 'Custom players sheet');
+  await sheet.getByRole('button', { name: 'Done' }).click();
+  await expect(second.getByRole('button', { name: 'Choose players for Closeouts' })).toContainText('1 player:');
+  await page.addStyleTag({ content: WIDE_FONT });
+  const cramped = await second.evaluate((block) =>
+    [...block.querySelectorAll('.station-edit, .station-edit *')]
+      .filter((el) => el.scrollWidth > el.clientWidth + 1 || (el.matches('.coach-input') && el.clientWidth < 200))
+      .map((el) => `${el.tagName.toLowerCase()}.${el.className} ${el.clientWidth}/${el.scrollWidth}px`),
+  );
+  expect(cramped, 'Practice plan: station controls cut off').toEqual([]);
 
   await page.getByRole('button', { name: 'Start practice' }).click();
   await expect(page.getByRole('heading', { name: 'Block 1 of 3' })).toBeVisible();

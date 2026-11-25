@@ -123,7 +123,7 @@ Only one phone runs a game at a time. After you share a game that's in progress,
 
 ### Planning practices
 
-Each team has a **Practice** tab. Tap **Drill library** to build your drills (or **Add starter drills** for about 20 common 9U and 12U drills to start from), then **+ New practice**: add drills, set their minutes, drag them into order, run several at once as **stations** with a coach for each, and split the players into balanced **scrimmage teams**. The plan shows the equipment to bring and whether you need the full court, and shares as text: the full plan, a card for each coach, and a one-pager for parents.
+Each team has a **Practice** tab. Tap **Drill library** to build your drills (or **Add starter drills** for about 20 common 9U and 12U drills to start from), then **+ New practice**: add drills, set their minutes, drag them into order, run several at once as **stations** with a coach and a group of players for each (a scrimmage team or players you pick), and split the players into balanced **scrimmage teams**. The plan shows the equipment to bring and whether you need the full court, and shares as text: the full plan, a card for each coach, and a one-pager for parents.
 
 **Start practice** runs a big countdown for each drill, with **Pause**, **+1 min**, **Skip**, **Next** and **↶ Undo**, a beep at one minute left, and a warning when you’re running past your planned length. Afterwards, note what went well and what to work on. The Practice tab's **Season focus** shows how much time went to each kind of work (defense, offense, inbounding…) and each drill.
 
@@ -275,3 +275,7 @@ Repository setting: **Settings → Pages → Source: GitHub Actions**.
 ### Changing stored data
 
 The IndexedDB schema lives in `src/data/db.ts`. Never edit an existing `version(n)`. Add `version(n + 1)` with an `upgrade()` that migrates old records, and add a test for it. App updates must never lose a coach's data.
+
+## License
+
+[MIT](LICENSE). Use it, change it, share it; keep the copyright notice.

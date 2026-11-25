@@ -50,3 +50,38 @@ export function trackAppHeight(): () => void {
     window.removeEventListener('orientationchange', update);
   };
 }
+
+/**
+ * Keeps vertical swipes on a sheet from scrolling the page behind it. iOS
+ * passes a swipe on to the page when the sheet has nothing left to scroll
+ * that way (or fits without scrolling), so cancel exactly those moves. The
+ * sheet still scrolls, and sideways swipes (a row of filter tags) are left
+ * alone.
+ */
+export function containScroll(el: HTMLElement): () => void {
+  let lastX = 0;
+  let lastY = 0;
+  const start = (e: TouchEvent) => {
+    lastX = e.touches[0]?.clientX ?? 0;
+    lastY = e.touches[0]?.clientY ?? 0;
+  };
+  const move = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    if (!touch || e.touches.length > 1) return;
+    const dx = touch.clientX - lastX;
+    const dy = touch.clientY - lastY;
+    lastX = touch.clientX;
+    lastY = touch.clientY;
+    if (Math.abs(dx) > Math.abs(dy)) return;
+    // Finger moving down scrolls up; finger moving up scrolls down.
+    const atTop = el.scrollTop <= 0;
+    const atBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 1;
+    if ((dy > 0 && atTop) || (dy < 0 && atBottom)) e.preventDefault();
+  };
+  el.addEventListener('touchstart', start, { passive: true });
+  el.addEventListener('touchmove', move, { passive: false });
+  return () => {
+    el.removeEventListener('touchstart', start);
+    el.removeEventListener('touchmove', move);
+  };
+}

@@ -59,7 +59,7 @@ describe('rotating stations (PR4b)', () => {
     const block = await screen.findByRole('listitem', { name: 'Block 1' });
     const mode = within(block).getByRole('radiogroup', { name: 'How the stations run' });
     expect(within(mode).getByRole('radio', { name: 'Parallel' })).toBeChecked();
-    expect(within(block).getByText('Each group stays at its station for the whole block.')).toBeInTheDocument();
+    expect(within(block).queryByText(/Groups move to the next station/)).not.toBeInTheDocument();
     await user.click(within(mode).getByRole('radio', { name: 'Rotate' }));
     expect(await within(block).findByText(/Groups move to the next station every 6:00/)).toBeInTheDocument();
     expect(within(block).getByText(/Rotate every 6:00/)).toBeInTheDocument();

@@ -308,14 +308,15 @@ export function rotationAt(block: Pick<PracticeBlock, 'minutes' | 'stations' | '
 }
 
 /**
- * The group at station `station` during rotation `rotation`. The groups as
- * planned are where everyone starts; at each rotation every group moves on
- * to the next station, and from the last back to the first.
+ * The station whose group is at `station` during rotation `rotation`. The
+ * groups as planned are where everyone starts; at each rotation every group
+ * (its team or hand-picked players) moves on to the next station, and from
+ * the last back to the first.
  */
-export function groupAt(block: Pick<PracticeBlock, 'stations' | 'rotate'>, station: number, rotation: number): StationGroup {
+export function groupFrom(block: Pick<PracticeBlock, 'stations' | 'rotate'>, station: number, rotation: number): Station {
   const count = rotationCount(block);
-  const from = (((station - rotation) % count) + count) % count;
-  return block.stations[count > 1 ? from : station]!.group;
+  const from = count > 1 ? (((station - rotation) % count) + count) % count : station;
+  return block.stations[from]!;
 }
 
 /** "4:00", "3:20": one rotation's length. */
@@ -536,8 +537,71 @@ export function coachesIn(practice: Pick<Practice, 'blocks'>): string[] {
   return names;
 }
 
-const GROUP_LABEL: Record<StationGroup, string> = { all: 'Everyone', A: 'Team A', B: 'Team B' };
+type Attendance = Pick<Practice, 'attending' | 'teams'>;
+
+/**
+ * Who a station is for (PR4): 'all' is everyone attending, A and B are the
+ * scrimmage teams, and custom is the hand-picked players who are still
+ * attending.
+ */
+export function stationPlayerIds(practice: Attendance, station: Pick<Station, 'group' | 'players'>): string[] {
+  if (station.group === 'all') return practice.attending;
+  if (station.group === 'custom') return (station.players ?? []).filter((id) => practice.attending.includes(id));
+  return practice.teams[station.group];
+}
+
+/** The names of a station's players, sorted; empty for everyone (no need to list them). */
+export function stationPlayerNames(practice: Attendance, station: Pick<Station, 'group' | 'players'>, roster: Player[]): string {
+  return station.group === 'all' ? '' : names(stationPlayerIds(practice, station), roster);
+}
+
+/**
+ * Picks a player for (or takes them off) a custom station (PR4). A player
+ * can be in only one drill at a time in a block, so picking removes them
+ * from the block's other custom stations. Other blocks are untouched.
+ */
+export function setStationPlayer(blocks: PracticeBlock[], blockId: string, stationIndex: number, playerId: string, picked: boolean): PracticeBlock[] {
+  return blocks.map((b) =>
+    b.id !== blockId
+      ? b
+      : {
+          ...b,
+          stations: b.stations.map((s, i) => {
+            const has = (s.players ?? []).includes(playerId);
+            if (i === stationIndex) {
+              if (picked) return has ? s : { ...s, players: [...(s.players ?? []), playerId] };
+              return has ? { ...s, players: (s.players ?? []).filter((id) => id !== playerId) } : s;
+            }
+            // Also clears picks kept on a station switched to All/A/B, so switching it back can't double-book anyone.
+            return picked && has ? { ...s, players: (s.players ?? []).filter((id) => id !== playerId) } : s;
+          }),
+        },
+  );
+}
+
+/** Attending players already in another station of this block: another custom, team A/B or everyone station. */
+export function inOtherStations(practice: Attendance, block: Pick<PracticeBlock, 'stations'>, stationIndex: number): Set<string> {
+  const ids = new Set<string>();
+  block.stations.forEach((s, i) => {
+    if (i === stationIndex) return;
+    for (const id of stationPlayerIds(practice, s)) if (practice.attending.includes(id)) ids.add(id);
+  });
+  return ids;
+}
+
+/** Attending players in none of the block's stations. */
+export function notInAnyStation(practice: Attendance, block: Pick<PracticeBlock, 'stations'>): string[] {
+  const inDrill = new Set(block.stations.flatMap((s) => stationPlayerIds(practice, s)));
+  return practice.attending.filter((id) => !inDrill.has(id));
+}
+
+const GROUP_LABEL: Record<StationGroup, string> = { all: 'Everyone', A: 'Team A', B: 'Team B', custom: 'Custom' };
 export const groupLabel = (group: StationGroup) => GROUP_LABEL[group];
+
+/** A group as it rotates (PR4b): "Team A", or "Post work group" for players picked for that drill. */
+export function rotatingGroupLabel(from: Pick<Station, 'group' | 'drillId'>, drills: DrillIndex): string {
+  return from.group === 'custom' ? `${drillName(drills, from.drillId)} group` : GROUP_LABEL[from.group];
+}
 
 function heading(practice: Practice, team: Team): string {
   const when = [formatGameDate(practice.date), practice.time ? formatTime(practice.time) : ''].filter(Boolean).join(', ');
@@ -553,9 +617,10 @@ function names(ids: string[], roster: Player[]): string {
     .join(', ');
 }
 
-function stationLine(s: Station, drills: DrillIndex): string {
-  const parts = [drillName(drills, s.drillId), s.coach.trim(), s.group === 'all' ? '' : GROUP_LABEL[s.group]];
-  return parts.filter(Boolean).join(' · ');
+function stationLine(s: Station, drills: DrillIndex, practice: Practice, roster: Player[]): string {
+  const custom = s.group === 'custom' ? stationPlayerNames(practice, s, roster) : '';
+  const group = s.group === 'all' ? '' : custom ? `${GROUP_LABEL[s.group]}: ${custom}` : GROUP_LABEL[s.group];
+  return [drillName(drills, s.drillId), s.coach.trim(), group].filter(Boolean).join(' · ');
 }
 
 /** The whole plan for coaches (PR10): read-only, for a message, Notes or printing. */
@@ -569,13 +634,13 @@ export function practicePlanText(practice: Practice, team: Team, drills: DrillIn
     if (start === null || start === undefined) return;
     const time = `${startLabel(practice, start)} · ${block.minutes} min`;
     if (block.stations.length === 1) {
-      lines.push(`${time} · ${stationLine(block.stations[0]!, drills)}`);
+      lines.push(`${time} · ${stationLine(block.stations[0]!, drills, practice, roster)}`);
     } else if (rotationCount(block) > 1) {
       lines.push(`${time} · Stations, rotate every ${rotationLength(block)}:`);
-      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills)}`);
+      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
     } else {
       lines.push(`${time} · Stations at the same time:`);
-      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills)}`);
+      for (const s of block.stations) lines.push(`  • ${stationLine(s, drills, practice, roster)}`);
     }
   });
   if (practice.teams.A.length + practice.teams.B.length > 0) {
@@ -604,12 +669,17 @@ export function stationCardText(practice: Practice, team: Team, drills: DrillInd
       if (count > 1) {
         // Each group in the order it arrives at this station (PR4b).
         const si = block.stations.indexOf(s);
-        const order = Array.from({ length: count }, (_, r) => GROUP_LABEL[groupAt(block, si, r)]);
-        lines.push(`  Groups rotate every ${rotationLength(block)}: ${order.join(', then ')}`);
-        for (const g of (['A', 'B'] as const).filter((g) => block.stations.some((st) => st.group === g))) {
-          lines.push(`  ${GROUP_LABEL[g]}: ${names(practice.teams[g], roster) || 'not split yet'}`);
+        const arriving = Array.from({ length: count }, (_, r) => groupFrom(block, si, r));
+        lines.push(`  Groups rotate every ${rotationLength(block)}: ${arriving.map((g) => rotatingGroupLabel(g, drills)).join(', then ')}`);
+        for (const g of arriving) {
+          if (g.group === 'all') continue;
+          const who = stationPlayerNames(practice, g, roster);
+          lines.push(`  ${rotatingGroupLabel(g, drills)}: ${who || (g.group === 'custom' ? 'no players picked' : 'not split yet')}`);
         }
-      } else if (s.group !== 'all') lines.push(`  ${GROUP_LABEL[s.group]}: ${names(practice.teams[s.group], roster) || 'not split yet'}`);
+      } else if (s.group !== 'all') {
+        const who = stationPlayerNames(practice, s, roster);
+        lines.push(`  ${GROUP_LABEL[s.group]}: ${who || (s.group === 'custom' ? 'no players picked' : 'not split yet')}`);
+      }
       if (drill?.equipment.length) lines.push(`  Needs: ${drill.equipment.join(', ')}`);
       if (drill?.notes.trim()) lines.push(`  ${drill.notes.trim()}`);
       lines.push('');

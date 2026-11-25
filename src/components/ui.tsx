@@ -1,7 +1,8 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { BETA } from '../beta';
 import type { Position } from '../data/types';
 import { canGoBack } from '../router';
+import { containScroll } from '../viewport';
 
 /** Small shared building blocks used across screens. */
 
@@ -164,9 +165,12 @@ export function Empty({ children }: { children: ReactNode }) {
 
 /** A bottom sheet (iOS style) for editing without leaving the screen. */
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  // Swiping on the sheet scrolls the sheet, never the page behind it.
+  useEffect(() => (ref.current ? containScroll(ref.current) : undefined), []);
   return (
     <div className="sheet-backdrop" onClick={onClose}>
-      <div className="sheet" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
+      <div ref={ref} className="sheet" role="dialog" aria-label={title} onClick={(e) => e.stopPropagation()}>
         <div className="sheet-head">
           <h2>{title}</h2>
           <button type="button" className="link" onClick={onClose}>

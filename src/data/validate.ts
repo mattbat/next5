@@ -120,9 +120,13 @@ const gameFields = shape({
 // dozen blocks at most.
 const MAX_BLOCKS = 200;
 const isStation: Check = (value) => {
-  if (!exact({ drillId: isString, coach: isString, group: oneOf('all', 'A', 'B') })(value)) return false;
-  const { rating, note } = value as { rating?: unknown; note?: unknown };
-  return (rating === undefined || oneOf('up', 'down')(rating)) && (note === undefined || isString(note));
+  if (!exact({ drillId: isString, coach: isString, group: oneOf('all', 'A', 'B', 'custom') })(value)) return false;
+  const { rating, note, players } = value as { rating?: unknown; note?: unknown; players?: unknown };
+  return (
+    (rating === undefined || oneOf('up', 'down')(rating)) &&
+    (note === undefined || isString(note)) &&
+    (players === undefined || listOf(isString, 100)(players))
+  );
 };
 const isBlock = shape({
   minutes: isCount(600),

@@ -16,12 +16,17 @@ import {
   finishPractice,
   formatClock,
   formatTime,
-  groupAt,
+  groupFrom,
   indexDrills,
   rotationAt,
   rotationCount,
   rotationEnds,
   rotationLength,
+  inOtherStations,
+  notInAnyStation,
+  setStationPlayer,
+  stationPlayerIds,
+  stationPlayerNames,
   moveBlock,
   movePlayer,
   needsFullCourt,
@@ -467,7 +472,7 @@ describe('rotating stations (PR4b)', () => {
     expect(rotationCount(block('b', 12, two))).toBe(1);
     expect(rotationEnds(block('b', 12, two))).toEqual([12 * 60_000]);
     expect(rotationCount(block('b', 12, [station('x')], { rotate: true }))).toBe(1);
-    expect(groupAt(block('b', 12, two), 1, 0)).toBe('B');
+    expect(groupFrom(block('b', 12, two), 1, 0).group).toBe('B');
   });
 
   it('splits the block evenly, to the second', () => {
@@ -486,9 +491,9 @@ describe('rotating stations (PR4b)', () => {
 
   it('moves each group on to the next station at each rotation', () => {
     const b = block('b', 12, three, { rotate: true });
-    expect([0, 1, 2].map((s) => groupAt(b, s, 0))).toEqual(['A', 'B', 'all']);
-    expect([0, 1, 2].map((s) => groupAt(b, s, 1))).toEqual(['all', 'A', 'B']);
-    expect([0, 1, 2].map((s) => groupAt(b, s, 2))).toEqual(['B', 'all', 'A']);
+    expect([0, 1, 2].map((s) => groupFrom(b, s, 0).group)).toEqual(['A', 'B', 'all']);
+    expect([0, 1, 2].map((s) => groupFrom(b, s, 1).group)).toEqual(['all', 'A', 'B']);
+    expect([0, 1, 2].map((s) => groupFrom(b, s, 2).group)).toEqual(['B', 'all', 'A']);
   });
 
   it('adds +1 min to the rotation running now only', () => {
@@ -547,5 +552,125 @@ describe('rotating stations (PR4b)', () => {
     expect(practicePlanText({ ...done, status: 'planned' }, team, drills, [])).toContain('Stations, rotate every 6:00:');
     const card = stationCardText({ ...done, status: 'planned' }, team, drills, [], 'Coach Sam');
     expect(card).toContain('Groups rotate every 6:00: Team A, then Team B');
+  });
+
+  it('moves hand-picked players with their group', () => {
+    const drills = indexDrills([drill('post', { name: 'Post work' }), drill('guard', { name: 'Guard work' })]);
+    const roster = [player('Ann'), player('Bea')];
+    const plan = practice({
+      attending: ['Ann', 'Bea'],
+      blocks: [
+        block('b', 12, [station('post', { group: 'custom', players: ['Ann'] }), station('guard', { group: 'custom', players: ['Bea'], coach: 'Coach Lee' })], {
+          rotate: true,
+        }),
+      ],
+    });
+    const b = plan.blocks[0]!;
+    expect(groupFrom(b, 1, 1).players).toEqual(['Ann']);
+    const card = stationCardText(plan, team, drills, roster, 'Coach Lee');
+    expect(card).toContain('Groups rotate every 6:00: Guard work group, then Post work group');
+    expect(card).toContain('Post work group: Ann');
+  });
+});
+
+describe('custom station groups (PR4)', () => {
+  const roster = ['Ann', 'Bea', 'Cy', 'Di'].map((id) => player(id));
+  const plan = practice({
+    attending: ['Ann', 'Bea', 'Cy', 'Di'],
+    teams: { A: ['Cy'], B: ['Di'] },
+    blocks: [
+      block('b1', 10, [
+        station('shoot', { coach: 'Coach Sam', group: 'custom', players: ['Bea', 'Ann'] }),
+        station('close', { group: 'custom', players: [] }),
+      ]),
+      block('b2', 10, [station('warm', { group: 'custom', players: ['Ann'] }), station('water', { group: 'custom' })]),
+    ],
+  });
+
+  it('says who each kind of station is for', () => {
+    const p = practice({ attending: ['Ann', 'Bea'], teams: { A: ['Cy'], B: [] } });
+    expect(stationPlayerIds(p, { group: 'all' })).toEqual(['Ann', 'Bea']);
+    expect(stationPlayerIds(p, { group: 'A' })).toEqual(['Cy']);
+    expect(stationPlayerIds(p, { group: 'custom', players: ['Bea', 'Zed'] })).toEqual(['Bea']);
+    expect(stationPlayerIds(p, { group: 'custom' })).toEqual([]);
+    expect(stationPlayerNames(p, { group: 'custom', players: ['Bea', 'Ann'] }, roster)).toBe('Ann, Bea');
+    expect(stationPlayerNames(p, { group: 'all' }, roster)).toBe('');
+  });
+
+  it('picking a player moves them out of the block’s other custom stations only', () => {
+    const blocks = setStationPlayer(plan.blocks, 'b1', 1, 'Ann', true);
+    expect(blocks[0]!.stations[0]!.players).toEqual(['Bea']);
+    expect(blocks[0]!.stations[1]!.players).toEqual(['Ann']);
+    expect(blocks[1]).toBe(plan.blocks[1]);
+  });
+
+  it('unpicking removes a player from that station only, and picking twice changes nothing', () => {
+    const off = setStationPlayer(plan.blocks, 'b1', 0, 'Ann', false);
+    expect(off[0]!.stations[0]!.players).toEqual(['Bea']);
+    expect(setStationPlayer(plan.blocks, 'b1', 0, 'Ann', true)[0]!.stations[0]!.players).toEqual(['Bea', 'Ann']);
+  });
+
+  it('keeps picked players when the group changes away from custom', () => {
+    const s = { ...plan.blocks[0]!.stations[0]!, group: 'A' as const };
+    expect(s.players).toEqual(['Bea', 'Ann']);
+    expect(stationPlayerIds(plan, s)).toEqual(['Cy']);
+    expect(stationPlayerIds(plan, { ...s, group: 'custom' })).toEqual(['Bea', 'Ann']);
+  });
+
+  it('picking a player clears them from kept picks on a station switched away from custom', () => {
+    const switched = plan.blocks.map((b, i) =>
+      i === 0 ? { ...b, stations: b.stations.map((s, k) => (k === 0 ? { ...s, group: 'A' as const } : s)) } : b,
+    );
+    const blocks = setStationPlayer(switched, 'b1', 1, 'Ann', true);
+    expect(blocks[0]!.stations[0]!.players).toEqual(['Bea']);
+    expect(blocks[0]!.stations[1]!.players).toEqual(['Ann']);
+  });
+
+  it('knows who is already in another drill, and who is in none', () => {
+    const b = plan.blocks[0]!;
+    expect([...inOtherStations(plan, b, 1)].sort()).toEqual(['Ann', 'Bea']);
+    expect([...inOtherStations(plan, b, 0)]).toEqual([]);
+    expect(notInAnyStation(plan, b)).toEqual(['Cy', 'Di']);
+    const mixed = block('b3', 5, [station('shoot', { group: 'A' }), station('close', { group: 'custom' })]);
+    expect([...inOtherStations(plan, mixed, 1)]).toEqual(['Cy']);
+    const everyone = block('b4', 5, [station('shoot'), station('close', { group: 'custom' })]);
+    expect(inOtherStations(plan, everyone, 1).size).toBe(4);
+  });
+
+  it('shows Custom in the plan text and on the station card', () => {
+    const text = practicePlanText(plan, team, DRILLS, roster);
+    expect(text).toContain('  • Form shooting · Coach Sam · Custom: Ann, Bea\n  • Closeouts · Custom\n');
+    const card = stationCardText(plan, team, DRILLS, roster, 'Coach Sam');
+    expect(card).toContain('Form shooting\n  Custom: Ann, Bea\n');
+    const none = stationCardText(
+      practice({ attending: [], blocks: [block('b', 5, [station('shoot', { coach: 'Sam', group: 'custom' })])] }),
+      team,
+      DRILLS,
+      roster,
+      'Sam',
+    );
+    expect(none).toContain('Custom: no players picked');
+  });
+
+  it('never puts a player in two custom stations of one block (property)', () => {
+    const ids = ['a', 'b', 'c', 'd', 'e'];
+    const op = fc.record({
+      block: fc.integer({ min: 0, max: 1 }),
+      station: fc.integer({ min: 0, max: 2 }),
+      player: fc.constantFrom(...ids),
+      picked: fc.boolean(),
+    });
+    fc.assert(
+      fc.property(fc.array(op, { maxLength: 40 }), (ops) => {
+        const make = (id: string) =>
+          block(id, 5, [station('shoot', { group: 'custom' }), station('close', { group: 'custom' }), station('warm', { group: 'custom' })]);
+        let blocks = [make('x'), make('y')];
+        for (const o of ops) blocks = setStationPlayer(blocks, blocks[o.block]!.id, o.station, o.player, o.picked);
+        for (const b of blocks) {
+          const all = b.stations.flatMap((s) => s.players ?? []);
+          expect(new Set(all).size).toBe(all.length);
+        }
+      }),
+    );
   });
 });

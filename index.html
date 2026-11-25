@@ -8,10 +8,26 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="next5" />
-    <meta name="description" content="Plan fair basketball rotations and run substitutions on game day." />
+    <meta
+      name="description"
+      content="Free youth basketball rotation app. Plan fair playing time and lineups by position, then run subs with one tap on game day. Works offline on iPhone."
+    />
+    <link rel="canonical" href="https://mattbat.com/next5/" />
+    <!-- Link previews in Messages, team chats and social apps. -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="next5" />
+    <meta property="og:title" content="next5 — Youth Basketball Rotation & Substitution App" />
+    <meta
+      property="og:description"
+      content="Fair playing time, lineups by position and one-tap subs on game day. Free, no account, works offline on iPhone."
+    />
+    <meta property="og:url" content="https://mattbat.com/next5/" />
+    <meta property="og:image" content="https://mattbat.com/next5/pwa-512x512.png" />
+    <meta name="twitter:card" content="summary" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/apple-touch-icon-180x180.png" />
-    <title>next5</title>
+    <!-- The Home Screen name comes from apple-mobile-web-app-title, so this can say more. -->
+    <title>next5 — Youth Basketball Rotation &amp; Substitution App</title>
     <script>
       // Light or dark before the app loads, so it never flashes the wrong one
       // (D10). Same logic as applyTheme in src/theme.ts.
@@ -30,6 +46,15 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <h1>next5: youth basketball rotation and substitution app</h1>
+      <p>
+        next5 is a free iPhone app for youth basketball coaches. Enter your roster once, mark who showed up, and it builds a
+        rotation with fair playing time that always has the positions you need on the court. On game day it shows who comes
+        in and who goes out at each substitution. It also plans practices. No account, no App Store, works offline.
+        Turn on JavaScript to use it.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
